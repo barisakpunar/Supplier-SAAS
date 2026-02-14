@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Net.Http.Headers;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
@@ -6,6 +7,7 @@ using Nop.Core.Domain.Stores;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Services.Common;
+using Nop.Services.ScheduleTasks;
 using Nop.Services.Stores;
 
 namespace Nop.Web.Framework;
@@ -52,6 +54,55 @@ public partial class WebStoreContext : IStoreContext
     #region Properties
 
     /// <summary>
+    /// Gets a value indicating whether current request belongs to the admin area
+    /// </summary>
+    /// <returns><c>true</c> if current request belongs to the admin area; otherwise <c>false</c></returns>
+    protected virtual bool IsAdminAreaRequest()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null)
+            return false;
+
+        if (httpContext.GetRouteValue("area") is string area && area.Equals(AreaNames.ADMIN, StringComparison.InvariantCultureIgnoreCase))
+            return true;
+
+        var requestPath = httpContext.Request.Path.Value;
+        return !string.IsNullOrEmpty(requestPath) && requestPath.StartsWith("/admin", StringComparison.InvariantCultureIgnoreCase);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether current request is a scheduled task execution request
+    /// </summary>
+    /// <returns><c>true</c> if current request is a scheduled task execution request; otherwise <c>false</c></returns>
+    protected virtual bool IsScheduleTaskRequest()
+    {
+        return _httpContextAccessor.HttpContext?.Request?.Path
+                   .Equals(new PathString($"/{NopTaskDefaults.ScheduleTaskPath}"), StringComparison.InvariantCultureIgnoreCase)
+               ?? false;
+    }
+
+    /// <summary>
+    /// Tries to resolve the current store from authenticated customer assignment
+    /// </summary>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the resolved store if any, otherwise <c>null</c>
+    /// </returns>
+    protected virtual async Task<Store> GetStoreByAuthenticatedCustomerAsync()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext?.User?.Identity?.IsAuthenticated != true || IsScheduleTaskRequest() || IsAdminAreaRequest())
+            return null;
+
+        //resolve lazily to avoid circular dependency in constructors
+        var currentCustomer = await EngineContext.Current.Resolve<IWorkContext>().GetCurrentCustomerAsync();
+        if (currentCustomer?.RegisteredInStoreId > 0)
+            return await _storeService.GetStoreByIdAsync(currentCustomer.RegisteredInStoreId);
+
+        return null;
+    }
+
+    /// <summary>
     /// Gets the current store
     /// </summary>
     /// <returns>A task that represents the asynchronous operation</returns>
@@ -60,11 +111,15 @@ public partial class WebStoreContext : IStoreContext
         if (_cachedStore != null)
             return _cachedStore;
 
-        //try to determine the current store by HOST header
-        string host = _httpContextAccessor.HttpContext?.Request.Headers[HeaderNames.Host];
+        var store = await GetStoreByAuthenticatedCustomerAsync();
 
-        var allStores = await _storeService.GetAllStoresAsync();
-        var store = allStores.FirstOrDefault(s => _storeService.ContainsHostValue(s, host)) ?? allStores.FirstOrDefault();
+        if (store is null)
+        {
+            //fallback to default host-based resolution
+            string host = _httpContextAccessor.HttpContext?.Request.Headers[HeaderNames.Host];
+            var allStores = await _storeService.GetAllStoresAsync();
+            store = allStores.FirstOrDefault(s => _storeService.ContainsHostValue(s, host)) ?? allStores.FirstOrDefault();
+        }
 
         _cachedStore = store ?? throw new Exception("No store could be loaded");
 
