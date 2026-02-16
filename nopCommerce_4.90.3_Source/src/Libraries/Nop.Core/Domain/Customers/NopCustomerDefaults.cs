@@ -32,6 +32,11 @@ public static partial class NopCustomerDefaults
     /// </summary>
     public static string VendorsRoleName => "Vendors";
 
+    /// <summary>
+    /// Gets a system name of 'store owners' customer role
+    /// </summary>
+    public static string StoreOwnersRoleName => "StoreOwners";
+
     #endregion
 
     #region System customers

@@ -13,6 +13,7 @@ namespace Nop.Web.Areas.Admin.Controllers;
 [AutoValidateAntiforgeryToken]
 [ValidateIpAddress]
 [AuthorizeAdmin]
+[ValidateStoreOwner]
 [ValidateVendor]
 [SaveSelectedTab]
 [NotNullValidationMessage]

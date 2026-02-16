@@ -146,6 +146,7 @@ public partial class StandardPermission
     {
         public const string ENABLE_MULTI_FACTOR_AUTHENTICATION = $"{nameof(Security)}.EnableMultiFactorAuthentication";
         public const string ACCESS_ADMIN_PANEL = $"{nameof(Security)}.AccessAdminPanel";
+        public const string ACCESS_STORE_OWNER_PANEL = $"{nameof(Security)}.AccessStoreOwnerPanel";
     }
 
     public partial class PublicStore

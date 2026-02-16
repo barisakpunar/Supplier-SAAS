@@ -14,6 +14,7 @@ public partial class DefaultPermissionConfigManager : IPermissionConfigManager
         
         new ("Security. Enable Multi-factor authentication", StandardPermission.Security.ENABLE_MULTI_FACTOR_AUTHENTICATION, nameof(StandardPermission.Security), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.RegisteredRoleName),
         new ("Access admin area", StandardPermission.Security.ACCESS_ADMIN_PANEL, nameof(StandardPermission.Security), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
+        new ("Access store owner panel", StandardPermission.Security.ACCESS_STORE_OWNER_PANEL, nameof(StandardPermission.Security), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
 
         #endregion
 
