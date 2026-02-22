@@ -7,6 +7,7 @@ using Nop.Core.Domain.Stores;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Services.Common;
+using Nop.Services.Customers;
 using Nop.Services.ScheduleTasks;
 using Nop.Services.Stores;
 
@@ -91,12 +92,23 @@ public partial class WebStoreContext : IStoreContext
     protected virtual async Task<Store> GetStoreByAuthenticatedCustomerAsync()
     {
         var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.User?.Identity?.IsAuthenticated != true || IsScheduleTaskRequest() || IsAdminAreaRequest())
+        if (httpContext?.User?.Identity?.IsAuthenticated != true || IsScheduleTaskRequest())
             return null;
 
         //resolve lazily to avoid circular dependency in constructors
-        var currentCustomer = await EngineContext.Current.Resolve<IWorkContext>().GetCurrentCustomerAsync();
-        if (currentCustomer?.RegisteredInStoreId > 0)
+        var workContext = EngineContext.Current.Resolve<IWorkContext>();
+        var currentCustomer = await workContext.GetCurrentCustomerAsync();
+        if (currentCustomer?.RegisteredInStoreId <= 0)
+            return null;
+
+        if (!IsAdminAreaRequest())
+            return await _storeService.GetStoreByIdAsync(currentCustomer.RegisteredInStoreId);
+
+        var customerService = EngineContext.Current.Resolve<ICustomerService>();
+        if (await customerService.IsAdminAsync(currentCustomer))
+            return null;
+
+        if (await customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName))
             return await _storeService.GetStoreByIdAsync(currentCustomer.RegisteredInStoreId);
 
         return null;

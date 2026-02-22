@@ -18,6 +18,23 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
     protected readonly ICustomerService _customerService;
     protected readonly IWorkContext _workContext;
 
+    private static readonly HashSet<string> _allowedMenuItems = new(StringComparer.InvariantCultureIgnoreCase)
+    {
+        "Home",
+        "Dashboard",
+        "Catalog",
+        "Products",
+        "Categories",
+        "Manufacturers",
+        "Product reviews",
+        "Sales",
+        "Orders",
+        "Shipments",
+        "Return requests",
+        "Customers",
+        "Customers list"
+    };
+
     #endregion
 
     #region Ctor
@@ -46,18 +63,33 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
         if (!await _customerService.IsInCustomerRoleAsync(customer, NopCustomerDefaults.StoreOwnersRoleName))
             return;
 
-        eventMessage.RootMenuItem.ChildNodes = new List<AdminMenuItem>
+        static bool prune(AdminMenuItem node)
         {
-            new()
-            {
-                Visible = true,
-                SystemName = "StoreOwnerPanel",
-                Title = "Store Owner Panel",
-                Url = eventMessage.GetMenuItemUrl("StoreOwner", "Index"),
-                IconClass = "fas fa-store",
-                PermissionNames = new List<string> { StandardPermission.Security.ACCESS_STORE_OWNER_PANEL }
-            }
-        };
+            if (node is null)
+                return false;
+
+            node.ChildNodes = node.ChildNodes.Where(prune).ToList();
+            return _allowedMenuItems.Contains(node.SystemName) || node.ChildNodes.Any();
+        }
+
+        eventMessage.RootMenuItem.ChildNodes = eventMessage.RootMenuItem.ChildNodes.Where(prune).ToList();
+
+        var dashboard = eventMessage.RootMenuItem.GetItemBySystemName("Dashboard");
+        if (dashboard != null)
+        {
+            dashboard.PermissionNames = new List<string> { StandardPermission.Security.ACCESS_STORE_OWNER_PANEL };
+            return;
+        }
+
+        eventMessage.RootMenuItem.ChildNodes.Insert(0, new AdminMenuItem
+        {
+            Visible = true,
+            SystemName = "Dashboard",
+            Title = "Dashboard",
+            Url = eventMessage.GetMenuItemUrl("Home", "Index"),
+            IconClass = "fas fa-desktop",
+            PermissionNames = new List<string> { StandardPermission.Security.ACCESS_STORE_OWNER_PANEL }
+        });
     }
 
     #endregion

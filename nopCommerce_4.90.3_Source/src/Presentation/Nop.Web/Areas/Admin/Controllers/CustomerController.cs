@@ -347,11 +347,16 @@ public partial class CustomerController : BaseAdminController
             //fill entity from model
             var customer = model.ToEntity<Customer>();
             var currentStore = await _storeContext.GetCurrentStoreAsync();
+            var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+            var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                               && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
 
             customer.CustomerGuid = Guid.NewGuid();
             customer.CreatedOnUtc = DateTime.UtcNow;
             customer.LastActivityDateUtc = DateTime.UtcNow;
-            customer.RegisteredInStoreId = currentStore.Id;
+            customer.RegisteredInStoreId = isStoreOwner && currentCustomer.RegisteredInStoreId > 0
+                ? currentCustomer.RegisteredInStoreId
+                : model.RegisteredInStoreId > 0 ? model.RegisteredInStoreId : currentStore.Id;
 
             //form fields
             if (_dateTimeSettings.AllowCustomersToSetTimeZone)
@@ -474,6 +479,10 @@ public partial class CustomerController : BaseAdminController
         if (customer == null || customer.Deleted)
             return RedirectToAction("List");
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+
         //validate customer roles
         var allCustomerRoles = await _customerService.GetAllCustomerRolesAsync(true);
         var newCustomerRoles = new List<CustomerRole>();
@@ -589,6 +598,9 @@ public partial class CustomerController : BaseAdminController
                     customer.Phone = model.Phone;
                 if (_customerSettings.FaxEnabled)
                     customer.Fax = model.Fax;
+                customer.RegisteredInStoreId = isStoreOwner && currentCustomer.RegisteredInStoreId > 0
+                    ? currentCustomer.RegisteredInStoreId
+                    : model.RegisteredInStoreId > 0 ? model.RegisteredInStoreId : customer.RegisteredInStoreId;
 
                 //custom customer attributes
                 customer.CustomCustomerAttributesXML = customerAttributesXml;

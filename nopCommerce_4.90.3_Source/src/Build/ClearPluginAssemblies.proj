@@ -13,12 +13,21 @@
     <OutputPath>$(MSBuildProjectDirectory)\..\Presentation\Nop.Web\bin\$(Configuration)</OutputPath>
   </PropertyGroup> 
 
+  <PropertyGroup>
+    <!-- Prefer SDK-provided host path; fallback to common macOS install locations -->
+    <DotNetHostPath Condition="'$(DotNetHostPath)' == '' and '$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</DotNetHostPath>
+    <DotNetHostPath Condition="'$(DotNetHostPath)' == '' and Exists('/opt/homebrew/bin/dotnet')">/opt/homebrew/bin/dotnet</DotNetHostPath>
+    <DotNetHostPath Condition="'$(DotNetHostPath)' == '' and Exists('/usr/local/bin/dotnet')">/usr/local/bin/dotnet</DotNetHostPath>
+    <DotNetHostPath Condition="'$(DotNetHostPath)' == '' and Exists('/usr/local/share/dotnet/dotnet')">/usr/local/share/dotnet/dotnet</DotNetHostPath>
+    <DotNetHostPath Condition="'$(DotNetHostPath)' == ''">dotnet</DotNetHostPath>
+  </PropertyGroup>
+
   <Target Name="NopClear">
     
     <!-- When .NET Core builds a project, it copies all referenced libraries to the output folder.
     For plugins it creates too many unnecessary files that just take up space.
     At the moment you can't disable this behavior. That's why we have to manually delete all unnecessary libraries from plugin output directories. -->  
-    <Exec Command='dotnet "ClearPluginAssemblies.dll" "OutputPath=$(OutputPath)|PluginPath=$(PluginPath)|SaveLocalesFolders=$(SaveLocalesFolders)"' />
+    <Exec Command='"$(DotNetHostPath)" "ClearPluginAssemblies.dll" "OutputPath=$(OutputPath)|PluginPath=$(PluginPath)|SaveLocalesFolders=$(SaveLocalesFolders)"' />
   </Target> 
       
 </Project>

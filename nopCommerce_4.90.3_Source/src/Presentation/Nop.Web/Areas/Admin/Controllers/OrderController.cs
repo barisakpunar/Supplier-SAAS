@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
+using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Events;
@@ -147,6 +148,14 @@ public partial class OrderController : BaseAdminController
         if (orderId == 0)
             return false;
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        if (!await _customerService.IsAdminAsync(currentCustomer)
+            && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName))
+        {
+            var order = await _orderService.GetOrderByIdAsync(orderId);
+            return order != null && order.StoreId == currentCustomer.RegisteredInStoreId;
+        }
+
         var currentVendor = await _workContext.GetCurrentVendorAsync();
         if (currentVendor == null)
             //not a vendor; has access
@@ -163,6 +172,11 @@ public partial class OrderController : BaseAdminController
         if (orderItem == null || orderItem.ProductId == 0)
             return false;
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        if (!await _customerService.IsAdminAsync(currentCustomer)
+            && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName))
+            return await HasAccessToOrderAsync(orderItem.OrderId);
+
         var currentVendor = await _workContext.GetCurrentVendorAsync();
         if (currentVendor == null)
             //not a vendor; has access
@@ -176,11 +190,6 @@ public partial class OrderController : BaseAdminController
     protected virtual async ValueTask<bool> HasAccessToShipmentAsync(Shipment shipment)
     {
         ArgumentNullException.ThrowIfNull(shipment);
-
-        if (await _workContext.GetCurrentVendorAsync() == null)
-            //not a vendor; has access
-            return true;
-
         return await HasAccessToOrderAsync(shipment.OrderId);
     }
 
@@ -844,7 +853,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor does not have access to this functionality
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToOrderAsync(order))
+        if (!await HasAccessToOrderAsync(order))
             return RedirectToAction("List");
 
         //prepare model
@@ -1361,7 +1370,7 @@ public partial class OrderController : BaseAdminController
             ?? throw new ArgumentException("No order item found with the specified id");
 
         //ensure a vendor has access only to his products 
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToProductAsync(orderItem))
+        if (!await HasAccessToProductAsync(orderItem))
             return RedirectToAction("List");
 
         orderItem.DownloadCount = 0;
@@ -1394,7 +1403,7 @@ public partial class OrderController : BaseAdminController
             ?? throw new ArgumentException("No order item found with the specified id");
 
         //ensure a vendor has access only to his products 
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToProductAsync(orderItem))
+        if (!await HasAccessToProductAsync(orderItem))
             return RedirectToAction("List");
 
         orderItem.IsDownloadActivated = !orderItem.IsDownloadActivated;
@@ -1427,7 +1436,7 @@ public partial class OrderController : BaseAdminController
             throw new ArgumentException("Product is not downloadable");
 
         //ensure a vendor has access only to his products 
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToProductAsync(orderItem))
+        if (!await HasAccessToProductAsync(orderItem))
             return RedirectToAction("List");
 
         //prepare model
@@ -1450,7 +1459,7 @@ public partial class OrderController : BaseAdminController
             ?? throw new ArgumentException("No order item found with the specified id");
 
         //ensure a vendor has access only to his products 
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToProductAsync(orderItem))
+        if (!await HasAccessToProductAsync(orderItem))
             return RedirectToAction("List");
 
         //attach license
@@ -1483,7 +1492,7 @@ public partial class OrderController : BaseAdminController
             ?? throw new ArgumentException("No order item found with the specified id");
 
         //ensure a vendor has access only to his products 
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToProductAsync(orderItem))
+        if (!await HasAccessToProductAsync(orderItem))
             return RedirectToAction("List");
 
         //attach license
@@ -1808,7 +1817,7 @@ public partial class OrderController : BaseAdminController
             ?? throw new ArgumentException("No order found with the specified id");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToOrderAsync(order))
+        if (!await HasAccessToOrderAsync(order))
             return Content(string.Empty);
 
         //prepare model
@@ -1827,7 +1836,7 @@ public partial class OrderController : BaseAdminController
 
         //a vendor should have access only to his products
         var currentVendor = await _workContext.GetCurrentVendorAsync();
-        if (currentVendor != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return Content(string.Empty);
 
         //try to get an order with the specified id
@@ -1835,7 +1844,7 @@ public partial class OrderController : BaseAdminController
             ?? throw new ArgumentException("No order found with the specified id");
 
         //a vendor should have access only to his products
-        if (currentVendor != null && !await HasAccessToOrderAsync(order))
+        if (!await HasAccessToOrderAsync(order))
             return Content(string.Empty);
 
         //prepare model
@@ -1854,7 +1863,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToOrderAsync(order))
+        if (!await HasAccessToOrderAsync(order))
             return RedirectToAction("List");
 
         //prepare model
@@ -1875,7 +1884,7 @@ public partial class OrderController : BaseAdminController
 
         //a vendor should have access only to his products
         var currentVendor = await _workContext.GetCurrentVendorAsync();
-        if (currentVendor != null && !await HasAccessToOrderAsync(order))
+        if (!await HasAccessToOrderAsync(order))
             return RedirectToAction("List");
 
         var orderItems = await _orderService.GetOrderItemsAsync(order.Id, isShipEnabled: true);
@@ -2018,7 +2027,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         //prepare model
@@ -2037,7 +2046,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         foreach (var shipmentItem in await _shipmentService.GetShipmentItemsByShipmentIdAsync(shipment.Id))
@@ -2082,7 +2091,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         if (shipment.TrackingNumber == model.TrackingNumber)
@@ -2107,7 +2116,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         shipment.AdminComment = model.AdminComment;
@@ -2127,7 +2136,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         try
@@ -2155,7 +2164,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         try
@@ -2188,7 +2197,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         try
@@ -2216,7 +2225,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         try
@@ -2246,7 +2255,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         try
@@ -2274,7 +2283,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         try
@@ -2305,7 +2314,7 @@ public partial class OrderController : BaseAdminController
             return RedirectToAction("List");
 
         //a vendor should have access only to his products
-        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToShipmentAsync(shipment))
+        if (!await HasAccessToShipmentAsync(shipment))
             return RedirectToAction("List");
 
         byte[] bytes;
@@ -2336,7 +2345,7 @@ public partial class OrderController : BaseAdminController
             vendorId = currentVendor.Id;
 
         //load shipments
-        var shipments = await _shipmentService.GetAllShipmentsAsync(vendorId: vendorId,
+        var shipments = (await _shipmentService.GetAllShipmentsAsync(vendorId: vendorId,
             warehouseId: model.WarehouseId,
             shippingCountryId: model.CountryId,
             shippingStateId: model.StateProvinceId,
@@ -2346,7 +2355,14 @@ public partial class OrderController : BaseAdminController
             loadNotShipped: model.LoadNotShipped,
             loadNotReadyForPickup: model.LoadNotReadyForPickup,
             createdFromUtc: startDateValue,
-            createdToUtc: endDateValue);
+            createdToUtc: endDateValue)).ToList();
+        var filteredShipments = new List<Shipment>();
+        foreach (var shipment in shipments)
+        {
+            if (await HasAccessToShipmentAsync(shipment))
+                filteredShipments.Add(shipment);
+        }
+        shipments = filteredShipments;
 
         //ensure that we at least one shipment selected
         if (!shipments.Any())

@@ -156,6 +156,7 @@ public partial class CustomerService : ICustomerService
     /// <param name="pageIndex">Page index</param>
     /// <param name="pageSize">Page size</param>
     /// <param name="getOnlyTotalCount">A value in indicating whether you want to load only total number of records. Set to "true" if you don't want to load data from database</param>
+    /// <param name="storeId">Store identifier; pass 0 to load all records</param>
     /// <returns>
     /// A task that represents the asynchronous operation
     /// The task result contains the customers
@@ -166,7 +167,7 @@ public partial class CustomerService : ICustomerService
         string email = null, string username = null, string firstName = null, string lastName = null,
         int dayOfBirth = 0, int monthOfBirth = 0,
         string company = null, string phone = null, string zipPostalCode = null, string ipAddress = null,
-        bool? isActive = null, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false)
+        bool? isActive = null, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false, int storeId = 0)
     {
         var customers = await _customerRepository.GetAllPagedAsync(query =>
         {
@@ -182,6 +183,8 @@ public partial class CustomerService : ICustomerService
                 query = query.Where(c => affiliateId == c.AffiliateId);
             if (vendorId > 0)
                 query = query.Where(c => vendorId == c.VendorId);
+            if (storeId > 0)
+                query = query.Where(c => c.RegisteredInStoreId == storeId);
             if (isActive.HasValue)
                 query = query.Where(c => c.Active == isActive.Value);
 

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
+using Nop.Core.Domain.Customers;
 using Nop.Services.Catalog;
+using Nop.Services.Customers;
 using Nop.Services.Security;
 
 namespace Nop.Web.Areas.Admin.Controllers;
@@ -11,6 +13,7 @@ public partial class SearchCompleteController : BaseAdminController
 
     protected readonly IPermissionService _permissionService;
     protected readonly IProductService _productService;
+    protected readonly ICustomerService _customerService;
     protected readonly IWorkContext _workContext;
 
     #endregion
@@ -18,10 +21,12 @@ public partial class SearchCompleteController : BaseAdminController
     #region Ctor
 
     public SearchCompleteController(
+        ICustomerService customerService,
         IPermissionService permissionService,
         IProductService productService,
         IWorkContext workContext)
     {
+        _customerService = customerService;
         _permissionService = permissionService;
         _productService = productService;
         _workContext = workContext;
@@ -33,7 +38,8 @@ public partial class SearchCompleteController : BaseAdminController
 
     public virtual async Task<IActionResult> SearchAutoComplete(string term)
     {
-        if (!await _permissionService.AuthorizeAsync(StandardPermission.Security.ACCESS_ADMIN_PANEL))
+        if (!await _permissionService.AuthorizeAsync(StandardPermission.Security.ACCESS_ADMIN_PANEL)
+            && !await _permissionService.AuthorizeAsync(StandardPermission.Security.ACCESS_STORE_OWNER_PANEL))
             return Content(string.Empty);
 
         const int searchTermMinimumLength = 3;
@@ -48,9 +54,18 @@ public partial class SearchCompleteController : BaseAdminController
             vendorId = currentVendor.Id;
         }
 
+        var storeId = 0;
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        if (!await _customerService.IsAdminAsync(currentCustomer)
+            && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName))
+        {
+            storeId = currentCustomer.RegisteredInStoreId;
+        }
+
         //products
         const int productNumber = 15;
         var products = await _productService.SearchProductsAsync(0,
+            storeId: storeId,
             vendorId: vendorId,
             keywords: term,
             pageSize: productNumber,

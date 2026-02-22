@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Nop.Core;
+using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Orders;
 using Nop.Services.Catalog;
 using Nop.Services.Customers;
@@ -29,6 +31,7 @@ public partial class ReturnRequestModelFactory : IReturnRequestModelFactory
     protected readonly IOrderService _orderService;
     protected readonly IProductService _productService;
     protected readonly IReturnRequestService _returnRequestService;
+    protected readonly IWorkContext _workContext;
 
     #endregion
 
@@ -42,7 +45,8 @@ public partial class ReturnRequestModelFactory : IReturnRequestModelFactory
         ILocalizedModelFactory localizedModelFactory,
         IOrderService orderService,
         IProductService productService,
-        IReturnRequestService returnRequestService)
+        IReturnRequestService returnRequestService,
+        IWorkContext workContext)
     {
         _baseAdminModelFactory = baseAdminModelFactory;
         _dateTimeHelper = dateTimeHelper;
@@ -53,6 +57,7 @@ public partial class ReturnRequestModelFactory : IReturnRequestModelFactory
         _orderService = orderService;
         _productService = productService;
         _returnRequestService = returnRequestService;
+        _workContext = workContext;
     }
 
     #endregion
@@ -106,9 +111,14 @@ public partial class ReturnRequestModelFactory : IReturnRequestModelFactory
         var endDateValue = !searchModel.EndDate.HasValue ? null
             : (DateTime?)_dateTimeHelper.ConvertToUtcTime(searchModel.EndDate.Value, await _dateTimeHelper.GetCurrentTimeZoneAsync()).AddDays(1);
         var returnRequestStatus = searchModel.ReturnRequestStatusId == -1 ? null : (ReturnRequestStatus?)searchModel.ReturnRequestStatusId;
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        var storeId = isStoreOwner ? currentCustomer.RegisteredInStoreId : 0;
 
         //get return requests
-        var returnRequests = await _returnRequestService.SearchReturnRequestsAsync(customNumber: searchModel.CustomNumber,
+        var returnRequests = await _returnRequestService.SearchReturnRequestsAsync(storeId: storeId,
+            customNumber: searchModel.CustomNumber,
             rs: returnRequestStatus,
             createdFromUtc: startDateValue,
             createdToUtc: endDateValue,

@@ -969,6 +969,12 @@ public partial class OrderModelFactory : IOrderModelFactory
         //prepare available stores
         await _baseAdminModelFactory.PrepareStoresAsync(searchModel.AvailableStores);
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.StoreId = currentCustomer.RegisteredInStoreId;
+
         //prepare available vendors
         await _baseAdminModelFactory.PrepareVendorsAsync(searchModel.AvailableVendors);
 
@@ -988,7 +994,7 @@ public partial class OrderModelFactory : IOrderModelFactory
         //prepare grid
         searchModel.SetGridPageSize();
 
-        searchModel.HideStoresList = _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
+        searchModel.HideStoresList = isStoreOwner || _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
 
         return searchModel;
     }
@@ -1440,6 +1446,11 @@ public partial class OrderModelFactory : IOrderModelFactory
     {
         ArgumentNullException.ThrowIfNull(searchModel);
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        var managedStoreId = isStoreOwner ? currentCustomer.RegisteredInStoreId : 0;
+
         //get parameters to filter shipments
         var vendor = await _workContext.GetCurrentVendorAsync();
         var vendorId = vendor?.Id ?? 0;
@@ -1447,6 +1458,8 @@ public partial class OrderModelFactory : IOrderModelFactory
             : (DateTime?)_dateTimeHelper.ConvertToUtcTime(searchModel.StartDate.Value, await _dateTimeHelper.GetCurrentTimeZoneAsync());
         var endDateValue = !searchModel.EndDate.HasValue ? null
             : (DateTime?)_dateTimeHelper.ConvertToUtcTime(searchModel.EndDate.Value, await _dateTimeHelper.GetCurrentTimeZoneAsync()).AddDays(1);
+        var pageIndex = isStoreOwner ? 0 : searchModel.Page - 1;
+        var pageSize = isStoreOwner ? int.MaxValue : searchModel.PageSize;
 
         //get shipments
         var shipments = await _shipmentService.GetAllShipmentsAsync(vendorId,
@@ -1462,8 +1475,19 @@ public partial class OrderModelFactory : IOrderModelFactory
             0,
             startDateValue,
             endDateValue,
-            searchModel.Page - 1,
-            searchModel.PageSize);
+            pageIndex,
+            pageSize);
+
+        if (isStoreOwner)
+        {
+            var orderIds = shipments.Select(shipment => shipment.OrderId).Distinct().ToArray();
+            var allowedOrderIds = (await _orderService.GetOrdersByIdsAsync(orderIds))
+                .Where(order => order.StoreId == managedStoreId)
+                .Select(order => order.Id)
+                .ToHashSet();
+
+            shipments = shipments.Where(shipment => allowedOrderIds.Contains(shipment.OrderId)).ToList().ToPagedList(searchModel);
+        }
 
         //prepare list model
         var model = await new ShipmentListModel().PrepareToGridAsync(searchModel, shipments, () =>
