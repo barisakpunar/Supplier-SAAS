@@ -95,6 +95,8 @@ public class SchemaMigration : ForwardOnlyMigration
         Create.TableFor<CustomWishlist>();
         Create.TableFor<ShoppingCartItem>();
         Create.TableFor<Store>();
+        Create.TableFor<DealerInfo>();
+        Create.TableFor<DealerCustomerMapping>();
         Create.TableFor<StoreMapping>();
         Create.TableFor<LocaleStringResource>();
         Create.TableFor<LocalizedProperty>();
