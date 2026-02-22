@@ -1,0 +1,274 @@
+﻿using Nop.Core;
+using Nop.Core.Domain.Customers;
+using Nop.Data;
+
+namespace Nop.Services.Customers;
+
+/// <summary>
+/// Dealer service
+/// </summary>
+public partial class DealerService : IDealerService
+{
+    #region Fields
+
+    protected readonly IRepository<DealerInfo> _dealerInfoRepository;
+    protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
+
+    #endregion
+
+    #region Ctor
+
+    public DealerService(IRepository<DealerInfo> dealerInfoRepository,
+        IRepository<DealerCustomerMapping> dealerCustomerMappingRepository)
+    {
+        _dealerInfoRepository = dealerInfoRepository;
+        _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
+    }
+
+    #endregion
+
+    #region Methods
+
+    /// <summary>
+    /// Gets a dealer by identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer
+    /// </returns>
+    public virtual async Task<DealerInfo> GetDealerByIdAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return null;
+
+        return await _dealerInfoRepository.GetByIdAsync(dealerId, cache => default);
+    }
+
+    /// <summary>
+    /// Gets a dealer by customer identifier
+    /// </summary>
+    /// <param name="customerId">Customer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer
+    /// </returns>
+    public virtual async Task<DealerInfo> GetDealerByCustomerIdAsync(int customerId)
+    {
+        var dealerId = await GetDealerIdByCustomerIdAsync(customerId);
+        if (dealerId <= 0)
+            return null;
+
+        return await GetDealerByIdAsync(dealerId);
+    }
+
+    /// <summary>
+    /// Gets a dealer identifier by customer identifier
+    /// </summary>
+    /// <param name="customerId">Customer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer identifier
+    /// </returns>
+    public virtual async Task<int> GetDealerIdByCustomerIdAsync(int customerId)
+    {
+        if (customerId <= 0)
+            return 0;
+
+        var dealerId = await _dealerCustomerMappingRepository.Table
+            .Where(mapping => mapping.CustomerId == customerId)
+            .Select(mapping => mapping.DealerId)
+            .FirstOrDefaultAsync();
+
+        return dealerId;
+    }
+
+    /// <summary>
+    /// Search dealers
+    /// </summary>
+    /// <param name="name">Dealer name</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="active">Dealer active flag</param>
+    /// <param name="pageIndex">Page index</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealers
+    /// </returns>
+    public virtual async Task<IPagedList<DealerInfo>> SearchDealersAsync(string name = "", int storeId = 0,
+        bool? active = null, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        var query = _dealerInfoRepository.Table;
+
+        if (!string.IsNullOrWhiteSpace(name))
+            query = query.Where(dealer => dealer.Name.Contains(name));
+
+        if (storeId > 0)
+            query = query.Where(dealer => dealer.StoreId == storeId);
+
+        if (active.HasValue)
+            query = query.Where(dealer => dealer.Active == active.Value);
+
+        query = query.OrderBy(dealer => dealer.Name).ThenBy(dealer => dealer.Id);
+
+        return await query.ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    /// <summary>
+    /// Gets dealer-customer mappings
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains mappings
+    /// </returns>
+    public virtual async Task<IList<DealerCustomerMapping>> GetDealerCustomerMappingsAsync(int dealerId = 0, int customerId = 0)
+    {
+        var query = _dealerCustomerMappingRepository.Table;
+
+        if (dealerId > 0)
+            query = query.Where(mapping => mapping.DealerId == dealerId);
+
+        if (customerId > 0)
+            query = query.Where(mapping => mapping.CustomerId == customerId);
+
+        query = query.OrderBy(mapping => mapping.DealerId).ThenBy(mapping => mapping.CustomerId);
+
+        return await query.ToListAsync();
+    }
+
+    /// <summary>
+    /// Gets customer identifiers by dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains customer identifiers
+    /// </returns>
+    public virtual async Task<IList<int>> GetCustomerIdsByDealerIdAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return new List<int>();
+
+        return await _dealerCustomerMappingRepository.Table
+            .Where(mapping => mapping.DealerId == dealerId)
+            .Select(mapping => mapping.CustomerId)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Indicates whether a customer is mapped to the dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains a value indicating whether customer is mapped
+    /// </returns>
+    public virtual async Task<bool> IsCustomerMappedToDealerAsync(int dealerId, int customerId)
+    {
+        if (dealerId <= 0 || customerId <= 0)
+            return false;
+
+        return await _dealerCustomerMappingRepository.Table
+            .AnyAsync(mapping => mapping.DealerId == dealerId && mapping.CustomerId == customerId);
+    }
+
+    /// <summary>
+    /// Maps a customer to dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task MapCustomerToDealerAsync(int dealerId, int customerId)
+    {
+        if (dealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerId));
+
+        if (customerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(customerId));
+
+        var dealer = await GetDealerByIdAsync(dealerId);
+        if (dealer == null)
+            throw new ArgumentException("Dealer not found.", nameof(dealerId));
+
+        var mappings = await _dealerCustomerMappingRepository.Table
+            .Where(mapping => mapping.CustomerId == customerId)
+            .ToListAsync();
+
+        if (mappings.Any(mapping => mapping.DealerId == dealerId))
+            return;
+
+        if (mappings.Any())
+            await _dealerCustomerMappingRepository.DeleteAsync(mappings);
+
+        await _dealerCustomerMappingRepository.InsertAsync(new DealerCustomerMapping
+        {
+            DealerId = dealerId,
+            CustomerId = customerId
+        });
+    }
+
+    /// <summary>
+    /// Unmaps customer from dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UnmapCustomerFromDealerAsync(int dealerId, int customerId)
+    {
+        if (dealerId <= 0 || customerId <= 0)
+            return;
+
+        var mapping = await _dealerCustomerMappingRepository.Table
+            .SingleOrDefaultAsync(item => item.DealerId == dealerId && item.CustomerId == customerId);
+
+        if (mapping != null)
+            await _dealerCustomerMappingRepository.DeleteAsync(mapping);
+    }
+
+    /// <summary>
+    /// Inserts a dealer
+    /// </summary>
+    /// <param name="dealer">Dealer</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerAsync(DealerInfo dealer)
+    {
+        ArgumentNullException.ThrowIfNull(dealer);
+
+        if (dealer.CreatedOnUtc == default)
+            dealer.CreatedOnUtc = DateTime.UtcNow;
+
+        dealer.UpdatedOnUtc = null;
+        await _dealerInfoRepository.InsertAsync(dealer);
+    }
+
+    /// <summary>
+    /// Updates a dealer
+    /// </summary>
+    /// <param name="dealer">Dealer</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpdateDealerAsync(DealerInfo dealer)
+    {
+        ArgumentNullException.ThrowIfNull(dealer);
+
+        dealer.UpdatedOnUtc = DateTime.UtcNow;
+        await _dealerInfoRepository.UpdateAsync(dealer);
+    }
+
+    /// <summary>
+    /// Deletes a dealer and related mappings
+    /// </summary>
+    /// <param name="dealer">Dealer</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task DeleteDealerAsync(DealerInfo dealer)
+    {
+        ArgumentNullException.ThrowIfNull(dealer);
+
+        await _dealerCustomerMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
+        await _dealerInfoRepository.DeleteAsync(dealer);
+    }
+
+    #endregion
+}
