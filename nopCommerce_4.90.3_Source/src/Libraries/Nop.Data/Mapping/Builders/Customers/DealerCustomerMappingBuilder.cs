@@ -5,9 +5,9 @@ using Nop.Data.Extensions;
 namespace Nop.Data.Mapping.Builders.Customers;
 
 /// <summary>
-/// Represents a dealer payment method mapping entity builder
+/// Represents a dealer-customer mapping entity builder
 /// </summary>
-public partial class DealerPaymentMethodMappingBuilder : NopEntityBuilder<DealerPaymentMethodMapping>
+public partial class DealerCustomerMappingBuilder : NopEntityBuilder<DealerCustomerMapping>
 {
     #region Methods
 
@@ -18,10 +18,10 @@ public partial class DealerPaymentMethodMappingBuilder : NopEntityBuilder<Dealer
     public override void MapEntity(CreateTableExpressionBuilder table)
     {
         table
-            .WithColumn(NameCompatibilityManager.GetColumnName(typeof(DealerPaymentMethodMapping), nameof(DealerPaymentMethodMapping.DealerId)))
+            .WithColumn(NameCompatibilityManager.GetColumnName(typeof(DealerCustomerMapping), nameof(DealerCustomerMapping.DealerId)))
             .AsInt32().ForeignKey<DealerInfo>().PrimaryKey()
-            .WithColumn(NameCompatibilityManager.GetColumnName(typeof(DealerPaymentMethodMapping), nameof(DealerPaymentMethodMapping.PaymentMethodSystemName)))
-            .AsString(400).NotNullable().PrimaryKey();
+            .WithColumn(NameCompatibilityManager.GetColumnName(typeof(DealerCustomerMapping), nameof(DealerCustomerMapping.CustomerId)))
+            .AsInt32().ForeignKey<Customer>().PrimaryKey();
     }
 
     #endregion

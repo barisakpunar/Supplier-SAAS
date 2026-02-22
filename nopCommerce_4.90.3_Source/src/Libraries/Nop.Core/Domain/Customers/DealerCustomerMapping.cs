@@ -1,9 +1,9 @@
 ﻿namespace Nop.Core.Domain.Customers;
 
 /// <summary>
-/// Represents allowed payment methods for a dealer customer
+/// Represents a dealer-customer mapping class
 /// </summary>
-public partial class DealerPaymentMethodMapping : BaseEntity
+public partial class DealerCustomerMapping : BaseEntity
 {
     /// <summary>
     /// Gets or sets the dealer identifier
@@ -11,7 +11,7 @@ public partial class DealerPaymentMethodMapping : BaseEntity
     public int DealerId { get; set; }
 
     /// <summary>
-    /// Gets or sets the payment method system name
+    /// Gets or sets the customer identifier
     /// </summary>
-    public string PaymentMethodSystemName { get; set; }
+    public int CustomerId { get; set; }
 }

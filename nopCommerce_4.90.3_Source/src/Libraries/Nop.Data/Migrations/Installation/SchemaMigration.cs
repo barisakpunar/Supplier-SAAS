@@ -61,7 +61,6 @@ public class SchemaMigration : ForwardOnlyMigration
         Create.TableFor<CustomerAddressMapping>();
         Create.TableFor<CustomerRole>();
         Create.TableFor<CustomerCustomerRoleMapping>();
-        Create.TableFor<DealerPaymentMethodMapping>();
         Create.TableFor<ExternalAuthenticationRecord>();
         Create.TableFor<CheckoutAttribute>();
         Create.TableFor<CheckoutAttributeValue>();
@@ -96,6 +95,9 @@ public class SchemaMigration : ForwardOnlyMigration
         Create.TableFor<CustomWishlist>();
         Create.TableFor<ShoppingCartItem>();
         Create.TableFor<Store>();
+        Create.TableFor<DealerInfo>();
+        Create.TableFor<DealerCustomerMapping>();
+        Create.TableFor<DealerPaymentMethodMapping>();
         Create.TableFor<StoreMapping>();
         Create.TableFor<LocaleStringResource>();
         Create.TableFor<LocalizedProperty>();
