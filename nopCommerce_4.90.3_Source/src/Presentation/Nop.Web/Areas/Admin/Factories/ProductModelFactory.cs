@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
+using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Directory;
 using Nop.Core.Domain.Discounts;
 using Nop.Core.Domain.Orders;
@@ -718,6 +719,12 @@ public partial class ProductModelFactory : IProductModelFactory
         //prepare available stores
         await _baseAdminModelFactory.PrepareStoresAsync(searchModel.AvailableStores);
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.SearchStoreId = currentCustomer.RegisteredInStoreId;
+
         //prepare available vendors
         await _baseAdminModelFactory.PrepareVendorsAsync(searchModel.AvailableVendors);
 
@@ -727,7 +734,7 @@ public partial class ProductModelFactory : IProductModelFactory
         //prepare available warehouses
         await _baseAdminModelFactory.PrepareWarehousesAsync(searchModel.AvailableWarehouses);
 
-        searchModel.HideStoresList = _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
+        searchModel.HideStoresList = isStoreOwner || _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
 
         //prepare "published" filter (0 - all; 1 - published only; 2 - unpublished only)
         searchModel.AvailablePublishedOptions.Add(new SelectListItem
@@ -764,6 +771,10 @@ public partial class ProductModelFactory : IProductModelFactory
     {
         ArgumentNullException.ThrowIfNull(searchModel);
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+
         //get parameters to filter comments
         var overridePublished = searchModel.SearchPublishedId == 0 ? null : (bool?)(searchModel.SearchPublishedId == 1);
         var currentVendor = await _workContext.GetCurrentVendorAsync();
@@ -776,6 +787,9 @@ public partial class ProductModelFactory : IProductModelFactory
             categoryIds.AddRange(childCategoryIds);
         }
 
+        var pageIndex = isStoreOwner ? 0 : searchModel.Page - 1;
+        var pageSize = isStoreOwner ? int.MaxValue : searchModel.PageSize;
+
         //get products
         var products = await _productService.SearchProductsAsync(showHidden: true,
             categoryIds: categoryIds,
@@ -785,8 +799,11 @@ public partial class ProductModelFactory : IProductModelFactory
             warehouseId: searchModel.SearchWarehouseId,
             productType: searchModel.SearchProductTypeId > 0 ? (ProductType?)searchModel.SearchProductTypeId : null,
             keywords: searchModel.SearchProductName,
-            pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize,
+            pageIndex: pageIndex, pageSize: pageSize,
             overridePublished: overridePublished);
+
+        if (isStoreOwner)
+            products = products.Where(product => product.LimitedToStores).ToList().ToPagedList(searchModel);
 
         var primaryStoreCurrency = await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId);
 

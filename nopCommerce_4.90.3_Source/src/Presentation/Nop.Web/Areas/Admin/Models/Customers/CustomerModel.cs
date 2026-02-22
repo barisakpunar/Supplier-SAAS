@@ -24,6 +24,7 @@ public partial record CustomerModel : BaseNopEntityModel, IAclSupportedModel
 
         AvailableCountries = new List<SelectListItem>();
         AvailableStates = new List<SelectListItem>();
+        AvailableStores = new List<SelectListItem>();
         AvailableVendors = new List<SelectListItem>();
         CustomerAttributes = new List<CustomerAttributeModel>();
         AddRewardPoints = new AddRewardPointsToCustomerModel();
@@ -143,6 +144,13 @@ public partial record CustomerModel : BaseNopEntityModel, IAclSupportedModel
 
     [NopResourceDisplayName("Admin.Customers.Customers.Fields.RegisteredInStore")]
     public string RegisteredInStore { get; set; }
+
+    [NopResourceDisplayName("Admin.Customers.Customers.Fields.RegisteredInStore")]
+    public int RegisteredInStoreId { get; set; }
+
+    public IList<SelectListItem> AvailableStores { get; set; }
+
+    public bool HideRegisteredInStoreList { get; set; }
 
     [NopResourceDisplayName("Admin.Customers.Customers.Fields.AdminComment")]
     public string AdminComment { get; set; }

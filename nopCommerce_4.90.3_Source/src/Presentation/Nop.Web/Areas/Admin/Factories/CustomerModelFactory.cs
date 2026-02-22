@@ -29,6 +29,7 @@ using Nop.Web.Areas.Admin.Models.Common;
 using Nop.Web.Areas.Admin.Models.Customers;
 using Nop.Web.Areas.Admin.Models.ShoppingCart;
 using Nop.Web.Framework.Models.Extensions;
+using Nop.Web.Framework.Extensions;
 
 namespace Nop.Web.Areas.Admin.Factories;
 
@@ -547,6 +548,14 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     {
         ArgumentNullException.ThrowIfNull(searchModel);
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var storeId = 0;
+        if (!await _customerService.IsAdminAsync(currentCustomer)
+            && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName))
+        {
+            storeId = currentCustomer.RegisteredInStoreId;
+        }
+
         //get parameters to filter customers
         _ = int.TryParse(searchModel.SearchDayOfBirth, out var dayOfBirth);
         _ = int.TryParse(searchModel.SearchMonthOfBirth, out var monthOfBirth);
@@ -593,7 +602,8 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             zipPostalCode: searchModel.SearchZipPostalCode,
             ipAddress: searchModel.SearchIpAddress,
             isActive: searchModel.SearchIsActive,
-            pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
+            pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize,
+            storeId: storeId);
 
         //prepare list model
         var model = await new CustomerListModel().PrepareToGridAsync(searchModel, customers, () =>
@@ -692,6 +702,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
                 model.LastIpAddress = customer.LastIpAddress;
                 model.LastVisitedPage = await _genericAttributeService.GetAttributeAsync<string>(customer, NopCustomerDefaults.LastVisitedPageAttribute);
                 model.SelectedCustomerRoleIds = (await _customerService.GetCustomerRoleIdsAsync(customer)).ToList();
+                model.RegisteredInStoreId = customer.RegisteredInStoreId;
                 model.RegisteredInStore = (await _storeService.GetAllStoresAsync())
                     .FirstOrDefault(store => store.Id == customer.RegisteredInStoreId)?.Name ?? string.Empty;
                 model.DisplayRegisteredInStore = model.Id > 0 && !string.IsNullOrEmpty(model.RegisteredInStore) &&
@@ -762,6 +773,33 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         //prepare available vendors
         await _baseAdminModelFactory.PrepareVendorsAsync(model.AvailableVendors,
             defaultItemText: await _localizationService.GetResourceAsync("Admin.Customers.Customers.Fields.Vendor.None"));
+
+        //prepare available stores for customer create/edit
+        await _baseAdminModelFactory.PrepareStoresAsync(model.AvailableStores, withSpecialDefaultItem: false);
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+        {
+            model.RegisteredInStoreId = currentCustomer.RegisteredInStoreId;
+            model.AvailableStores = model.AvailableStores
+                .Where(item => item.Value == currentCustomer.RegisteredInStoreId.ToString())
+                .ToList();
+        }
+
+        if (model.RegisteredInStoreId <= 0)
+        {
+            var currentStore = await _storeContext.GetCurrentStoreAsync();
+            model.RegisteredInStoreId = currentStore?.Id ?? 0;
+
+            if (model.RegisteredInStoreId <= 0
+                && model.AvailableStores.Any()
+                && int.TryParse(model.AvailableStores.First().Value, out var firstStoreId))
+                model.RegisteredInStoreId = firstStoreId;
+        }
+
+        model.HideRegisteredInStoreList = model.AvailableStores.SelectionIsNotPossible();
 
         //prepare model customer attributes
         await PrepareCustomerAttributeModelsAsync(model.CustomerAttributes, customer);

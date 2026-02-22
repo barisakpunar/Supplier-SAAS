@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Nop.Core;
+using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Directory;
 using Nop.Core.Domain.Discounts;
 using Nop.Services.Catalog;
+using Nop.Services.Customers;
 using Nop.Services.Directory;
 using Nop.Services.Discounts;
 using Nop.Services.Localization;
@@ -26,6 +29,7 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
     protected readonly CurrencySettings _currencySettings;
     protected readonly ICurrencyService _currencyService;
     protected readonly IBaseAdminModelFactory _baseAdminModelFactory;
+    protected readonly ICustomerService _customerService;
     protected readonly IManufacturerService _manufacturerService;
     protected readonly IDiscountService _discountService;
     protected readonly IDiscountSupportedModelFactory _discountSupportedModelFactory;
@@ -34,6 +38,7 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
     protected readonly IProductService _productService;
     protected readonly IStoreMappingSupportedModelFactory _storeMappingSupportedModelFactory;
     protected readonly IUrlRecordService _urlRecordService;
+    protected readonly IWorkContext _workContext;
 
     #endregion
 
@@ -43,6 +48,7 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
         CurrencySettings currencySettings,
         ICurrencyService currencyService,
         IBaseAdminModelFactory baseAdminModelFactory,
+        ICustomerService customerService,
         IManufacturerService manufacturerService,
         IDiscountService discountService,
         IDiscountSupportedModelFactory discountSupportedModelFactory,
@@ -50,12 +56,14 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
         ILocalizedModelFactory localizedModelFactory,
         IProductService productService,
         IStoreMappingSupportedModelFactory storeMappingSupportedModelFactory,
-        IUrlRecordService urlRecordService)
+        IUrlRecordService urlRecordService,
+        IWorkContext workContext)
     {
         _catalogSettings = catalogSettings;
         _currencySettings = currencySettings;
         _currencyService = currencyService;
         _baseAdminModelFactory = baseAdminModelFactory;
+        _customerService = customerService;
         _manufacturerService = manufacturerService;
         _discountService = discountService;
         _discountSupportedModelFactory = discountSupportedModelFactory;
@@ -64,6 +72,7 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
         _productService = productService;
         _storeMappingSupportedModelFactory = storeMappingSupportedModelFactory;
         _urlRecordService = urlRecordService;
+        _workContext = workContext;
     }
 
     #endregion
@@ -110,7 +119,13 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
         //prepare available stores
         await _baseAdminModelFactory.PrepareStoresAsync(searchModel.AvailableStores);
 
-        searchModel.HideStoresList = _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.SearchStoreId = currentCustomer.RegisteredInStoreId;
+
+        searchModel.HideStoresList = isStoreOwner || _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
 
         //prepare "published" filter (0 - all; 1 - published only; 2 - unpublished only)
         searchModel.AvailablePublishedOptions.Add(new SelectListItem
@@ -147,12 +162,22 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
     {
         ArgumentNullException.ThrowIfNull(searchModel);
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+
+        var pageIndex = isStoreOwner ? 0 : searchModel.Page - 1;
+        var pageSize = isStoreOwner ? int.MaxValue : searchModel.PageSize;
+
         //get manufacturers
         var manufacturers = await _manufacturerService.GetAllManufacturersAsync(showHidden: true,
             manufacturerName: searchModel.SearchManufacturerName,
             storeId: searchModel.SearchStoreId,
-            pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize,
+            pageIndex: pageIndex, pageSize: pageSize,
             overridePublished: searchModel.SearchPublishedId == 0 ? null : (bool?)(searchModel.SearchPublishedId == 1));
+
+        if (isStoreOwner)
+            manufacturers = manufacturers.Where(manufacturer => manufacturer.LimitedToStores).ToList().ToPagedList(searchModel);
 
         //prepare grid model
         var model = await new ManufacturerListModel().PrepareToGridAsync(searchModel, manufacturers, () =>

@@ -13,14 +13,15 @@ public partial class DefaultPermissionConfigManager : IPermissionConfigManager
         #region Security
         
         new ("Security. Enable Multi-factor authentication", StandardPermission.Security.ENABLE_MULTI_FACTOR_AUTHENTICATION, nameof(StandardPermission.Security), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.RegisteredRoleName),
-        new ("Access admin area", StandardPermission.Security.ACCESS_ADMIN_PANEL, nameof(StandardPermission.Security), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
+        new ("Access admin area", StandardPermission.Security.ACCESS_ADMIN_PANEL, nameof(StandardPermission.Security), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Access store owner panel", StandardPermission.Security.ACCESS_STORE_OWNER_PANEL, nameof(StandardPermission.Security), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
 
         #endregion
 
         #region Customers
         
-        new ("Admin area. Customers. View", StandardPermission.Customers.CUSTOMERS_VIEW, nameof(StandardPermission.Customers), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. Customers. Create, edit, delete", StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE, nameof(StandardPermission.Customers), NopCustomerDefaults.AdministratorsRoleName),
+        new ("Admin area. Customers. View", StandardPermission.Customers.CUSTOMERS_VIEW, nameof(StandardPermission.Customers), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Customers. Create, edit, delete", StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE, nameof(StandardPermission.Customers), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Customers. Import and export", StandardPermission.Customers.CUSTOMERS_IMPORT_EXPORT, nameof(StandardPermission.Customers), NopCustomerDefaults.AdministratorsRoleName),
         new ("Admin area. Customers. Allow impersonation", StandardPermission.Customers.CUSTOMERS_IMPERSONATION, nameof(StandardPermission.Customers), NopCustomerDefaults.AdministratorsRoleName),
         new ("Admin area. Customer roles. View", StandardPermission.Customers.CUSTOMER_ROLES_VIEW, nameof(StandardPermission.Customers), NopCustomerDefaults.AdministratorsRoleName),
@@ -37,13 +38,13 @@ public partial class DefaultPermissionConfigManager : IPermissionConfigManager
         #region Orders
         
         new ("Admin area. Current Carts. Manage", StandardPermission.Orders.CURRENT_CARTS_MANAGE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. Orders. View", StandardPermission.Orders.ORDERS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
-        new ("Admin area. Orders. Create, edit, delete", StandardPermission.Orders.ORDERS_CREATE_EDIT_DELETE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
+        new ("Admin area. Orders. View", StandardPermission.Orders.ORDERS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Orders. Create, edit, delete", StandardPermission.Orders.ORDERS_CREATE_EDIT_DELETE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Orders. Import and export", StandardPermission.Orders.ORDERS_IMPORT_EXPORT, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
-        new ("Admin area. Shipments. View", StandardPermission.Orders.SHIPMENTS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
-        new ("Admin area. Shipments. Create, edit, delete", StandardPermission.Orders.SHIPMENTS_CREATE_EDIT_DELETE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
-        new ("Admin area. Return requests. View", StandardPermission.Orders.RETURN_REQUESTS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. Return requests. Create, edit, delete", StandardPermission.Orders.RETURN_REQUESTS_CREATE_EDIT_DELETE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName),
+        new ("Admin area. Shipments. View", StandardPermission.Orders.SHIPMENTS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Shipments. Create, edit, delete", StandardPermission.Orders.SHIPMENTS_CREATE_EDIT_DELETE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Return requests. View", StandardPermission.Orders.RETURN_REQUESTS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Return requests. Create, edit, delete", StandardPermission.Orders.RETURN_REQUESTS_CREATE_EDIT_DELETE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Recurring payments. View", StandardPermission.Orders.RECURRING_PAYMENTS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName),
         new ("Admin area. Recurring payments. Create, edit, delete", StandardPermission.Orders.RECURRING_PAYMENTS_CREATE_EDIT_DELETE, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName),
         new ("Admin area. Gift cards. View", StandardPermission.Orders.GIFT_CARDS_VIEW, nameof(StandardPermission.Orders), NopCustomerDefaults.AdministratorsRoleName),
@@ -66,17 +67,17 @@ public partial class DefaultPermissionConfigManager : IPermissionConfigManager
 
         #region Catalog
         
-        new ("Admin area. Products. View", StandardPermission.Catalog.PRODUCTS_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
-        new ("Admin area. Products. Create, edit, delete", StandardPermission.Catalog.PRODUCTS_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
+        new ("Admin area. Products. View", StandardPermission.Catalog.PRODUCTS_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Products. Create, edit, delete", StandardPermission.Catalog.PRODUCTS_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Products. Import and export", StandardPermission.Catalog.PRODUCTS_IMPORT_EXPORT, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
-        new ("Admin area. Categories. View", StandardPermission.Catalog.CATEGORIES_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. Categories. Create, edit, delete", StandardPermission.Catalog.CATEGORIES_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName),
+        new ("Admin area. Categories. View", StandardPermission.Catalog.CATEGORIES_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Categories. Create, edit, delete", StandardPermission.Catalog.CATEGORIES_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Categories. Import and export", StandardPermission.Catalog.CATEGORIES_IMPORT_EXPORT, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. Manufacturer. View", StandardPermission.Catalog.MANUFACTURER_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. Manufacturer. Create, edit, delete", StandardPermission.Catalog.MANUFACTURER_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName),
+        new ("Admin area. Manufacturer. View", StandardPermission.Catalog.MANUFACTURER_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Manufacturer. Create, edit, delete", StandardPermission.Catalog.MANUFACTURER_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Manufacturer. Import and export", StandardPermission.Catalog.MANUFACTURER_IMPORT_EXPORT, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. Product reviews. View", StandardPermission.Catalog.PRODUCT_REVIEWS_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
-        new ("Admin area. Product reviews. Create, edit, delete", StandardPermission.Catalog.PRODUCT_REVIEWS_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
+        new ("Admin area. Product reviews. View", StandardPermission.Catalog.PRODUCT_REVIEWS_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
+        new ("Admin area. Product reviews. Create, edit, delete", StandardPermission.Catalog.PRODUCT_REVIEWS_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Product tags. View", StandardPermission.Catalog.PRODUCT_TAGS_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
         new ("Admin area. Product tags. Create, edit, delete", StandardPermission.Catalog.PRODUCT_TAGS_CREATE_EDIT_DELETE, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
         new ("Admin area. Filter level values. View", StandardPermission.Catalog.FILTER_LEVEL_VALUE_VIEW, nameof(StandardPermission.Catalog), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.VendorsRoleName),
@@ -156,7 +157,7 @@ public partial class DefaultPermissionConfigManager : IPermissionConfigManager
         new ("Admin area. System Log. Manage", StandardPermission.System.MANAGE_SYSTEM_LOG, nameof(StandardPermission.System), NopCustomerDefaults.AdministratorsRoleName),
         new ("Admin area. Message Queue. Manage", StandardPermission.System.MANAGE_MESSAGE_QUEUE, nameof(StandardPermission.System), NopCustomerDefaults.AdministratorsRoleName),
         new ("Admin area. Maintenance. Manage", StandardPermission.System.MANAGE_MAINTENANCE, nameof(StandardPermission.System), NopCustomerDefaults.AdministratorsRoleName),
-        new ("Admin area. HTML Editor. Manage pictures", StandardPermission.System.HTML_EDITOR_MANAGE_PICTURES, nameof(StandardPermission.System), NopCustomerDefaults.AdministratorsRoleName),
+        new ("Admin area. HTML Editor. Manage pictures", StandardPermission.System.HTML_EDITOR_MANAGE_PICTURES, nameof(StandardPermission.System), NopCustomerDefaults.AdministratorsRoleName, NopCustomerDefaults.StoreOwnersRoleName),
         new ("Admin area. Schedule Tasks. Manage", StandardPermission.System.MANAGE_SCHEDULE_TASKS, nameof(StandardPermission.System), NopCustomerDefaults.AdministratorsRoleName),
         new ("Admin area. App Settings. Manage", StandardPermission.System.MANAGE_APP_SETTINGS, nameof(StandardPermission.System), NopCustomerDefaults.AdministratorsRoleName),
 

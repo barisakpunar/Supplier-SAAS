@@ -1,0 +1,28 @@
+﻿@{
+    ViewBag.PageTitle = "Store Owner Panel";
+    NopHtml.SetActiveMenuItemSystemName("StoreOwnerPanel");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">Store Owner Panel</h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">Account</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>User:</strong> @ViewBag.StoreOwnerEmail</p>
+                        <p><strong>Store:</strong> @ViewBag.StoreName</p>
+                        <p><strong>Store Id:</strong> @ViewBag.StoreId</p>
+                        <p class="mb-0">Bu panel supplier/store-owner ekranlari icin ayrildi. Yeni moduller bu alana eklenecek.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

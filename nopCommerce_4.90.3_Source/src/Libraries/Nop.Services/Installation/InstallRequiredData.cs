@@ -2179,13 +2179,21 @@ public partial class InstallationService
             IsSystemRole = true,
             SystemName = NopCustomerDefaults.VendorsRoleName
         };
+        var crStoreOwners = new CustomerRole
+        {
+            Name = "Store Owners",
+            Active = true,
+            IsSystemRole = true,
+            SystemName = NopCustomerDefaults.StoreOwnersRoleName
+        };
         var customerRoles = new List<CustomerRole>
             {
                 crAdministrators,
                 crForumModerators,
                 crRegistered,
                 crGuests,
-                crVendors
+                crVendors,
+                crStoreOwners
             };
 
         await _dataProvider.BulkInsertEntitiesAsync(customerRoles);
