@@ -61,6 +61,7 @@ public class SchemaMigration : ForwardOnlyMigration
         Create.TableFor<CustomerAddressMapping>();
         Create.TableFor<CustomerRole>();
         Create.TableFor<CustomerCustomerRoleMapping>();
+        Create.TableFor<DealerPaymentMethodMapping>();
         Create.TableFor<ExternalAuthenticationRecord>();
         Create.TableFor<CheckoutAttribute>();
         Create.TableFor<CheckoutAttributeValue>();
