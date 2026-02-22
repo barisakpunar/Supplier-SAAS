@@ -1,0 +1,82 @@
+﻿@model DealerModel
+
+<div asp-validation-summary="All"></div>
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            @if (Model.IsStoreOwner)
+            {
+                <div class="alert alert-info">
+                    You are editing your assigned dealer scope. Store is fixed to your current store.
+                </div>
+            }
+
+            <div class="card card-default">
+                <div class="card-header">
+                    <h3 class="card-title">Dealer information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label asp-for="Name" class="col-form-label">Name</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label asp-for="StoreId" class="col-form-label">Store</label>
+                        </div>
+                        <div class="col-md-9">
+                            @if (Model.IsStoreOwner)
+                            {
+                                <input type="text" class="form-control" value="@Model.StoreName" disabled />
+                                <input asp-for="StoreId" type="hidden" />
+                            }
+                            else
+                            {
+                                <select asp-for="StoreId" asp-items="Model.AvailableStores" class="form-control"></select>
+                            }
+                            <span asp-validation-for="StoreId"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label asp-for="Active" class="col-form-label">Active</label>
+                        </div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="Active" />
+                            <span asp-validation-for="Active"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-header">
+                    <h3 class="card-title">Dealer customers</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Only customers of selected store are listed.</p>
+                    <select asp-for="SelectedCustomerIds" asp-items="Model.AvailableCustomers" multiple="multiple" class="form-control" style="min-height: 280px;"></select>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-header">
+                    <h3 class="card-title">Allowed payment methods</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Leave empty to allow all active payment methods for this dealer.</p>
+                    <select asp-for="SelectedPaymentMethodSystemNames" asp-items="Model.AvailablePaymentMethods" multiple="multiple" class="form-control" style="min-height: 220px;"></select>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
