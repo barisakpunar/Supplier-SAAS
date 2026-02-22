@@ -13,16 +13,19 @@ public partial class DealerService : IDealerService
 
     protected readonly IRepository<DealerInfo> _dealerInfoRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
+    protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
 
     #endregion
 
     #region Ctor
 
     public DealerService(IRepository<DealerInfo> dealerInfoRepository,
-        IRepository<DealerCustomerMapping> dealerCustomerMappingRepository)
+        IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
+        IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
     {
         _dealerInfoRepository = dealerInfoRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
+        _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
     }
 
     #endregion
@@ -158,6 +161,101 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Gets dealer-payment method mappings
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains mappings
+    /// </returns>
+    public virtual async Task<IList<DealerPaymentMethodMapping>> GetDealerPaymentMethodMappingsAsync(int dealerId = 0)
+    {
+        var query = _dealerPaymentMethodMappingRepository.Table;
+
+        if (dealerId > 0)
+            query = query.Where(mapping => mapping.DealerId == dealerId);
+
+        query = query.OrderBy(mapping => mapping.DealerId).ThenBy(mapping => mapping.PaymentMethodSystemName);
+
+        return await query.ToListAsync();
+    }
+
+    /// <summary>
+    /// Gets allowed payment method system names by dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains payment method system names
+    /// </returns>
+    public virtual async Task<IList<string>> GetAllowedPaymentMethodSystemNamesAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return new List<string>();
+
+        return await _dealerPaymentMethodMappingRepository.Table
+            .Where(mapping => mapping.DealerId == dealerId)
+            .Select(mapping => mapping.PaymentMethodSystemName)
+            .OrderBy(systemName => systemName)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Indicates whether a payment method is allowed for the dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="paymentMethodSystemName">Payment method system name</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains a value indicating whether payment method is allowed
+    /// </returns>
+    public virtual async Task<bool> IsPaymentMethodAllowedForDealerAsync(int dealerId, string paymentMethodSystemName)
+    {
+        if (dealerId <= 0 || string.IsNullOrWhiteSpace(paymentMethodSystemName))
+            return false;
+
+        var normalizedSystemName = paymentMethodSystemName.Trim();
+        var allowedPaymentMethodSystemNames = await GetAllowedPaymentMethodSystemNamesAsync(dealerId);
+        return allowedPaymentMethodSystemNames
+            .Any(systemName => systemName.Equals(normalizedSystemName, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    /// <summary>
+    /// Replaces allowed payment method system names for the dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="paymentMethodSystemNames">Payment method system names</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task SetAllowedPaymentMethodSystemNamesAsync(int dealerId, IList<string> paymentMethodSystemNames)
+    {
+        if (dealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerId));
+
+        var dealer = await GetDealerByIdAsync(dealerId);
+        if (dealer == null)
+            throw new ArgumentException("Dealer not found.", nameof(dealerId));
+
+        var normalizedSystemNames = (paymentMethodSystemNames ?? [])
+            .Where(systemName => !string.IsNullOrWhiteSpace(systemName))
+            .Select(systemName => systemName.Trim())
+            .Distinct(StringComparer.InvariantCultureIgnoreCase)
+            .ToList();
+
+        await _dealerPaymentMethodMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealerId);
+
+        if (!normalizedSystemNames.Any())
+            return;
+
+        var mappings = normalizedSystemNames.Select(systemName => new DealerPaymentMethodMapping
+        {
+            DealerId = dealerId,
+            PaymentMethodSystemName = systemName
+        }).ToList();
+
+        await _dealerPaymentMethodMappingRepository.InsertAsync(mappings);
+    }
+
+    /// <summary>
     /// Indicates whether a customer is mapped to the dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -266,6 +364,7 @@ public partial class DealerService : IDealerService
     {
         ArgumentNullException.ThrowIfNull(dealer);
 
+        await _dealerPaymentMethodMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
         await _dealerCustomerMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
         await _dealerInfoRepository.DeleteAsync(dealer);
     }

@@ -75,6 +75,45 @@ public partial interface IDealerService
     Task<IList<int>> GetCustomerIdsByDealerIdAsync(int dealerId);
 
     /// <summary>
+    /// Gets dealer-payment method mappings
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains mappings
+    /// </returns>
+    Task<IList<DealerPaymentMethodMapping>> GetDealerPaymentMethodMappingsAsync(int dealerId = 0);
+
+    /// <summary>
+    /// Gets allowed payment method system names by dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains payment method system names
+    /// </returns>
+    Task<IList<string>> GetAllowedPaymentMethodSystemNamesAsync(int dealerId);
+
+    /// <summary>
+    /// Indicates whether a payment method is allowed for the dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="paymentMethodSystemName">Payment method system name</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains a value indicating whether payment method is allowed
+    /// </returns>
+    Task<bool> IsPaymentMethodAllowedForDealerAsync(int dealerId, string paymentMethodSystemName);
+
+    /// <summary>
+    /// Replaces allowed payment method system names for the dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="paymentMethodSystemNames">Payment method system names</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task SetAllowedPaymentMethodSystemNamesAsync(int dealerId, IList<string> paymentMethodSystemNames);
+
+    /// <summary>
     /// Indicates whether a customer is mapped to the dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
