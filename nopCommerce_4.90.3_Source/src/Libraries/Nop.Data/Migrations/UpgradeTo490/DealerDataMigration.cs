@@ -51,6 +51,29 @@ public class DealerDataMigration : Migration
             foreach (var customerId in storeOwnerCustomerIds)
                 EnsureDealerForCustomer(customerId, fallbackStoreId, dealerByCustomerId);
         }
+
+        if (!Schema.Table(nameof(DealerPaymentMethodMapping)).Exists()
+            || !Schema.Table(nameof(DealerPaymentMethodMapping)).Column("CustomerId").Exists()
+            || !Schema.Table(nameof(DealerPaymentMethodMapping)).Column(nameof(DealerPaymentMethodMapping.DealerId)).Exists())
+            return;
+
+        var paymentCustomerIds = _dataProvider.GetTable<LegacyDealerPaymentMethodMapping>()
+            .Where(mapping => mapping.CustomerId > 0)
+            .Select(mapping => mapping.CustomerId)
+            .Distinct()
+            .ToList();
+
+        foreach (var customerId in paymentCustomerIds)
+        {
+            var dealerId = EnsureDealerForCustomer(customerId, fallbackStoreId, dealerByCustomerId);
+            if (dealerId <= 0)
+                continue;
+
+            Execute.Sql(
+                $"UPDATE {nameof(DealerPaymentMethodMapping)} " +
+                $"SET {nameof(DealerPaymentMethodMapping.DealerId)} = {dealerId} " +
+                $"WHERE CustomerId = {customerId} AND ({nameof(DealerPaymentMethodMapping.DealerId)} IS NULL OR {nameof(DealerPaymentMethodMapping.DealerId)} = 0)");
+        }
     }
 
     /// <summary>
@@ -100,4 +123,8 @@ public class DealerDataMigration : Migration
         return dealer.Id;
     }
 
+    private sealed class LegacyDealerPaymentMethodMapping : BaseEntity
+    {
+        public int CustomerId { get; set; }
+    }
 }

@@ -4,7 +4,7 @@ using Nop.Data.Extensions;
 
 namespace Nop.Data.Migrations.UpgradeTo490;
 
-[NopSchemaMigration("2026-02-22 12:30:00", "Dealer model tables")]
+[NopSchemaMigration("2026-02-22 12:30:00", "Dealer model tables and payment mapping shape")]
 public class DealerModelMigration : ForwardOnlyMigration
 {
     /// <summary>
@@ -17,5 +17,17 @@ public class DealerModelMigration : ForwardOnlyMigration
 
         if (!Schema.Table(nameof(DealerCustomerMapping)).Exists())
             Create.TableFor<DealerCustomerMapping>();
+
+        if (!Schema.Table(nameof(DealerPaymentMethodMapping)).Exists())
+            return;
+
+        if (!Schema.Table(nameof(DealerPaymentMethodMapping)).Column(nameof(DealerPaymentMethodMapping.DealerId)).Exists())
+        {
+            Alter.Table(nameof(DealerPaymentMethodMapping))
+                .AddColumn(nameof(DealerPaymentMethodMapping.DealerId))
+                .AsInt32()
+                .Nullable()
+                .Indexed();
+        }
     }
 }
