@@ -319,6 +319,7 @@ public partial class BaseNopTest
         services.AddTransient<ISearchTermService, SearchTermService>();
         services.AddTransient<IGenericAttributeService, GenericAttributeService>();
         services.AddTransient<IMaintenanceService, MaintenanceService>();
+        services.AddTransient<IDealerService, DealerService>();
         services.AddTransient<ICustomerService, CustomerService>();
         services.AddTransient<ICustomerRegistrationService, CustomerRegistrationService>();
         services.AddTransient<ICustomerReportService, CustomerReportService>();
