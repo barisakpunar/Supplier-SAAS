@@ -12,6 +12,12 @@ public class DealerPaymentMethodMappingMigration : ForwardOnlyMigration
     /// </summary>
     public override void Up()
     {
+        if (!Schema.Table(nameof(DealerInfo)).Exists())
+            Create.TableFor<DealerInfo>();
+
+        if (!Schema.Table(nameof(DealerCustomerMapping)).Exists())
+            Create.TableFor<DealerCustomerMapping>();
+
         if (!Schema.Table(nameof(DealerPaymentMethodMapping)).Exists())
             Create.TableFor<DealerPaymentMethodMapping>();
     }
