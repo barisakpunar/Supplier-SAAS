@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Nop.Web (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build nop web",
+      "program": "${workspaceFolder}/nopCommerce_4.90.3_Source/src/Presentation/Nop.Web/bin/Debug/net9.0/Nop.Web.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/nopCommerce_4.90.3_Source/src/Presentation/Nop.Web",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on:\\s+(https?://\\S+)"
+      }
+    }
+  ]
+}

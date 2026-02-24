@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build nop web",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/nopCommerce_4.90.3_Source/src/Presentation/Nop.Web/Nop.Web.csproj",
+        "/property:GenerateFullPaths=true",
+        "/p:Configuration=Debug",
+        "/p:Platform=AnyCPU",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "run nop web",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/nopCommerce_4.90.3_Source/src/Presentation/Nop.Web/Nop.Web.csproj",
+        "-c",
+        "Debug"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
