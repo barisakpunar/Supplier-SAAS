@@ -309,8 +309,8 @@ public partial class DealerController : BaseAdminController
             Name = dealer.Name,
             StoreId = dealer.StoreId,
             Active = dealer.Active,
-            SelectedCustomerIds = await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id),
-            SelectedPaymentMethodSystemNames = await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id)
+            SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList(),
+            SelectedPaymentMethodSystemNames = (await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id)).ToList()
         };
 
         await PrepareDealerModelAsync(model);

@@ -64,7 +64,7 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted">Only customers of selected store are listed.</p>
-                    <select asp-for="SelectedCustomerIds" asp-items="Model.AvailableCustomers" multiple="multiple" class="form-control" style="min-height: 280px;"></select>
+                    <nop-select asp-for="SelectedCustomerIds" asp-items="Model.AvailableCustomers" asp-multiple="true" />
                 </div>
             </div>
 
@@ -74,7 +74,7 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted">Leave empty to allow all active payment methods for this dealer.</p>
-                    <select asp-for="SelectedPaymentMethodSystemNames" asp-items="Model.AvailablePaymentMethods" multiple="multiple" class="form-control" style="min-height: 220px;"></select>
+                    <nop-select asp-for="SelectedPaymentMethodSystemNames" asp-items="Model.AvailablePaymentMethods" asp-multiple="true" />
                 </div>
             </div>
         </div>

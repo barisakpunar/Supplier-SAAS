@@ -36,15 +36,15 @@ public partial record DealerModel : BaseNopEntityModel
 
     public bool IsStoreOwner { get; set; }
 
-    public IList<SelectListItem> AvailableStores { get; set; }
+    public List<SelectListItem> AvailableStores { get; set; }
 
-    public IList<SelectListItem> AvailableCustomers { get; set; }
+    public List<SelectListItem> AvailableCustomers { get; set; }
 
-    public IList<int> SelectedCustomerIds { get; set; }
+    public List<int> SelectedCustomerIds { get; set; }
 
-    public IList<SelectListItem> AvailablePaymentMethods { get; set; }
+    public List<SelectListItem> AvailablePaymentMethods { get; set; }
 
-    public IList<string> SelectedPaymentMethodSystemNames { get; set; }
+    public List<string> SelectedPaymentMethodSystemNames { get; set; }
 
     #endregion
 }
