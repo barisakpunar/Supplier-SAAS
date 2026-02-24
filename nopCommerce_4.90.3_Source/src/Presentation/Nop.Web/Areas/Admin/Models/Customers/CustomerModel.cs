@@ -26,6 +26,7 @@ public partial record CustomerModel : BaseNopEntityModel, IAclSupportedModel
         AvailableStates = new List<SelectListItem>();
         AvailableStores = new List<SelectListItem>();
         AvailableVendors = new List<SelectListItem>();
+        AvailableDealers = new List<SelectListItem>();
         CustomerAttributes = new List<CustomerAttributeModel>();
         AddRewardPoints = new AddRewardPointsToCustomerModel();
         CustomerRewardPointsSearchModel = new CustomerRewardPointsSearchModel();
@@ -58,6 +59,11 @@ public partial record CustomerModel : BaseNopEntityModel, IAclSupportedModel
     public int VendorId { get; set; }
 
     public IList<SelectListItem> AvailableVendors { get; set; }
+
+    [Display(Name = "Dealer")]
+    public int DealerId { get; set; }
+
+    public IList<SelectListItem> AvailableDealers { get; set; }
 
     //form fields & properties
     public bool GenderEnabled { get; set; }

@@ -51,6 +51,7 @@ public partial class CustomerController : BaseAdminController
     protected readonly ICustomerRegistrationService _customerRegistrationService;
     protected readonly ICustomerService _customerService;
     protected readonly IDateTimeHelper _dateTimeHelper;
+    protected readonly IDealerService _dealerService;
     protected readonly IEmailAccountService _emailAccountService;
     protected readonly IEventPublisher _eventPublisher;
     protected readonly IExportManager _exportManager;
@@ -89,6 +90,7 @@ public partial class CustomerController : BaseAdminController
         ICustomerRegistrationService customerRegistrationService,
         ICustomerService customerService,
         IDateTimeHelper dateTimeHelper,
+        IDealerService dealerService,
         IEmailAccountService emailAccountService,
         IEventPublisher eventPublisher,
         IExportManager exportManager,
@@ -122,6 +124,7 @@ public partial class CustomerController : BaseAdminController
         _customerRegistrationService = customerRegistrationService;
         _customerService = customerService;
         _dateTimeHelper = dateTimeHelper;
+        _dealerService = dealerService;
         _emailAccountService = emailAccountService;
         _eventPublisher = eventPublisher;
         _exportManager = exportManager;
@@ -350,6 +353,19 @@ public partial class CustomerController : BaseAdminController
             var currentCustomer = await _workContext.GetCurrentCustomerAsync();
             var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
                                && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+            var managedStoreId = isStoreOwner ? currentCustomer.RegisteredInStoreId : 0;
+            DealerInfo selectedDealer = null;
+
+            if (model.DealerId > 0)
+            {
+                selectedDealer = await _dealerService.GetDealerByIdAsync(model.DealerId);
+                if (selectedDealer == null || managedStoreId > 0 && selectedDealer.StoreId != managedStoreId)
+                {
+                    ModelState.AddModelError(nameof(model.DealerId), "Selected dealer is not available for this store.");
+                    model = await _customerModelFactory.PrepareCustomerModelAsync(model, null, true);
+                    return View(model);
+                }
+            }
 
             customer.CustomerGuid = Guid.NewGuid();
             customer.CreatedOnUtc = DateTime.UtcNow;
@@ -437,6 +453,9 @@ public partial class CustomerController : BaseAdminController
                 _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Admin.Customers.Customers.CannotBeInVendoRoleWithoutVendorAssociated"));
             }
 
+            if (selectedDealer != null)
+                await _dealerService.MapCustomerToDealerAsync(selectedDealer.Id, customer.Id);
+
             //activity log
             await _customerActivityService.InsertActivityAsync("AddNewCustomer",
                 string.Format(await _localizationService.GetResourceAsync("ActivityLog.AddNewCustomer"), customer.Id), customer);
@@ -515,6 +534,15 @@ public partial class CustomerController : BaseAdminController
             {
                 ModelState.AddModelError(string.Empty, error);
             }
+        }
+
+        DealerInfo selectedDealer = null;
+        var managedStoreId = isStoreOwner ? currentCustomer.RegisteredInStoreId : 0;
+        if (model.DealerId > 0)
+        {
+            selectedDealer = await _dealerService.GetDealerByIdAsync(model.DealerId);
+            if (selectedDealer == null || managedStoreId > 0 && selectedDealer.StoreId != managedStoreId)
+                ModelState.AddModelError(nameof(model.DealerId), "Selected dealer is not available for this store.");
         }
 
         if (ModelState.IsValid)
@@ -657,6 +685,15 @@ public partial class CustomerController : BaseAdminController
 
                     _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Admin.Customers.Customers.CannotBeInVendoRoleWithoutVendorAssociated"));
                 }
+
+                var currentDealerId = await _dealerService.GetDealerIdByCustomerIdAsync(customer.Id);
+                if (selectedDealer == null)
+                {
+                    if (currentDealerId > 0)
+                        await _dealerService.UnmapCustomerFromDealerAsync(currentDealerId, customer.Id);
+                }
+                else if (currentDealerId != selectedDealer.Id)
+                    await _dealerService.MapCustomerToDealerAsync(selectedDealer.Id, customer.Id);
 
                 //activity log
                 await _customerActivityService.InsertActivityAsync("EditCustomer",

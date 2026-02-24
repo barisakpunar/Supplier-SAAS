@@ -353,6 +353,9 @@ public partial class DealerController : BaseAdminController
         dealer.Active = model.Active;
 
         await _dealerService.UpdateDealerAsync(dealer);
+
+        //customer mappings are readonly on edit; preserve existing mappings
+        model.SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList();
         await SaveDealerMappingsAsync(dealer, model);
 
         if (continueEditing)
