@@ -1,4 +1,4 @@
-# Dealer UI Manual Test Plan
+# Dealer + Payment Authorization Manual Test Plan
 
 Bu dokuman `codex/feature/dealer-payment-admin-ui` branch'i icindir.
 
@@ -6,130 +6,155 @@ Bu dokuman `codex/feature/dealer-payment-admin-ui` branch'i icindir.
 
 - Admin panelde `Customers > Dealers` ekrani
 - Dealer CRUD (create/edit)
-- Dealer-customer mapping
+- Customer->Dealer mapping (`Customer Edit`)
 - Dealer allowed payment methods mapping
-- Checkout tarafinda dealer bazli payment filtering
-- StoreOwner yetkisi ile dealer ekranina scoped erisim
+- Checkout'ta dealer bazli payment filtering
+- StoreOwner yetkisi ile store-scope dealer yonetimi
 
-## 2. On Kosullar
+## 2. Adminde Store'a Payment Method Atama Nerede?
+
+Store bazli payment method kapsamlandirmasi nop'ta plugin uzerinden yapilir:
+
+1. `Configuration > Local plugins`
+2. Ilgili payment plugin satiri `Edit`
+3. `Limited to stores` alanindan store sec
+4. `Is enabled` acik olmali
+
+Ayrica global aktif/pasif kontrolu:
+
+1. `Configuration > Payment > Methods`
+2. Method `Is active` durumunu ac/kapat
+
+Not: Dealer ekraninda gorulen payment method listesi, bu iki filtreyi zaten respect eder (aktif + store'a limitli pluginler).
+
+## 3. Yetkilendirme Kurallari (Koddan Cikan Final Kurallar)
+
+- Admin:
+  - Tum store/dealer kayitlarini gorebilir.
+  - Dealer payment method secimi sadece ilgili store'da aktif/gorunur pluginlerden olabilir.
+- StoreOwner:
+  - `Add new dealer` yapamaz.
+  - Sadece kendi store'undaki dealer'lari listeler ve editler.
+  - Payment method seciminde ust limit: kendi dealer'i icin izinli methodlar.
+  - Kendi dealer mapping'i bos ise bu `all active in store` kabul edilir.
+- Dealer ekraninda customer mapping:
+  - Create/Edit ekraninda customer alani readonly listeleme amaclidir.
+  - Gercek mapping `Customers > Customers > Edit > Dealer` alanindan yapilir.
+- Checkout:
+  - Dealer mapping bos ise tum aktif+store uygun odeme methodlari gelir.
+  - Dealer mapping dolu ise sadece secili methodlar gelir.
+  - Dealer pasif ise odeme methodu gelmez.
+
+## 4. On Kosullar
 
 - Branch: `codex/feature/dealer-payment-admin-ui`
-- Uygulama build aliyor:
+- Build:
   - `dotnet build /Users/baris/Documents/Tedarik-SAAS/nopCommerce_4.90.3_Source/src/Presentation/Nop.Web/Nop.Web.csproj -c Debug --no-restore --nologo -m:1 /nr:false`
-- En az 2 store var (Store A, Store B)
-- En az 3 registered customer var:
-  - `dealer-owner-a@example.com` (Store A)
+- En az 2 store: `Store A`, `Store B`
+- En az 4 registered customer:
+  - `owner-a@example.com` (Store A, StoreOwners rolunde)
   - `buyer-a1@example.com` (Store A)
+  - `buyer-a2@example.com` (Store A)
   - `buyer-b1@example.com` (Store B)
-- Payment pluginleri aktif:
+- En az 2 payment plugin aktif ve store kapsamli:
   - `Payments.Manual`
   - `Payments.CheckMoneyOrder`
 
-## 3. Admin UI Senaryolari
+## 5. Full Test Cycle
 
-### A1 - Menu gorunurlugu
+### P0 - Store bazli plugin kapsam test hazirligi
 
-- [ ] Admin ile giris yap
-- [ ] `Customers` menusu altinda `Dealers` itemi gorunuyor
-- [ ] `Customers > Dealers` sayfasi aciliyor
+- [ ] `Configuration > Local plugins` ekraninda `Payments.Manual` ve `Payments.CheckMoneyOrder` icin `Limited to stores` kontrol et
+- [ ] `Store A` icin ikisini de acik birak
+- [ ] `Store B` icin en az birini kapat (farki gozlemek icin)
+- [ ] `Configuration > Payment > Methods` ekraninda iki method da `Is active=true`
 
-### A2 - Dealer create
+### A1 - Dealer menu ve create/edit UI
 
-- [ ] `Customers > Dealers > Add new`
-- [ ] `Name`, `Store`, `Active`, `Dealer customers`, `Allowed payment methods` alanlari gorunuyor
-- [ ] Name: `Dealer A`, Store: `Store A`, Active: `true`
-- [ ] Customers: `dealer-owner-a@example.com`, `buyer-a1@example.com` sec
-- [ ] Payment methods: sadece `Payments.Manual` sec
-- [ ] `Save`
-- [ ] Listeye dondugunde `Dealer A` satiri gorunuyor
-- [ ] `Customers` kolonu `2`
-- [ ] `Payment methods` kolonu `Payments.Manual` iceriyor
-
-### A3 - Dealer edit
-
-- [ ] `Dealer A` satirinda `Edit`
-- [ ] Store `Store A` olarak gorunuyor
-- [ ] Customer listesinde secili customerlar korunmus
-- [ ] Payment methods listesinde `Payments.Manual` secili
-- [ ] `Payments.CheckMoneyOrder` da sec ve kaydet
-- [ ] Listeye donup payment summary'de iki method da gorunuyor
-
-### A4 - Bos payment mapping davranisi
-
-- [ ] `Dealer A` edit ekraninda tum payment selection'lari kaldir
-- [ ] Kaydet
-- [ ] Liste ekraninda `Payment methods` kolonu `All active payment methods` olarak gorunuyor
-
-### A5 - Store degistirme ve customer filtreleme
-
-- [ ] `Dealer A` edit ekraninda Store'u `Store B` yap
-- [ ] `buyer-a1@example.com` secili kalsa bile kaydet
-- [ ] Tekrar edit ac
-- [ ] `buyer-a1@example.com` mapping'den dusmus olmali (store uyumsuz customerlar temizlenir)
-
-## 4. Checkout Davranis Senaryolari
-
-### C1 - Mapping yoksa tum aktif methodlar
-
-- [ ] Dealer A'da payment mapping bos olsun
-- [ ] Dealer A'ya bagli bir customer ile storefront'ta checkout'a git
-- [ ] Aktif payment methodlarin tamami gorunuyor
-
-### C2 - Mapping varsa sadece secilen methodlar
-
-- [ ] Dealer A'da sadece `Payments.Manual` sec
-- [ ] Dealer A customer'i ile checkout'a git
-- [ ] Sadece `Payments.Manual` gorunuyor
-
-### C3 - Dealer pasif ise method yok
-
-- [ ] Dealer A `Active=false` yap
-- [ ] Dealer A customer'i ile checkout'a git
-- [ ] Payment method listesi bos (odeme adiminda method cikmiyor)
-- [ ] Test sonrasi tekrar `Active=true` yap
-
-## 5. StoreOwner Senaryolari
-
-> Bu senaryo icin test edilen kullanici `StoreOwners` rolunde olmali ve bir dealer'a mapli olmali.
-
-### S1 - Menu ve sayfa erisimi
-
-- [ ] StoreOwner ile admin panel girisi yap
+- [ ] Admin ile giris
 - [ ] `Customers > Dealers` menusu gorunuyor
-- [ ] `Dealers` listesinde sadece kendi dealer'i gorunuyor
-- [ ] `Add new` butonu gorunmuyor
+- [ ] `Add new` ile create ekrani aciliyor
+- [ ] `Dealer customers` alani sadece listeleme (secim yok)
+- [ ] `Allowed payment methods` checkbox listesi gorunuyor
 
-### S2 - Scope enforcement
+### A2 - Dealer create ve payment kaydi
 
-- [ ] URL'den farkli dealer id acmaya calis (`/Admin/Dealer/Edit/{baskaId}`)
-- [ ] Erişim engellenmeli (`Access denied`)
-
-### S3 - Store sabitleme
-
-- [ ] Kendi dealer edit ekraninda Store alani readonly
-- [ ] Form post'ta store id ile oynansa bile kayit kendi store scope'u ile kalir
-
-## 6. Negatif Testler
-
-### N1 - Zorunlu alan kontrolu
-
-- [ ] Dealer create ekraninda Name bos birak
+- [ ] `Name=Dealer A`, `Store=Store A`, `Active=true`
+- [ ] `Allowed payment methods`: `Payments.Manual` + `Payments.CheckMoneyOrder` sec
 - [ ] `Save`
-- [ ] Validation hatasi gorunmeli
+- [ ] Listeye donup `Payment methods` kolonunda iki methodu gor
+- [ ] Edit'e girip secimlerin korundugunu dogrula
 
-### N2 - Gecersiz store id
+### A3 - Multi-select persistence (kritik)
 
-- [ ] Form post'ta StoreId 0 veya gecersiz id gonder
-- [ ] Validation hatasi gorunmeli: `A valid store is required.`
+- [ ] Edit ekraninda methodlardan birini kaldir, digerini birak
+- [ ] `Save`
+- [ ] Tekrar edit ac, ayni secim korunmus olmali
+- [ ] Tekrar iki methodu da sec, `Save`
+- [ ] Tekrar edit ac, iki secim de korunmus olmali
 
-## 7. Regresyon Kontrolu
+### A4 - Customer->Dealer mapping (tek kaynak)
 
-- [ ] `Customers > Customers` liste ekrani normal calisiyor
-- [ ] `Payments` plugin ayarlari bozulmadi
-- [ ] Onceki StoreOwner menu kisitlari (Orders, Products, Categories vb.) devam ediyor
+- [ ] `Customers > Customers > Edit (buyer-a1)`
+- [ ] `Dealer` alanindan `Dealer A` sec ve kaydet
+- [ ] `Dealer A` edit ac, `Dealer customers` listesinde `buyer-a1` gorunmeli
+- [ ] `Customer Edit`ten dealer'i `None` yap
+- [ ] `Dealer A` editte listeden dustugunu dogrula
 
-## 8. Beklenen Sonuc Ozet
+### A5 - Checkout filter
 
-- Dealer UI ile admin tarafindan dealer/customer/payment mapping yonetilebiliyor.
-- Checkout'ta payment methodlar dealer mapping kurallarina gore filtreleniyor.
-- StoreOwner ayni ekrani kendi scope'u ile gorebiliyor; cross-tenant erisim engelli.
+- [ ] `buyer-a1` ile storefront checkout'a git
+- [ ] Dealer A'da iki method seciliyse ikisi de gorunmeli
+- [ ] Dealer A'da sadece bir method birakip tekrar checkout test et
+- [ ] Yalniz secili method gorunmeli
+
+### A6 - Dealer pasif kontrolu
+
+- [ ] `Dealer A` icin `Active=false`
+- [ ] Dealer'a bagli musteri ile checkout test et
+- [ ] Odeme adiminda method listesi bos olmali
+- [ ] Test sonunda `Active=true` geri al
+
+### S1 - StoreOwner liste scope
+
+- [ ] `owner-a@example.com` ile admin giris
+- [ ] `Customers > Dealers` ac
+- [ ] Sadece `Store A` dealer'lari listelenmeli
+- [ ] `Add new` gorunmemeli
+
+### S2 - StoreOwner edit scope
+
+- [ ] `Store A` icindeki farkli dealer kayitlarini acip edit yapabildigini dogrula
+- [ ] URL ile `Store B` dealer edit acmaya calis
+- [ ] `Access denied` beklenir
+
+### S3 - StoreOwner payment upper-bound
+
+- [ ] Admin ile `owner-a`'nin kendi dealer'inda sadece `Payments.Manual` secili birak
+- [ ] `owner-a` ile diger `Store A` dealer edit ac
+- [ ] Allowed payment methods listesinde sadece `Payments.Manual` gorunmeli
+- [ ] Bu dealer'a `CheckMoneyOrder` kaydetmeye calis (UI veya craft POST)
+- [ ] Kaydedilmemeli (storeowner kendinde olmayan methodu veremez)
+
+### S4 - StoreOwner mapping bos davranisi
+
+- [ ] Admin ile `owner-a`'nin kendi dealer payment mapping'ini bosalt (all active)
+- [ ] `owner-a` ile tekrar diger dealer edit ac
+- [ ] Store A'daki aktif methodlarin tamami secilebilir olmalı
+
+## 6. Regresyon Kontrolu
+
+- [ ] `Customers > Customers` create/edit normal calisiyor
+- [ ] Customer editte `Dealer` dropdown store scope ile uyumlu
+- [ ] `Configuration > Payment > Methods` sayfasi normal calisiyor
+- [ ] `Configuration > Local plugins > Edit` (Limited to stores) kayitlari normal
+- [ ] StoreOwner admin menu kisitlari (Orders, Products, Categories vb.) bozulmadi
+
+## 7. Kapanis Kriteri
+
+Asagidaki maddeler `OK` ise payment authorization konusu kapanabilir:
+
+- [ ] Admin tarafinda store+plugin+dealer katmanlari beklenen sekilde calisiyor
+- [ ] StoreOwner sadece kendi store scope'unda kalip ust limit disina cikamiyor
+- [ ] Multi-select kaydi stabil
+- [ ] Checkout filtreleme davranisi beklenen sonuclari veriyor

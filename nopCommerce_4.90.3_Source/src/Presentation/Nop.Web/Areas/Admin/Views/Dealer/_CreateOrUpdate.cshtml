@@ -63,48 +63,49 @@
                     <h3 class="card-title">Dealer customers</h3>
                 </div>
                 <div class="card-body">
-                    @if (Model.Id <= 0)
+                    @{
+                        var displayedCustomers = Model.Id > 0
+                            ? Model.AvailableCustomers
+                                .Where(item => int.TryParse(item.Value, out var id) && Model.SelectedCustomerIds.Contains(id))
+                                .OrderBy(item => item.Text)
+                                .ToList()
+                            : Model.AvailableCustomers
+                                .OrderBy(item => item.Text)
+                                .ToList();
+                    }
+
+                    <p class="text-muted">
+                        Customer mapping is managed from customer edit screen.
+                        @(Model.Id > 0 ? "Only mapped customers are shown." : "Customers in selected store are listed for reference.")
+                    </p>
+
+                    @if (displayedCustomers.Any())
                     {
-                        <p class="text-muted">Only customers of selected store are listed.</p>
-                        <nop-select asp-for="SelectedCustomerIds" asp-items="Model.AvailableCustomers" asp-multiple="true" />
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th style="width: 120px;">Edit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var customerItem in displayedCustomers)
+                                    {
+                                        <tr>
+                                            <td>@customerItem.Text</td>
+                                            <td class="text-center">
+                                                <a class="btn btn-default btn-sm" href="@Url.Action("Edit", "Customer", new { id = customerItem.Value })">Open</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     }
                     else
                     {
-                        var selectedCustomers = Model.AvailableCustomers
-                            .Where(item => int.TryParse(item.Value, out var id) && Model.SelectedCustomerIds.Contains(id))
-                            .OrderBy(item => item.Text)
-                            .ToList();
-
-                        <p class="text-muted">Customer mapping is readonly on edit screen.</p>
-
-                        @if (selectedCustomers.Any())
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Customer</th>
-                                            <th style="width: 120px;">Edit</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var customer in selectedCustomers)
-                                        {
-                                            <tr>
-                                                <td>@customer.Text</td>
-                                                <td class="text-center">
-                                                    <a class="btn btn-default btn-sm" href="@Url.Action("Edit", "Customer", new { id = customer.Value })">Open</a>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="alert alert-warning mb-0">No mapped customers.</div>
-                        }
+                        <div class="alert alert-warning mb-0">No customers to display.</div>
                     }
                 </div>
             </div>
@@ -115,7 +116,45 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted">Leave empty to allow all active payment methods for this dealer.</p>
-                    <nop-select asp-for="SelectedPaymentMethodSystemNames" asp-items="Model.AvailablePaymentMethods" asp-multiple="true" />
+                    @if (Model.AvailablePaymentMethods.Any())
+                    {
+                        <div class="row">
+                            @for (var index = 0; index < Model.AvailablePaymentMethods.Count; index++)
+                            {
+                                var paymentMethod = Model.AvailablePaymentMethods[index];
+                                var paymentMethodId = $"payment-method-{index}";
+                                var isChecked = Model.SelectedPaymentMethodSystemNames
+                                    .Any(systemName => string.Equals(systemName, paymentMethod.Value, StringComparison.InvariantCultureIgnoreCase));
+
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        @if (isChecked)
+                                        {
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   id="@paymentMethodId"
+                                                   name="SelectedPaymentMethodSystemNames"
+                                                   value="@paymentMethod.Value"
+                                                   checked="checked" />
+                                        }
+                                        else
+                                        {
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   id="@paymentMethodId"
+                                                   name="SelectedPaymentMethodSystemNames"
+                                                   value="@paymentMethod.Value" />
+                                        }
+                                        <label class="form-check-label" for="@paymentMethodId">@paymentMethod.Text</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning mb-0">No active payment methods found for selected store.</div>
+                    }
                 </div>
             </div>
         </div>

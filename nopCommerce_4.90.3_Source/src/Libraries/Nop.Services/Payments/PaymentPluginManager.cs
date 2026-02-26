@@ -56,25 +56,35 @@ public partial class PaymentPluginManager : PluginManager<IPaymentMethod>, IPaym
     public virtual async Task<IList<IPaymentMethod>> LoadActivePluginsAsync(Customer customer = null, int storeId = 0,
         int countryId = 0)
     {
-        var paymentMethods = await LoadActivePluginsAsync(_paymentSettings.ActivePaymentMethodSystemNames, customer, storeId);
+        var effectiveStoreId = storeId;
+        var dealerId = 0;
 
-        //if explicit payment method capabilities exist for this dealer, apply them
         if (customer?.Id > 0)
         {
-            var dealerId = _dealerCustomerMappingRepository.Table
+            if (customer.RegisteredInStoreId > 0)
+                effectiveStoreId = customer.RegisteredInStoreId;
+
+            dealerId = _dealerCustomerMappingRepository.Table
                 .Where(mapping => mapping.CustomerId == customer.Id)
                 .Select(mapping => mapping.DealerId)
                 .FirstOrDefault();
 
-            if (dealerId <= 0)
-                return paymentMethods;
+            if (dealerId > 0)
+            {
+                var dealer = _dealerInfoRepository.Table.FirstOrDefault(item => item.Id == dealerId);
+                if (dealer == null || !dealer.Active)
+                    return new List<IPaymentMethod>();
 
-            var dealerIsActive = _dealerInfoRepository.Table
-                .Any(dealer => dealer.Id == dealerId && dealer.Active);
+                if (dealer.StoreId > 0)
+                    effectiveStoreId = dealer.StoreId;
+            }
+        }
 
-            if (!dealerIsActive)
-                return new List<IPaymentMethod>();
+        var paymentMethods = await LoadActivePluginsAsync(_paymentSettings.ActivePaymentMethodSystemNames, customer, effectiveStoreId);
 
+        //if explicit payment method capabilities exist for this dealer, apply them
+        if (dealerId > 0)
+        {
             var allowedPaymentSystemNames = _dealerPaymentMethodMappingRepository.Table
                 .Where(mapping => mapping.DealerId == dealerId)
                 .Select(mapping => mapping.PaymentMethodSystemName)

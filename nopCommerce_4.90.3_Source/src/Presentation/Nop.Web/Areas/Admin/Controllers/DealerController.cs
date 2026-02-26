@@ -59,7 +59,7 @@ public partial class DealerController : BaseAdminController
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var (_, isStoreOwner, managedStoreId, managedDealerId) = await GetAccessContextAsync();
         model.IsStoreOwner = isStoreOwner;
 
         var stores = await _storeService.GetAllStoresAsync();
@@ -113,7 +113,7 @@ public partial class DealerController : BaseAdminController
         model.SelectedCustomerIds = model.SelectedCustomerIds ?? [];
 
         var paymentMethods = await _paymentPluginManager.LoadAllPluginsAsync(storeId: model.StoreId);
-        model.AvailablePaymentMethods = paymentMethods
+        var availablePaymentMethods = paymentMethods
             .OrderBy(method => method.PluginDescriptor.FriendlyName)
             .ThenBy(method => method.PluginDescriptor.SystemName)
             .Select(method => new SelectListItem
@@ -122,6 +122,16 @@ public partial class DealerController : BaseAdminController
                 Text = $"{method.PluginDescriptor.FriendlyName} ({method.PluginDescriptor.SystemName})"
             })
             .ToList();
+
+        if (isStoreOwner && (model.Id <= 0 || managedDealerId <= 0 || model.Id != managedDealerId))
+        {
+            var ownerAllowedSystemNamesSet = await GetStoreOwnerAllowedPaymentMethodSystemNamesAsync(managedDealerId, model.StoreId);
+            availablePaymentMethods = availablePaymentMethods
+                .Where(item => ownerAllowedSystemNamesSet.Contains(item.Value))
+                .ToList();
+        }
+
+        model.AvailablePaymentMethods = availablePaymentMethods;
         model.SelectedPaymentMethodSystemNames = model.SelectedPaymentMethodSystemNames ?? [];
     }
 
@@ -153,6 +163,10 @@ public partial class DealerController : BaseAdminController
         foreach (var customerId in selectedCustomerIds.Except(existingCustomerIds).ToList())
             await _dealerService.MapCustomerToDealerAsync(dealer.Id, customerId);
 
+        var (_, isStoreOwner, managedStoreId, managedDealerId) = await GetAccessContextAsync();
+        if (isStoreOwner && (managedStoreId <= 0 || dealer.StoreId != managedStoreId))
+            throw new InvalidOperationException("Store owner cannot manage payment methods outside own store.");
+
         var availablePaymentMethodSystemNames = (await _paymentPluginManager.LoadAllPluginsAsync(storeId: dealer.StoreId))
             .Select(method => method.PluginDescriptor.SystemName)
             .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
@@ -160,11 +174,75 @@ public partial class DealerController : BaseAdminController
         var selectedPaymentMethodSystemNames = (model.SelectedPaymentMethodSystemNames ?? [])
             .Where(systemName => !string.IsNullOrWhiteSpace(systemName))
             .Select(systemName => systemName.Trim())
-            .Where(availablePaymentMethodSystemNames.Contains)
             .Distinct(StringComparer.InvariantCultureIgnoreCase)
             .ToList();
 
+        var isStoreOwnerEditingOwnDealer = isStoreOwner && managedDealerId > 0 && dealer.Id == managedDealerId;
+
+        if (isStoreOwner && !isStoreOwnerEditingOwnDealer)
+        {
+            availablePaymentMethodSystemNames = await GetStoreOwnerAllowedPaymentMethodSystemNamesAsync(managedDealerId, dealer.StoreId);
+
+            var existingDealerSystemNames = (await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id))
+                .Where(systemName => !string.IsNullOrWhiteSpace(systemName))
+                .Select(systemName => systemName.Trim())
+                .Distinct(StringComparer.InvariantCultureIgnoreCase)
+                .ToList();
+            var preservedOutsideScope = existingDealerSystemNames
+                .Where(systemName => !availablePaymentMethodSystemNames.Contains(systemName));
+
+            selectedPaymentMethodSystemNames = selectedPaymentMethodSystemNames
+                .Where(availablePaymentMethodSystemNames.Contains)
+                .Concat(preservedOutsideScope)
+                .Distinct(StringComparer.InvariantCultureIgnoreCase)
+                .ToList();
+        }
+        else
+        {
+            selectedPaymentMethodSystemNames = selectedPaymentMethodSystemNames
+                .Where(availablePaymentMethodSystemNames.Contains)
+                .ToList();
+        }
+
         await _dealerService.SetAllowedPaymentMethodSystemNamesAsync(dealer.Id, selectedPaymentMethodSystemNames);
+    }
+
+    protected virtual async Task<HashSet<string>> GetStoreOwnerAllowedPaymentMethodSystemNamesAsync(int managedDealerId, int storeId)
+    {
+        var storePaymentMethodSystemNames = (await _paymentPluginManager.LoadAllPluginsAsync(storeId: storeId))
+            .Select(method => method.PluginDescriptor.SystemName)
+            .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+
+        if (managedDealerId <= 0)
+            return storePaymentMethodSystemNames;
+
+        var ownerAllowedSystemNames = await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(managedDealerId);
+
+        //empty mapping means "all active payment methods" for the dealer
+        if (!ownerAllowedSystemNames.Any())
+            return storePaymentMethodSystemNames;
+
+        storePaymentMethodSystemNames.IntersectWith(ownerAllowedSystemNames);
+        return storePaymentMethodSystemNames;
+    }
+
+    protected virtual void NormalizeSelectedPaymentMethodsFromRequest(DealerModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        model.SelectedPaymentMethodSystemNames = [];
+
+        if (!Request.HasFormContentType || !Request.Form.ContainsKey(nameof(DealerModel.SelectedPaymentMethodSystemNames)))
+            return;
+
+        var postedValues = Request.Form[nameof(DealerModel.SelectedPaymentMethodSystemNames)];
+        if (postedValues.Count == 0)
+            return;
+
+        model.SelectedPaymentMethodSystemNames = postedValues
+            .SelectMany(item => (item ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Distinct(StringComparer.InvariantCultureIgnoreCase)
+            .ToList();
     }
 
     #endregion
@@ -174,7 +252,7 @@ public partial class DealerController : BaseAdminController
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
     public virtual async Task<IActionResult> List(DealerListModel searchModel)
     {
-        var (_, isStoreOwner, managedStoreId, managedDealerId) = await GetAccessContextAsync();
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
         searchModel ??= new DealerListModel();
         searchModel.IsStoreOwner = isStoreOwner;
 
@@ -197,17 +275,9 @@ public partial class DealerController : BaseAdminController
 
         IList<DealerInfo> dealers;
         if (isStoreOwner)
-        {
-            var dealer = managedDealerId > 0 ? await _dealerService.GetDealerByIdAsync(managedDealerId) : null;
-            dealers = dealer is not null ? new List<DealerInfo> { dealer } : new List<DealerInfo>();
-        }
+            dealers = await _dealerService.SearchDealersAsync(name: searchModel.SearchName, storeId: managedStoreId, pageSize: int.MaxValue);
         else
-        {
-            dealers = await _dealerService.SearchDealersAsync(
-                name: searchModel.SearchName,
-                storeId: searchModel.SearchStoreId,
-                pageSize: int.MaxValue);
-        }
+            dealers = await _dealerService.SearchDealersAsync(name: searchModel.SearchName, storeId: searchModel.SearchStoreId, pageSize: int.MaxValue);
 
         var storesById = stores.ToDictionary(store => store.Id);
 
@@ -259,6 +329,8 @@ public partial class DealerController : BaseAdminController
         if (isStoreOwner)
             return AccessDeniedView();
 
+        NormalizeSelectedPaymentMethodsFromRequest(model);
+
         var store = await _storeService.GetStoreByIdAsync(model.StoreId);
         if (store is null)
             ModelState.AddModelError(nameof(model.StoreId), "A valid store is required.");
@@ -288,7 +360,7 @@ public partial class DealerController : BaseAdminController
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
     public virtual async Task<IActionResult> Edit(int id)
     {
-        var (_, isStoreOwner, managedStoreId, managedDealerId) = await GetAccessContextAsync();
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
 
         var dealer = await _dealerService.GetDealerByIdAsync(id);
         if (dealer is null)
@@ -296,9 +368,6 @@ public partial class DealerController : BaseAdminController
 
         if (isStoreOwner)
         {
-            if (managedDealerId <= 0 || managedDealerId != dealer.Id)
-                return AccessDeniedView();
-
             if (managedStoreId > 0 && dealer.StoreId != managedStoreId)
                 return AccessDeniedView();
         }
@@ -324,7 +393,8 @@ public partial class DealerController : BaseAdminController
     [FormValueRequired("save", "save-continue")]
     public virtual async Task<IActionResult> Edit(DealerModel model, bool continueEditing)
     {
-        var (_, isStoreOwner, managedStoreId, managedDealerId) = await GetAccessContextAsync();
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        NormalizeSelectedPaymentMethodsFromRequest(model);
 
         var dealer = await _dealerService.GetDealerByIdAsync(model.Id);
         if (dealer is null)
@@ -332,9 +402,8 @@ public partial class DealerController : BaseAdminController
 
         if (isStoreOwner)
         {
-            if (managedDealerId <= 0 || managedDealerId != dealer.Id)
+            if (managedStoreId > 0 && dealer.StoreId != managedStoreId)
                 return AccessDeniedView();
-
             model.StoreId = managedStoreId;
         }
 
