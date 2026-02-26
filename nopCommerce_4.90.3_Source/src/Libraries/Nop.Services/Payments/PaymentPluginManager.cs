@@ -1,5 +1,6 @@
 ﻿using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Payments;
+using Nop.Data;
 using Nop.Services.Configuration;
 using Nop.Services.Customers;
 using Nop.Services.Plugins;
@@ -15,6 +16,9 @@ public partial class PaymentPluginManager : PluginManager<IPaymentMethod>, IPaym
 
     protected readonly ISettingService _settingService;
     protected readonly PaymentSettings _paymentSettings;
+    protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
+    protected readonly IRepository<DealerInfo> _dealerInfoRepository;
+    protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
 
     #endregion
 
@@ -22,9 +26,15 @@ public partial class PaymentPluginManager : PluginManager<IPaymentMethod>, IPaym
 
     public PaymentPluginManager(ICustomerService customerService,
         IPluginService pluginService,
+        IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
+        IRepository<DealerInfo> dealerInfoRepository,
+        IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository,
         ISettingService settingService,
         PaymentSettings paymentSettings) : base(customerService, pluginService)
     {
+        _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
+        _dealerInfoRepository = dealerInfoRepository;
+        _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
         _settingService = settingService;
         _paymentSettings = paymentSettings;
     }
@@ -46,7 +56,48 @@ public partial class PaymentPluginManager : PluginManager<IPaymentMethod>, IPaym
     public virtual async Task<IList<IPaymentMethod>> LoadActivePluginsAsync(Customer customer = null, int storeId = 0,
         int countryId = 0)
     {
-        var paymentMethods = await LoadActivePluginsAsync(_paymentSettings.ActivePaymentMethodSystemNames, customer, storeId);
+        var effectiveStoreId = storeId;
+        var dealerId = 0;
+
+        if (customer?.Id > 0)
+        {
+            if (customer.RegisteredInStoreId > 0)
+                effectiveStoreId = customer.RegisteredInStoreId;
+
+            dealerId = _dealerCustomerMappingRepository.Table
+                .Where(mapping => mapping.CustomerId == customer.Id)
+                .Select(mapping => mapping.DealerId)
+                .FirstOrDefault();
+
+            if (dealerId > 0)
+            {
+                var dealer = _dealerInfoRepository.Table.FirstOrDefault(item => item.Id == dealerId);
+                if (dealer == null || !dealer.Active)
+                    return new List<IPaymentMethod>();
+
+                if (dealer.StoreId > 0)
+                    effectiveStoreId = dealer.StoreId;
+            }
+        }
+
+        var paymentMethods = await LoadActivePluginsAsync(_paymentSettings.ActivePaymentMethodSystemNames, customer, effectiveStoreId);
+
+        //if explicit payment method capabilities exist for this dealer, apply them
+        if (dealerId > 0)
+        {
+            var allowedPaymentSystemNames = _dealerPaymentMethodMappingRepository.Table
+                .Where(mapping => mapping.DealerId == dealerId)
+                .Select(mapping => mapping.PaymentMethodSystemName)
+                .ToList();
+
+            if (allowedPaymentSystemNames.Any())
+            {
+                var allowedPaymentSystemNamesSet = new HashSet<string>(allowedPaymentSystemNames, StringComparer.InvariantCultureIgnoreCase);
+                paymentMethods = paymentMethods
+                    .Where(method => allowedPaymentSystemNamesSet.Contains(method.PluginDescriptor.SystemName))
+                    .ToList();
+            }
+        }
 
         //filter by country
         if (countryId > 0)
@@ -77,8 +128,11 @@ public partial class PaymentPluginManager : PluginManager<IPaymentMethod>, IPaym
     /// </returns>
     public virtual async Task<bool> IsPluginActiveAsync(string systemName, Customer customer = null, int storeId = 0)
     {
-        var paymentMethod = await LoadPluginBySystemNameAsync(systemName, customer, storeId);
-        return IsPluginActive(paymentMethod);
+        if (string.IsNullOrWhiteSpace(systemName))
+            return false;
+
+        var activeMethods = await LoadActivePluginsAsync(customer, storeId);
+        return activeMethods.Any(method => method.PluginDescriptor.SystemName.Equals(systemName, StringComparison.InvariantCultureIgnoreCase));
     }
 
     /// <summary>

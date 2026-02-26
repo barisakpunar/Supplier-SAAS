@@ -80,7 +80,8 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
             "Common",
             "RoxyFileman",
             "StoreOwner",
-            "Security"
+            "Security",
+            "Dealer"
         };
 
         private static readonly HashSet<string> _deniedReturnRequestActions = new(StringComparer.InvariantCultureIgnoreCase)

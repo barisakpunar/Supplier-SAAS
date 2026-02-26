@@ -59,6 +59,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     protected readonly ICustomerService _customerService;
     protected readonly ICustomWishlistService _customWishlistService;
     protected readonly IDateTimeHelper _dateTimeHelper;
+    protected readonly IDealerService _dealerService;
     protected readonly IExternalAuthenticationService _externalAuthenticationService;
     protected readonly IGdprService _gdprService;
     protected readonly IGenericAttributeService _genericAttributeService;
@@ -103,6 +104,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         ICustomerService customerService,
         ICustomWishlistService customWishlistService,
         IDateTimeHelper dateTimeHelper,
+        IDealerService dealerService,
         IExternalAuthenticationService externalAuthenticationService,
         IGdprService gdprService,
         IGenericAttributeService genericAttributeService,
@@ -143,6 +145,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         _customerService = customerService;
         _customWishlistService = customWishlistService;
         _dateTimeHelper = dateTimeHelper;
+        _dealerService = dealerService;
         _externalAuthenticationService = externalAuthenticationService;
         _gdprService = gdprService;
         _genericAttributeService = genericAttributeService;
@@ -678,6 +681,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
                 model.Email = customer.Email;
                 model.Username = customer.Username;
                 model.VendorId = customer.VendorId;
+                model.DealerId = await _dealerService.GetDealerIdByCustomerIdAsync(customer.Id);
                 model.AdminComment = customer.AdminComment;
                 model.IsTaxExempt = customer.IsTaxExempt;
                 model.Active = customer.Active;
@@ -800,6 +804,42 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         }
 
         model.HideRegisteredInStoreList = model.AvailableStores.SelectionIsNotPossible();
+
+        var dealerStoreId = isStoreOwner && currentCustomer.RegisteredInStoreId > 0
+            ? currentCustomer.RegisteredInStoreId
+            : model.RegisteredInStoreId;
+        var availableDealers = await _dealerService.SearchDealersAsync(storeId: dealerStoreId, pageIndex: 0, pageSize: int.MaxValue);
+        model.AvailableDealers = new List<SelectListItem>
+        {
+            new()
+            {
+                Text = await _localizationService.GetResourceAsync("Admin.Common.None"),
+                Value = "0"
+            }
+        };
+        foreach (var dealer in availableDealers)
+        {
+            model.AvailableDealers.Add(new SelectListItem
+            {
+                Text = dealer.Name,
+                Value = dealer.Id.ToString(),
+                Selected = dealer.Id == model.DealerId
+            });
+        }
+
+        if (model.DealerId > 0 && model.AvailableDealers.All(item => item.Value != model.DealerId.ToString()))
+        {
+            var selectedDealer = await _dealerService.GetDealerByIdAsync(model.DealerId);
+            if (selectedDealer != null && (!isStoreOwner || selectedDealer.StoreId == currentCustomer.RegisteredInStoreId))
+            {
+                model.AvailableDealers.Add(new SelectListItem
+                {
+                    Text = selectedDealer.Name,
+                    Value = selectedDealer.Id.ToString(),
+                    Selected = true
+                });
+            }
+        }
 
         //prepare model customer attributes
         await PrepareCustomerAttributeModelsAsync(model.CustomerAttributes, customer);

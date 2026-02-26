@@ -357,6 +357,15 @@
             <em>@T("Admin.Customers.Customers.VendorShouldBeInVendorsRole")</em>
         </div>
     </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DealerId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="DealerId" asp-items="Model.AvailableDealers" />
+            <span asp-validation-for="DealerId"></span>
+        </div>
+    </div>
     @if (Model.AffiliateId > 0)
     {
         <div class="form-group row">
