@@ -39,6 +39,16 @@ public partial interface IDealerService
     Task<int> GetDealerIdByCustomerIdAsync(int customerId);
 
     /// <summary>
+    /// Gets dealer financial profile by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer financial profile
+    /// </returns>
+    Task<DealerFinancialProfile> GetDealerFinancialProfileByDealerIdAsync(int dealerId);
+
+    /// <summary>
     /// Search dealers
     /// </summary>
     /// <param name="name">Dealer name</param>
@@ -112,6 +122,15 @@ public partial interface IDealerService
     /// <param name="paymentMethodSystemNames">Payment method system names</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task SetAllowedPaymentMethodSystemNamesAsync(int dealerId, IList<string> paymentMethodSystemNames);
+
+    /// <summary>
+    /// Creates or updates dealer financial profile
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="openAccountEnabled">Open account enabled flag</param>
+    /// <param name="creditLimit">Credit limit</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpsertDealerFinancialProfileAsync(int dealerId, bool openAccountEnabled, decimal creditLimit);
 
     /// <summary>
     /// Indicates whether a customer is mapped to the dealer

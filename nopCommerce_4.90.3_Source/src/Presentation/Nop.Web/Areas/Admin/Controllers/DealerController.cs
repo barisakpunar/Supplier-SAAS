@@ -349,6 +349,7 @@ public partial class DealerController : BaseAdminController
         };
 
         await _dealerService.InsertDealerAsync(dealer);
+        await _dealerService.UpsertDealerFinancialProfileAsync(dealer.Id, model.OpenAccountEnabled, model.CreditLimit);
         await SaveDealerMappingsAsync(dealer, model);
 
         if (continueEditing)
@@ -381,6 +382,9 @@ public partial class DealerController : BaseAdminController
             SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList(),
             SelectedPaymentMethodSystemNames = (await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id)).ToList()
         };
+        var financialProfile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealer.Id);
+        model.OpenAccountEnabled = financialProfile?.OpenAccountEnabled ?? false;
+        model.CreditLimit = financialProfile?.CreditLimit ?? 0;
 
         await PrepareDealerModelAsync(model);
         return View(model);
@@ -422,6 +426,7 @@ public partial class DealerController : BaseAdminController
         dealer.Active = model.Active;
 
         await _dealerService.UpdateDealerAsync(dealer);
+        await _dealerService.UpsertDealerFinancialProfileAsync(dealer.Id, model.OpenAccountEnabled, model.CreditLimit);
 
         //customer mappings are readonly on edit; preserve existing mappings
         model.SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList();

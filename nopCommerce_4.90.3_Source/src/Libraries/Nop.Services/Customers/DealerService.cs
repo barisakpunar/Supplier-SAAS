@@ -12,6 +12,7 @@ public partial class DealerService : IDealerService
     #region Fields
 
     protected readonly IRepository<DealerInfo> _dealerInfoRepository;
+    protected readonly IRepository<DealerFinancialProfile> _dealerFinancialProfileRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
 
@@ -20,10 +21,12 @@ public partial class DealerService : IDealerService
     #region Ctor
 
     public DealerService(IRepository<DealerInfo> dealerInfoRepository,
+        IRepository<DealerFinancialProfile> dealerFinancialProfileRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
     {
         _dealerInfoRepository = dealerInfoRepository;
+        _dealerFinancialProfileRepository = dealerFinancialProfileRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
     }
@@ -84,6 +87,23 @@ public partial class DealerService : IDealerService
             .FirstOrDefaultAsync();
 
         return dealerId;
+    }
+
+    /// <summary>
+    /// Gets dealer financial profile by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer financial profile
+    /// </returns>
+    public virtual async Task<DealerFinancialProfile> GetDealerFinancialProfileByDealerIdAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return null;
+
+        return await _dealerFinancialProfileRepository.Table
+            .FirstOrDefaultAsync(profile => profile.DealerId == dealerId);
     }
 
     /// <summary>
@@ -256,6 +276,46 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Creates or updates dealer financial profile
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="openAccountEnabled">Open account enabled flag</param>
+    /// <param name="creditLimit">Credit limit</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpsertDealerFinancialProfileAsync(int dealerId, bool openAccountEnabled, decimal creditLimit)
+    {
+        if (dealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerId));
+
+        if (creditLimit < 0)
+            throw new ArgumentOutOfRangeException(nameof(creditLimit));
+
+        var dealer = await GetDealerByIdAsync(dealerId);
+        if (dealer == null)
+            throw new ArgumentException("Dealer not found.", nameof(dealerId));
+
+        var profile = await GetDealerFinancialProfileByDealerIdAsync(dealerId);
+        if (profile == null)
+        {
+            profile = new DealerFinancialProfile
+            {
+                DealerId = dealerId,
+                OpenAccountEnabled = openAccountEnabled,
+                CreditLimit = creditLimit,
+                CreatedOnUtc = DateTime.UtcNow
+            };
+
+            await _dealerFinancialProfileRepository.InsertAsync(profile);
+            return;
+        }
+
+        profile.OpenAccountEnabled = openAccountEnabled;
+        profile.CreditLimit = creditLimit;
+        profile.UpdatedOnUtc = DateTime.UtcNow;
+        await _dealerFinancialProfileRepository.UpdateAsync(profile);
+    }
+
+    /// <summary>
     /// Indicates whether a customer is mapped to the dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -366,6 +426,7 @@ public partial class DealerService : IDealerService
 
         await _dealerPaymentMethodMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
         await _dealerCustomerMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
+        await _dealerFinancialProfileRepository.DeleteAsync(profile => profile.DealerId == dealer.Id);
         await _dealerInfoRepository.DeleteAsync(dealer);
     }
 
