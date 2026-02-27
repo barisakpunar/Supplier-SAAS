@@ -34,6 +34,11 @@ public partial record DealerModel : BaseNopEntityModel
 
     public bool Active { get; set; }
 
+    public bool OpenAccountEnabled { get; set; }
+
+    [Range(typeof(decimal), "0", "999999999999999.9999")]
+    public decimal CreditLimit { get; set; }
+
     public bool IsStoreOwner { get; set; }
 
     public List<SelectListItem> AvailableStores { get; set; }

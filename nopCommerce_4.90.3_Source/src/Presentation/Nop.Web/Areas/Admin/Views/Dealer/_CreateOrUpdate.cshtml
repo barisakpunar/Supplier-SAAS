@@ -60,6 +60,33 @@
 
             <div class="card card-default">
                 <div class="card-header">
+                    <h3 class="card-title">Open account</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label asp-for="OpenAccountEnabled" class="col-form-label">Enable open account</label>
+                        </div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="OpenAccountEnabled" />
+                            <span asp-validation-for="OpenAccountEnabled"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label asp-for="CreditLimit" class="col-form-label">Credit limit</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="CreditLimit" class="form-control" />
+                            <span asp-validation-for="CreditLimit"></span>
+                            <small class="form-text text-muted">Used for open account validation (MVP).</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-header">
                     <h3 class="card-title">Dealer customers</h3>
                 </div>
                 <div class="card-body">

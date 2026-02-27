@@ -149,6 +149,20 @@ public partial class CheckoutController : BasePublicController
         return interval.TotalMinutes > _orderSettings.MinimumOrderPlacementInterval;
     }
 
+    protected virtual async Task<bool> IsPaymentMethodAllowedForCurrentCheckoutAsync(Customer customer, IList<ShoppingCartItem> cart, string paymentMethodSystemName)
+    {
+        if (string.IsNullOrWhiteSpace(paymentMethodSystemName))
+            return false;
+
+        var filterByCountryId = 0;
+        if (_addressSettings.CountryEnabled)
+            filterByCountryId = (await _customerService.GetCustomerBillingAddressAsync(customer))?.CountryId ?? 0;
+
+        var paymentMethodModel = await _checkoutModelFactory.PreparePaymentMethodModelAsync(cart, filterByCountryId);
+        return paymentMethodModel.PaymentMethods.Any(paymentMethod =>
+            paymentMethod.PaymentMethodSystemName.Equals(paymentMethodSystemName, StringComparison.OrdinalIgnoreCase));
+    }
+
     /// <summary>
     /// Parses the value indicating whether the "pickup in store" is allowed
     /// </summary>
@@ -1123,6 +1137,9 @@ public partial class CheckoutController : BasePublicController
         if (!await _paymentPluginManager.IsPluginActiveAsync(paymentmethod, customer, store.Id))
             return await PaymentMethod();
 
+        if (!await IsPaymentMethodAllowedForCurrentCheckoutAsync(customer, cart, paymentmethod))
+            return await PaymentMethod();
+
         //save
         await _genericAttributeService.SaveAttributeAsync(customer,
             NopCustomerDefaults.SelectedPaymentMethodAttribute, paymentmethod, store.Id);
@@ -1162,6 +1179,9 @@ public partial class CheckoutController : BasePublicController
         var paymentMethod = await _paymentPluginManager
             .LoadPluginBySystemNameAsync(paymentMethodSystemName, customer, store.Id);
         if (paymentMethod == null)
+            return RedirectToRoute(NopRouteNames.Standard.CHECKOUT_PAYMENT_METHOD);
+
+        if (!await IsPaymentMethodAllowedForCurrentCheckoutAsync(customer, cart, paymentMethodSystemName))
             return RedirectToRoute(NopRouteNames.Standard.CHECKOUT_PAYMENT_METHOD);
 
         //Check whether payment info should be skipped
@@ -1309,6 +1329,10 @@ public partial class CheckoutController : BasePublicController
             processPaymentRequest.CustomerId = customer.Id;
             processPaymentRequest.PaymentMethodSystemName = await _genericAttributeService.GetAttributeAsync<string>(customer,
                 NopCustomerDefaults.SelectedPaymentMethodAttribute, store.Id);
+
+            if (!await IsPaymentMethodAllowedForCurrentCheckoutAsync(customer, cart, processPaymentRequest.PaymentMethodSystemName))
+                throw new Exception("Selected payment method is not available");
+
             await _orderProcessingService.SetProcessPaymentRequestAsync(processPaymentRequest);
             var placeOrderResult = await _orderProcessingService.PlaceOrderAsync(processPaymentRequest);
             if (placeOrderResult.Success)
@@ -1917,6 +1941,9 @@ public partial class CheckoutController : BasePublicController
             if (!_paymentPluginManager.IsPluginActive(paymentMethodInst))
                 throw new Exception("Selected payment method can't be parsed");
 
+            if (!await IsPaymentMethodAllowedForCurrentCheckoutAsync(customer, cart, paymentmethod))
+                throw new Exception("Selected payment method is not available");
+
             //save
             await _genericAttributeService.SaveAttributeAsync(customer,
                 NopCustomerDefaults.SelectedPaymentMethodAttribute, paymentmethod, store.Id);
@@ -1955,6 +1982,9 @@ public partial class CheckoutController : BasePublicController
 
             var paymentMethodSystemName = await _genericAttributeService.GetAttributeAsync<string>(customer,
                 NopCustomerDefaults.SelectedPaymentMethodAttribute, store.Id);
+            if (!await IsPaymentMethodAllowedForCurrentCheckoutAsync(customer, cart, paymentMethodSystemName))
+                throw new Exception("Payment method is not selected");
+
             var paymentMethod = await _paymentPluginManager
                                     .LoadPluginBySystemNameAsync(paymentMethodSystemName, customer, store.Id)
                                 ?? throw new Exception("Payment method is not selected");
@@ -2052,6 +2082,10 @@ public partial class CheckoutController : BasePublicController
                 processPaymentRequest.CustomerId = customer.Id;
                 processPaymentRequest.PaymentMethodSystemName = await _genericAttributeService.GetAttributeAsync<string>(customer,
                     NopCustomerDefaults.SelectedPaymentMethodAttribute, store.Id);
+
+                if (!await IsPaymentMethodAllowedForCurrentCheckoutAsync(customer, cart, processPaymentRequest.PaymentMethodSystemName))
+                    throw new Exception("Selected payment method is not available");
+
                 await _orderProcessingService.SetProcessPaymentRequestAsync(processPaymentRequest);
                 var placeOrderResult = await _orderProcessingService.PlaceOrderAsync(processPaymentRequest);
                 if (placeOrderResult.Success)
