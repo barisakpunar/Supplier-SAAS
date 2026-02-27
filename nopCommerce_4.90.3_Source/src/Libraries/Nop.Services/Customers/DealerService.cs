@@ -1,5 +1,7 @@
 ﻿using Nop.Core;
 using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Payments;
 using Nop.Data;
 
 namespace Nop.Services.Customers;
@@ -14,7 +16,10 @@ public partial class DealerService : IDealerService
     protected readonly IRepository<DealerInfo> _dealerInfoRepository;
     protected readonly IRepository<DealerFinancialProfile> _dealerFinancialProfileRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
+    protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
+
+    protected const string OpenAccountPaymentMethodSystemName = "Payments.OpenAccount";
 
     #endregion
 
@@ -23,11 +28,13 @@ public partial class DealerService : IDealerService
     public DealerService(IRepository<DealerInfo> dealerInfoRepository,
         IRepository<DealerFinancialProfile> dealerFinancialProfileRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
+        IRepository<Order> orderRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
     {
         _dealerInfoRepository = dealerInfoRepository;
         _dealerFinancialProfileRepository = dealerFinancialProfileRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
+        _orderRepository = orderRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
     }
 
@@ -104,6 +111,57 @@ public partial class DealerService : IDealerService
 
         return await _dealerFinancialProfileRepository.Table
             .FirstOrDefaultAsync(profile => profile.DealerId == dealerId);
+    }
+
+    /// <summary>
+    /// Gets current open account debt for dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains current open account debt
+    /// </returns>
+    public virtual async Task<decimal> GetOpenAccountCurrentDebtAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return 0;
+
+        var customerIds = await GetCustomerIdsByDealerIdAsync(dealerId);
+        if (!customerIds.Any())
+            return 0;
+
+        var debt = await _orderRepository.Table
+            .Where(order => customerIds.Contains(order.CustomerId)
+                            && !order.Deleted
+                            && order.OrderStatusId != (int)OrderStatus.Cancelled
+                            && order.PaymentMethodSystemName == OpenAccountPaymentMethodSystemName
+                            && (order.PaymentStatusId == (int)PaymentStatus.Pending
+                                || order.PaymentStatusId == (int)PaymentStatus.Authorized))
+            .SumAsync(order => order.OrderTotal);
+
+        return debt;
+    }
+
+    /// <summary>
+    /// Gets available open account credit for dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains available credit
+    /// </returns>
+    public virtual async Task<decimal> GetOpenAccountAvailableCreditAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return 0;
+
+        var profile = await GetDealerFinancialProfileByDealerIdAsync(dealerId);
+        if (profile == null || !profile.OpenAccountEnabled)
+            return 0;
+
+        var currentDebt = await GetOpenAccountCurrentDebtAsync(dealerId);
+        var availableCredit = profile.CreditLimit - currentDebt;
+        return availableCredit > 0 ? availableCredit : 0;
     }
 
     /// <summary>

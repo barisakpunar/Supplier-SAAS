@@ -49,6 +49,26 @@ public partial interface IDealerService
     Task<DealerFinancialProfile> GetDealerFinancialProfileByDealerIdAsync(int dealerId);
 
     /// <summary>
+    /// Gets current open account debt for dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains current open account debt
+    /// </returns>
+    Task<decimal> GetOpenAccountCurrentDebtAsync(int dealerId);
+
+    /// <summary>
+    /// Gets available open account credit for dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains available credit
+    /// </returns>
+    Task<decimal> GetOpenAccountAvailableCreditAsync(int dealerId);
+
+    /// <summary>
     /// Search dealers
     /// </summary>
     /// <param name="name">Dealer name</param>
