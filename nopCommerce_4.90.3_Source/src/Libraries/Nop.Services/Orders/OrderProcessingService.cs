@@ -48,6 +48,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     protected readonly ICurrencyService _currencyService;
     protected readonly ICustomerActivityService _customerActivityService;
     protected readonly ICustomerService _customerService;
+    protected readonly IDealerService _dealerService;
     protected readonly ICustomNumberFormatter _customNumberFormatter;
     protected readonly IDiscountService _discountService;
     protected readonly IEncryptionService _encryptionService;
@@ -88,6 +89,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     protected readonly RewardPointsSettings _rewardPointsSettings;
     protected readonly ShippingSettings _shippingSettings;
     protected readonly TaxSettings _taxSettings;
+    protected const string OpenAccountPaymentMethodSystemName = "Payments.OpenAccount";
 
     #endregion
 
@@ -101,6 +103,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         ICurrencyService currencyService,
         ICustomerActivityService customerActivityService,
         ICustomerService customerService,
+        IDealerService dealerService,
         ICustomNumberFormatter customNumberFormatter,
         IDiscountService discountService,
         IEncryptionService encryptionService,
@@ -150,6 +153,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         _currencyService = currencyService;
         _customerActivityService = customerActivityService;
         _customerService = customerService;
+        _dealerService = dealerService;
         _customNumberFormatter = customNumberFormatter;
         _discountService = discountService;
         _encryptionService = encryptionService;
@@ -268,6 +272,26 @@ public partial class OrderProcessingService : IOrderProcessingService
             DisplayToCustomer = false,
             CreatedOnUtc = DateTime.UtcNow
         });
+    }
+
+    protected virtual async Task<string> ValidateOpenAccountCreditLimitAsync(ProcessPaymentRequest processPaymentRequest, PlaceOrderContainer details)
+    {
+        if (!string.Equals(processPaymentRequest.PaymentMethodSystemName, OpenAccountPaymentMethodSystemName, StringComparison.InvariantCultureIgnoreCase))
+            return null;
+
+        var dealerId = await _dealerService.GetDealerIdByCustomerIdAsync(processPaymentRequest.CustomerId);
+        if (dealerId <= 0)
+            return "Open account is not available for this customer.";
+
+        var financialProfile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealerId);
+        if (financialProfile == null || !financialProfile.OpenAccountEnabled)
+            return "Open account is not enabled for this dealer.";
+
+        var availableCredit = await _dealerService.GetOpenAccountAvailableCreditAsync(dealerId);
+        if (availableCredit >= details.OrderTotal)
+            return null;
+
+        return $"Open account credit limit is exceeded. Available credit: {availableCredit:0.####}, order total: {details.OrderTotal:0.####}.";
     }
 
     /// <summary>
@@ -1553,6 +1577,13 @@ public partial class OrderProcessingService : IOrderProcessingService
 
             try
             {
+                var openAccountValidationError = await ValidateOpenAccountCreditLimitAsync(processPaymentRequest, placeOrderContainer);
+                if (!string.IsNullOrEmpty(openAccountValidationError))
+                {
+                    result.AddError(openAccountValidationError);
+                    return result;
+                }
+
                 var processPaymentResult =
                     await GetProcessPaymentResultAsync(processPaymentRequest, placeOrderContainer)
                     ?? throw new NopException("processPaymentResult is not available");

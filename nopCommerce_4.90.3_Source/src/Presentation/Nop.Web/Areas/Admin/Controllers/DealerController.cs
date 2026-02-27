@@ -133,6 +133,17 @@ public partial class DealerController : BaseAdminController
 
         model.AvailablePaymentMethods = availablePaymentMethods;
         model.SelectedPaymentMethodSystemNames = model.SelectedPaymentMethodSystemNames ?? [];
+
+        if (model.Id > 0)
+        {
+            model.CurrentDebt = await _dealerService.GetOpenAccountCurrentDebtAsync(model.Id);
+            model.AvailableCredit = await _dealerService.GetOpenAccountAvailableCreditAsync(model.Id);
+        }
+        else
+        {
+            model.CurrentDebt = 0;
+            model.AvailableCredit = model.OpenAccountEnabled ? model.CreditLimit : 0;
+        }
     }
 
     protected virtual async Task SaveDealerMappingsAsync(DealerInfo dealer, DealerModel model)
