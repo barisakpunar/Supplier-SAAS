@@ -36,7 +36,6 @@ public partial record DealerModel : BaseNopEntityModel
 
     public bool OpenAccountEnabled { get; set; }
 
-    [Range(typeof(decimal), "0", "999999999999999.9999")]
     public decimal CreditLimit { get; set; }
 
     public decimal CurrentDebt { get; set; }

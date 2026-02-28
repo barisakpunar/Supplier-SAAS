@@ -16,6 +16,7 @@ public partial class DealerController : BaseAdminController
 {
     #region Fields
 
+    protected const decimal MaxDealerCreditLimit = 99999999999999.9999m;
     protected readonly ICustomerService _customerService;
     protected readonly IDealerService _dealerService;
     protected readonly IPaymentPluginManager _paymentPluginManager;
@@ -256,6 +257,17 @@ public partial class DealerController : BaseAdminController
             .ToList();
     }
 
+    protected virtual void ValidateDealerFinancialInputs(DealerModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        if (model.CreditLimit < 0 || model.CreditLimit > MaxDealerCreditLimit)
+            ModelState.AddModelError(nameof(model.CreditLimit), $"Credit limit must be between 0 and {MaxDealerCreditLimit:0.####}.");
+
+        if (decimal.Round(model.CreditLimit, 4) != model.CreditLimit)
+            ModelState.AddModelError(nameof(model.CreditLimit), "Credit limit can contain up to 4 decimal digits.");
+    }
+
     #endregion
 
     #region Methods
@@ -345,6 +357,7 @@ public partial class DealerController : BaseAdminController
         var store = await _storeService.GetStoreByIdAsync(model.StoreId);
         if (store is null)
             ModelState.AddModelError(nameof(model.StoreId), "A valid store is required.");
+        ValidateDealerFinancialInputs(model);
 
         if (!ModelState.IsValid)
         {
@@ -425,6 +438,7 @@ public partial class DealerController : BaseAdminController
         var store = await _storeService.GetStoreByIdAsync(model.StoreId);
         if (store is null)
             ModelState.AddModelError(nameof(model.StoreId), "A valid store is required.");
+        ValidateDealerFinancialInputs(model);
 
         if (!ModelState.IsValid)
         {
