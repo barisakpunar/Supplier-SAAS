@@ -1,4 +1,5 @@
-﻿@model DealerModel
+﻿@using System.Globalization
+@model DealerModel
 
 <div asp-validation-summary="All"></div>
 <input asp-for="Id" type="hidden" />
@@ -74,10 +75,10 @@
                     </div>
                     <div class="form-group row">
                         <div class="col-md-3">
-                            <label asp-for="CreditLimit" class="col-form-label">Credit limit</label>
+                            <nop-label asp-for="CreditLimit" />
                         </div>
                         <div class="col-md-9">
-                            <input asp-for="CreditLimit" class="form-control" />
+                            <nop-editor asp-for="CreditLimit" />
                             <span asp-validation-for="CreditLimit"></span>
                             <small class="form-text text-muted">Used for open account validation (MVP).</small>
                         </div>
@@ -89,7 +90,7 @@
                                 <label class="col-form-label">Current debt</label>
                             </div>
                             <div class="col-md-9">
-                                <input type="text" class="form-control" value="@Model.CurrentDebt.ToString("0.####")" readonly />
+                                <input type="text" class="form-control" value="@Model.CurrentDebt.ToString("0.####", CultureInfo.CurrentCulture)" readonly />
                             </div>
                         </div>
                         <div class="form-group row">
@@ -97,7 +98,7 @@
                                 <label class="col-form-label">Available credit</label>
                             </div>
                             <div class="col-md-9">
-                                <input type="text" class="form-control" value="@Model.AvailableCredit.ToString("0.####")" readonly />
+                                <input type="text" class="form-control" value="@Model.AvailableCredit.ToString("0.####", CultureInfo.CurrentCulture)" readonly />
                             </div>
                         </div>
                     }
@@ -223,10 +224,10 @@
                         </div>
                         <div class="form-group row">
                             <div class="col-md-3">
-                                <label asp-for="ManualTransactionAmount" class="col-form-label">Amount</label>
+                                <nop-label asp-for="ManualTransactionAmount" />
                             </div>
                             <div class="col-md-9">
-                                <input asp-for="ManualTransactionAmount" class="form-control" />
+                                <nop-editor asp-for="ManualTransactionAmount" />
                                 <span asp-validation-for="ManualTransactionAmount"></span>
                             </div>
                         </div>
@@ -278,7 +279,7 @@
                                                 <td>@transaction.CreatedOnUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
                                                 <td>@transaction.TransactionType</td>
                                                 <td>@transaction.Direction</td>
-                                                <td>@transaction.Amount.ToString("0.####")</td>
+                                                <td>@transaction.Amount.ToString("0.####", CultureInfo.CurrentCulture)</td>
                                                 <td>@(transaction.OrderId?.ToString() ?? "-")</td>
                                                 <td>@(transaction.CustomerId?.ToString() ?? "-")</td>
                                                 <td>@(string.IsNullOrWhiteSpace(transaction.Note) ? "-" : transaction.Note)</td>
@@ -298,3 +299,15 @@
         </div>
     </div>
 </section>
+
+<script>
+    if (window.jQuery && $.validator && $.validator.methods) {
+        $.validator.methods.number = function (value, element) {
+            if (this.optional(element))
+                return true;
+
+            value = (value || '').replace(/\s/g, '');
+            return /^-?(?:\d+|\d{1,3}(?:[.,]\d{3})*)(?:[.,]\d+)?$/.test(value);
+        };
+    }
+</script>
