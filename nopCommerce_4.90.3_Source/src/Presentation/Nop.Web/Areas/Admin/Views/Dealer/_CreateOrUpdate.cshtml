@@ -203,6 +203,55 @@
                     }
                 </div>
             </div>
+
+            @if (Model.Id > 0)
+            {
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">Dealer transactions</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Shows latest @Model.Transactions.Count transaction(s). Full ledger actions will be added in the next iteration.</p>
+
+                        @if (Model.Transactions.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 180px;">Created (UTC)</th>
+                                            <th style="width: 210px;">Type</th>
+                                            <th style="width: 90px;">Direction</th>
+                                            <th style="width: 120px;">Amount</th>
+                                            <th style="width: 90px;">Order</th>
+                                            <th style="width: 100px;">Customer</th>
+                                            <th>Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var transaction in Model.Transactions)
+                                        {
+                                            <tr>
+                                                <td>@transaction.CreatedOnUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                                <td>@transaction.TransactionType</td>
+                                                <td>@transaction.Direction</td>
+                                                <td>@transaction.Amount.ToString("0.####")</td>
+                                                <td>@(transaction.OrderId?.ToString() ?? "-")</td>
+                                                <td>@(transaction.CustomerId?.ToString() ?? "-")</td>
+                                                <td>@(string.IsNullOrWhiteSpace(transaction.Note) ? "-" : transaction.Note)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning mb-0">No transactions to display.</div>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </section>

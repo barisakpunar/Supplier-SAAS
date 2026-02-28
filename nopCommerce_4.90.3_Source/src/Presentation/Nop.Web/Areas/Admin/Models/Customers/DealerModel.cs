@@ -16,6 +16,7 @@ public partial record DealerModel : BaseNopEntityModel
         AvailableStores = new List<SelectListItem>();
         AvailableCustomers = new List<SelectListItem>();
         AvailablePaymentMethods = new List<SelectListItem>();
+        Transactions = new List<DealerTransactionItemModel>();
         SelectedCustomerIds = new List<int>();
         SelectedPaymentMethodSystemNames = new List<string>();
     }
@@ -53,6 +54,8 @@ public partial record DealerModel : BaseNopEntityModel
     public List<SelectListItem> AvailablePaymentMethods { get; set; }
 
     public List<string> SelectedPaymentMethodSystemNames { get; set; }
+
+    public List<DealerTransactionItemModel> Transactions { get; set; }
 
     #endregion
 }

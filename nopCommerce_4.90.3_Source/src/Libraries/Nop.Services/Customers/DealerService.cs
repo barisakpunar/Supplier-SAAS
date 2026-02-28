@@ -189,6 +189,28 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Gets dealer transactions
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer transactions
+    /// </returns>
+    public virtual async Task<IList<DealerTransaction>> GetDealerTransactionsAsync(int dealerId, int pageSize = int.MaxValue)
+    {
+        if (dealerId <= 0 || pageSize <= 0)
+            return new List<DealerTransaction>();
+
+        return await _dealerTransactionRepository.Table
+            .Where(transaction => transaction.DealerId == dealerId)
+            .OrderByDescending(transaction => transaction.CreatedOnUtc)
+            .ThenByDescending(transaction => transaction.Id)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Inserts a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>

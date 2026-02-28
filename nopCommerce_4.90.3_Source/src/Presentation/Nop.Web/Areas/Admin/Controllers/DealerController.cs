@@ -17,6 +17,7 @@ public partial class DealerController : BaseAdminController
     #region Fields
 
     protected const decimal MaxDealerCreditLimit = 99999999999999.9999m;
+    protected const int DealerTransactionPreviewPageSize = 100;
     protected readonly ICustomerService _customerService;
     protected readonly IDealerService _dealerService;
     protected readonly IPaymentPluginManager _paymentPluginManager;
@@ -54,6 +55,28 @@ public partial class DealerController : BaseAdminController
         var managedDealerId = isStoreOwner ? await _dealerService.GetDealerIdByCustomerIdAsync(customer.Id) : 0;
 
         return (customer, isStoreOwner, managedStoreId, managedDealerId);
+    }
+
+    protected virtual string GetDealerTransactionTypeText(int transactionTypeId)
+    {
+        return transactionTypeId switch
+        {
+            (int)DealerTransactionType.OpenAccountOrder => "Open account order",
+            (int)DealerTransactionType.OpenAccountCollection => "Open account collection",
+            (int)DealerTransactionType.ManualDebitAdjustment => "Manual debit adjustment",
+            (int)DealerTransactionType.ManualCreditAdjustment => "Manual credit adjustment",
+            _ => $"Type #{transactionTypeId}"
+        };
+    }
+
+    protected virtual string GetDealerTransactionDirectionText(int directionId)
+    {
+        return directionId switch
+        {
+            (int)DealerTransactionDirection.Debit => "Debit",
+            (int)DealerTransactionDirection.Credit => "Credit",
+            _ => $"Direction #{directionId}"
+        };
     }
 
     protected virtual async Task PrepareDealerModelAsync(DealerModel model)
@@ -139,11 +162,24 @@ public partial class DealerController : BaseAdminController
         {
             model.CurrentDebt = await _dealerService.GetOpenAccountCurrentDebtAsync(model.Id);
             model.AvailableCredit = await _dealerService.GetOpenAccountAvailableCreditAsync(model.Id);
+            model.Transactions = (await _dealerService.GetDealerTransactionsAsync(model.Id, DealerTransactionPreviewPageSize))
+                .Select(transaction => new DealerTransactionItemModel
+                {
+                    OrderId = transaction.OrderId,
+                    CustomerId = transaction.CustomerId,
+                    TransactionType = GetDealerTransactionTypeText(transaction.TransactionTypeId),
+                    Direction = GetDealerTransactionDirectionText(transaction.DirectionId),
+                    Amount = transaction.Amount,
+                    Note = transaction.Note,
+                    CreatedOnUtc = transaction.CreatedOnUtc
+                })
+                .ToList();
         }
         else
         {
             model.CurrentDebt = 0;
             model.AvailableCredit = model.OpenAccountEnabled ? model.CreditLimit : 0;
+            model.Transactions = [];
         }
     }
 

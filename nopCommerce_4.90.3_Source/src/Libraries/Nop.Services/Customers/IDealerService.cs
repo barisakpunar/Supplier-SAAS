@@ -69,6 +69,17 @@ public partial interface IDealerService
     Task<decimal> GetOpenAccountAvailableCreditAsync(int dealerId);
 
     /// <summary>
+    /// Gets dealer transactions
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer transactions
+    /// </returns>
+    Task<IList<DealerTransaction>> GetDealerTransactionsAsync(int dealerId, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Inserts a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>

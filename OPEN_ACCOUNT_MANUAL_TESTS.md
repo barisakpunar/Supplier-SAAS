@@ -69,6 +69,12 @@ Bu dokuman `codex/feature/open-account-limit-ledger` branch'i icindir.
 - [ ] OA6 sonrasi `OpenAccountOrder` tipinde `Debit` bir kayit olusmali
 - [ ] OA7 sonrasi ayni siparis icin `OpenAccountCollection` tipinde `Credit` bir kayit olusmali
 
+### OA9 - Dealer edit ekraninda hareket listesi
+
+- [ ] `Customers > Dealers > Edit Dealer A` ac
+- [ ] `Dealer transactions` karti gorunmeli
+- [ ] Son hareketler listesinde OA6/OA7 kayitlari satir olarak gorunmeli
+
 ## 4. Kapanis Kriteri
 
 Asagidaki maddeler `OK` ise Open Account V1 kapanabilir:
@@ -77,3 +83,4 @@ Asagidaki maddeler `OK` ise Open Account V1 kapanabilir:
 - [ ] Merkezi servis kontrolu ile bypass engelleniyor
 - [ ] Debt/available credit hesaplari siparis ve tahsilatla tutarli ilerliyor
 - [ ] DealerTransaction tablosu siparis/tahsilat akisini dogru yansitiyor
+- [ ] Dealer edit ekranindaki hareket listesi ledger kayitlariyla tutarli
