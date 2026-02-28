@@ -75,6 +75,13 @@ Bu dokuman `codex/feature/open-account-limit-ledger` branch'i icindir.
 - [ ] `Dealer transactions` karti gorunmeli
 - [ ] Son hareketler listesinde OA6/OA7 kayitlari satir olarak gorunmeli
 
+### OA10 - Manuel hareket girisi (tahsilat/borc)
+
+- [ ] `Manual transaction entry` kartinda `Manual credit adjustment` + tutar (ornek `50`) gir ve `Add transaction`
+- [ ] Kayit sonrasi listede yeni satir gorunmeli, `Current debt` 50 azaltilmali
+- [ ] `Manual debit adjustment` + tutar (ornek `30`) gir ve kaydet
+- [ ] Kayit sonrasi listede yeni satir gorunmeli, `Current debt` 30 artmali
+
 ## 4. Kapanis Kriteri
 
 Asagidaki maddeler `OK` ise Open Account V1 kapanabilir:
@@ -84,3 +91,4 @@ Asagidaki maddeler `OK` ise Open Account V1 kapanabilir:
 - [ ] Debt/available credit hesaplari siparis ve tahsilatla tutarli ilerliyor
 - [ ] DealerTransaction tablosu siparis/tahsilat akisini dogru yansitiyor
 - [ ] Dealer edit ekranindaki hareket listesi ledger kayitlariyla tutarli
+- [ ] Manuel hareket girisleri debt/available credit hesaplarina yansiyor

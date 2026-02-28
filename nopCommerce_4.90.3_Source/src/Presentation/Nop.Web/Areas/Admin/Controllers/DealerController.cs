@@ -79,6 +79,16 @@ public partial class DealerController : BaseAdminController
         };
     }
 
+    protected virtual int GetDirectionIdByManualTransactionType(int manualTransactionTypeId)
+    {
+        return manualTransactionTypeId switch
+        {
+            (int)DealerTransactionType.ManualDebitAdjustment => (int)DealerTransactionDirection.Debit,
+            (int)DealerTransactionType.ManualCreditAdjustment => (int)DealerTransactionDirection.Credit,
+            _ => 0
+        };
+    }
+
     protected virtual async Task PrepareDealerModelAsync(DealerModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
@@ -157,6 +167,27 @@ public partial class DealerController : BaseAdminController
 
         model.AvailablePaymentMethods = availablePaymentMethods;
         model.SelectedPaymentMethodSystemNames = model.SelectedPaymentMethodSystemNames ?? [];
+        model.AvailableManualTransactionTypes =
+        [
+            new SelectListItem
+            {
+                Text = "Manual credit adjustment",
+                Value = ((int)DealerTransactionType.ManualCreditAdjustment).ToString()
+            },
+            new SelectListItem
+            {
+                Text = "Manual debit adjustment",
+                Value = ((int)DealerTransactionType.ManualDebitAdjustment).ToString()
+            }
+        ];
+
+        var availableManualTypeIds = model.AvailableManualTransactionTypes
+            .Select(item => int.TryParse(item.Value, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .ToHashSet();
+
+        if (!availableManualTypeIds.Contains(model.ManualTransactionTypeId))
+            model.ManualTransactionTypeId = (int)DealerTransactionType.ManualCreditAdjustment;
 
         if (model.Id > 0)
         {
@@ -304,6 +335,21 @@ public partial class DealerController : BaseAdminController
             ModelState.AddModelError(nameof(model.CreditLimit), "Credit limit can contain up to 4 decimal digits.");
     }
 
+    protected virtual void ValidateManualTransactionInputs(DealerModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var directionId = GetDirectionIdByManualTransactionType(model.ManualTransactionTypeId);
+        if (directionId <= 0)
+            ModelState.AddModelError(nameof(model.ManualTransactionTypeId), "A valid transaction type is required.");
+
+        if (model.ManualTransactionAmount <= 0 || model.ManualTransactionAmount > MaxDealerCreditLimit)
+            ModelState.AddModelError(nameof(model.ManualTransactionAmount), $"Amount must be between 0.0001 and {MaxDealerCreditLimit:0.####}.");
+
+        if (decimal.Round(model.ManualTransactionAmount, 4) != model.ManualTransactionAmount)
+            ModelState.AddModelError(nameof(model.ManualTransactionAmount), "Amount can contain up to 4 decimal digits.");
+    }
+
     #endregion
 
     #region Methods
@@ -442,6 +488,54 @@ public partial class DealerController : BaseAdminController
             SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList(),
             SelectedPaymentMethodSystemNames = (await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id)).ToList()
         };
+        var financialProfile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealer.Id);
+        model.OpenAccountEnabled = financialProfile?.OpenAccountEnabled ?? false;
+        model.CreditLimit = financialProfile?.CreditLimit ?? 0;
+
+        await PrepareDealerModelAsync(model);
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    [ActionName("Edit")]
+    [FormValueRequired("add-transaction")]
+    public virtual async Task<IActionResult> AddTransaction(DealerModel model)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+
+        var dealer = await _dealerService.GetDealerByIdAsync(model.Id);
+        if (dealer is null)
+            return RedirectToAction(nameof(List));
+
+        if (isStoreOwner && managedStoreId > 0 && dealer.StoreId != managedStoreId)
+            return AccessDeniedView();
+
+        var directionId = GetDirectionIdByManualTransactionType(model.ManualTransactionTypeId);
+        ValidateManualTransactionInputs(model);
+
+        if (ModelState.IsValid)
+        {
+            await _dealerService.InsertDealerTransactionAsync(new DealerTransaction
+            {
+                DealerId = dealer.Id,
+                TransactionTypeId = model.ManualTransactionTypeId,
+                DirectionId = directionId,
+                Amount = model.ManualTransactionAmount,
+                Note = string.IsNullOrWhiteSpace(model.ManualTransactionNote) ? null : model.ManualTransactionNote.Trim()
+            });
+
+            return RedirectToAction(nameof(Edit), new { id = dealer.Id });
+        }
+
+        model.Id = dealer.Id;
+        model.Name = dealer.Name;
+        model.StoreId = dealer.StoreId;
+        model.Active = dealer.Active;
+        model.SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList();
+        model.SelectedPaymentMethodSystemNames = (await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id)).ToList();
+
         var financialProfile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealer.Id);
         model.OpenAccountEnabled = financialProfile?.OpenAccountEnabled ?? false;
         model.CreditLimit = financialProfile?.CreditLimit ?? 0;
