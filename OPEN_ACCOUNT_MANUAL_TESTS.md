@@ -9,6 +9,7 @@ Bu dokuman `codex/feature/open-account-limit-ledger` branch'i icindir.
 - Checkout'ta open account gorunurlugu (limit + yetki)
 - Siparis olusturma aninda merkezi limit kontrolu (`Payments.OpenAccount` plugini)
 - Tahsilat sonrasi limitin geri acilmasi (payment status `Paid`)
+- Dealer transaction ledger kayitlari (`DealerTransaction`)
 
 ## 2. On Kosullar
 
@@ -62,6 +63,12 @@ Bu dokuman `codex/feature/open-account-limit-ledger` branch'i icindir.
 - [ ] Dealer edit ekranini yenile
 - [ ] `Current debt` dusmeli, `Available credit` artmali
 
+### OA8 - Dealer transaction ledger kontrolu
+
+- [ ] DB'de `DealerTransaction` tablosunu kontrol et
+- [ ] OA6 sonrasi `OpenAccountOrder` tipinde `Debit` bir kayit olusmali
+- [ ] OA7 sonrasi ayni siparis icin `OpenAccountCollection` tipinde `Credit` bir kayit olusmali
+
 ## 4. Kapanis Kriteri
 
 Asagidaki maddeler `OK` ise Open Account V1 kapanabilir:
@@ -69,3 +76,4 @@ Asagidaki maddeler `OK` ise Open Account V1 kapanabilir:
 - [ ] Open account sadece yetkili ve limit yeterli durumlarda secilebiliyor
 - [ ] Merkezi servis kontrolu ile bypass engelleniyor
 - [ ] Debt/available credit hesaplari siparis ve tahsilatla tutarli ilerliyor
+- [ ] DealerTransaction tablosu siparis/tahsilat akisini dogru yansitiyor

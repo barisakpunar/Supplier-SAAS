@@ -15,6 +15,7 @@ public partial class DealerService : IDealerService
 
     protected readonly IRepository<DealerInfo> _dealerInfoRepository;
     protected readonly IRepository<DealerFinancialProfile> _dealerFinancialProfileRepository;
+    protected readonly IRepository<DealerTransaction> _dealerTransactionRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
@@ -27,12 +28,14 @@ public partial class DealerService : IDealerService
 
     public DealerService(IRepository<DealerInfo> dealerInfoRepository,
         IRepository<DealerFinancialProfile> dealerFinancialProfileRepository,
+        IRepository<DealerTransaction> dealerTransactionRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
         IRepository<Order> orderRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
     {
         _dealerInfoRepository = dealerInfoRepository;
         _dealerFinancialProfileRepository = dealerFinancialProfileRepository;
+        _dealerTransactionRepository = dealerTransactionRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
         _orderRepository = orderRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
@@ -126,6 +129,27 @@ public partial class DealerService : IDealerService
         if (dealerId <= 0)
             return 0;
 
+        var openAccountTransactions = await _dealerTransactionRepository.Table
+            .Where(transaction => transaction.DealerId == dealerId
+                                  && (transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountOrder
+                                      || transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountCollection))
+            .Select(transaction => new
+            {
+                transaction.DirectionId,
+                transaction.Amount
+            })
+            .ToListAsync();
+
+        if (openAccountTransactions.Any())
+        {
+            var balance = openAccountTransactions.Sum(transaction =>
+                transaction.DirectionId == (int)DealerTransactionDirection.Debit
+                    ? transaction.Amount
+                    : -transaction.Amount);
+
+            return balance > 0 ? balance : 0;
+        }
+
         var customerIds = await GetCustomerIdsByDealerIdAsync(dealerId);
         if (!customerIds.Any())
             return 0;
@@ -162,6 +186,48 @@ public partial class DealerService : IDealerService
         var currentDebt = await GetOpenAccountCurrentDebtAsync(dealerId);
         var availableCredit = profile.CreditLimit - currentDebt;
         return availableCredit > 0 ? availableCredit : 0;
+    }
+
+    /// <summary>
+    /// Inserts a dealer transaction
+    /// </summary>
+    /// <param name="dealerTransaction">Dealer transaction</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerTransactionAsync(DealerTransaction dealerTransaction)
+    {
+        ArgumentNullException.ThrowIfNull(dealerTransaction);
+
+        if (dealerTransaction.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransaction.DealerId));
+
+        if (dealerTransaction.Amount < decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransaction.Amount));
+
+        if (dealerTransaction.CreatedOnUtc == default)
+            dealerTransaction.CreatedOnUtc = DateTime.UtcNow;
+
+        await _dealerTransactionRepository.InsertAsync(dealerTransaction);
+    }
+
+    /// <summary>
+    /// Indicates whether a dealer transaction exists for the order and transaction type
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="orderId">Order identifier</param>
+    /// <param name="transactionTypeId">Transaction type identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains a value indicating whether transaction exists
+    /// </returns>
+    public virtual async Task<bool> DealerTransactionExistsAsync(int dealerId, int orderId, int transactionTypeId)
+    {
+        if (dealerId <= 0 || orderId <= 0 || transactionTypeId <= 0)
+            return false;
+
+        return await _dealerTransactionRepository.Table
+            .AnyAsync(transaction => transaction.DealerId == dealerId
+                                     && transaction.OrderId == orderId
+                                     && transaction.TransactionTypeId == transactionTypeId);
     }
 
     /// <summary>
@@ -485,6 +551,7 @@ public partial class DealerService : IDealerService
         await _dealerPaymentMethodMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
         await _dealerCustomerMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
         await _dealerFinancialProfileRepository.DeleteAsync(profile => profile.DealerId == dealer.Id);
+        await _dealerTransactionRepository.DeleteAsync(transaction => transaction.DealerId == dealer.Id);
         await _dealerInfoRepository.DeleteAsync(dealer);
     }
 

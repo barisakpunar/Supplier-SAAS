@@ -69,6 +69,25 @@ public partial interface IDealerService
     Task<decimal> GetOpenAccountAvailableCreditAsync(int dealerId);
 
     /// <summary>
+    /// Inserts a dealer transaction
+    /// </summary>
+    /// <param name="dealerTransaction">Dealer transaction</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerTransactionAsync(DealerTransaction dealerTransaction);
+
+    /// <summary>
+    /// Indicates whether a dealer transaction exists for the order and transaction type
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="orderId">Order identifier</param>
+    /// <param name="transactionTypeId">Transaction type identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains a value indicating whether transaction exists
+    /// </returns>
+    Task<bool> DealerTransactionExistsAsync(int dealerId, int orderId, int transactionTypeId);
+
+    /// <summary>
     /// Search dealers
     /// </summary>
     /// <param name="name">Dealer name</param>
