@@ -19,7 +19,7 @@ public partial class DealerFinancialProfileBuilder : NopEntityBuilder<DealerFina
     public override void MapEntity(CreateTableExpressionBuilder table)
     {
         table
-            .WithColumn(nameof(DealerFinancialProfile.DealerId)).AsInt32().NotNullable().Unique().ForeignKey<DealerInfo>(onDelete: Rule.Cascade)
+            .WithColumn(nameof(DealerFinancialProfile.DealerId)).AsInt32().NotNullable().Unique("AK_DealerFinancialProfile_DealerId").ForeignKey<DealerInfo>(onDelete: Rule.Cascade)
             .WithColumn(nameof(DealerFinancialProfile.OpenAccountEnabled)).AsBoolean().NotNullable().WithDefaultValue(false)
             .WithColumn(nameof(DealerFinancialProfile.CreditLimit)).AsDecimal(18, 4).NotNullable().WithDefaultValue(0)
             .WithColumn(nameof(DealerFinancialProfile.CreatedOnUtc)).AsDateTime2().NotNullable()
