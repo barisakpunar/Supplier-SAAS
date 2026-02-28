@@ -7,7 +7,7 @@ Bu dokuman `codex/feature/open-account-limit-ledger` branch'i icindir.
 - Dealer finans profili (`OpenAccountEnabled`, `CreditLimit`)
 - Dealer edit ekraninda finans ozeti (`Current debt`, `Available credit`)
 - Checkout'ta open account gorunurlugu (limit + yetki)
-- Siparis olusturma aninda merkezi limit kontrolu (`OrderProcessingService`)
+- Siparis olusturma aninda merkezi limit kontrolu (`Payments.OpenAccount` plugini)
 - Tahsilat sonrasi limitin geri acilmasi (payment status `Paid`)
 
 ## 2. On Kosullar

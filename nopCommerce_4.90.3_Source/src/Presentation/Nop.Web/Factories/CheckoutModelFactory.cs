@@ -34,7 +34,6 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
     protected readonly ICountryService _countryService;
     protected readonly ICurrencyService _currencyService;
     protected readonly ICustomerService _customerService;
-    protected readonly IDealerService _dealerService;
     protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly ILocalizationService _localizationService;
     protected readonly IOrderProcessingService _orderProcessingService;
@@ -58,8 +57,6 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
     protected readonly ShippingSettings _shippingSettings;
     protected readonly TaxSettings _taxSettings;
 
-    protected const string OpenAccountPaymentMethodSystemName = "Payments.OpenAccount";
-
     #endregion
 
     #region Ctor
@@ -72,7 +69,6 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
         ICountryService countryService,
         ICurrencyService currencyService,
         ICustomerService customerService,
-        IDealerService dealerService,
         IGenericAttributeService genericAttributeService,
         ILocalizationService localizationService,
         IOrderProcessingService orderProcessingService,
@@ -104,7 +100,6 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
         _countryService = countryService;
         _currencyService = currencyService;
         _customerService = customerService;
-        _dealerService = dealerService;
         _genericAttributeService = genericAttributeService;
         _localizationService = localizationService;
         _orderProcessingService = orderProcessingService;
@@ -132,26 +127,6 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
     #endregion
 
     #region Utilities
-
-    protected virtual async Task<bool> IsOpenAccountAvailableForCheckoutAsync(Customer customer, IList<ShoppingCartItem> cart)
-    {
-        if (customer?.Id <= 0)
-            return false;
-
-        var dealerId = await _dealerService.GetDealerIdByCustomerIdAsync(customer.Id);
-        if (dealerId <= 0)
-            return false;
-
-        var financialProfile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealerId);
-        if (financialProfile == null || !financialProfile.OpenAccountEnabled)
-            return false;
-
-        var cartTotal = (await _orderTotalCalculationService
-            .GetShoppingCartTotalAsync(cart, usePaymentMethodAdditionalFee: false)).shoppingCartTotal ?? 0;
-
-        var availableCredit = await _dealerService.GetOpenAccountAvailableCreditAsync(dealerId);
-        return availableCredit >= cartTotal;
-    }
 
     /// <summary>
     /// Prepares the checkout pickup points model
@@ -507,17 +482,6 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
             .Where(pm => pm.PaymentMethodType == PaymentMethodType.Standard || pm.PaymentMethodType == PaymentMethodType.Redirection)
             .WhereAwait(async pm => !await pm.HidePaymentMethodAsync(cart))
             .ToListAsync();
-
-        if (paymentMethods.Any(pm => pm.PluginDescriptor.SystemName.Equals(OpenAccountPaymentMethodSystemName, StringComparison.InvariantCultureIgnoreCase)))
-        {
-            var openAccountAvailable = await IsOpenAccountAvailableForCheckoutAsync(customer, cart);
-            if (!openAccountAvailable)
-            {
-                paymentMethods = paymentMethods
-                    .Where(pm => !pm.PluginDescriptor.SystemName.Equals(OpenAccountPaymentMethodSystemName, StringComparison.InvariantCultureIgnoreCase))
-                    .ToList();
-            }
-        }
 
         foreach (var pm in paymentMethods)
         {

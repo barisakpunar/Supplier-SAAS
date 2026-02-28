@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Payment methods",
+  "FriendlyName": "Open Account",
+  "SystemName": "Payments.OpenAccount",
+  "Version": "4.90.1",
+  "SupportedVersions": [ "4.90" ],
+  "Author": "nopCommerce team",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Payments.OpenAccount.dll",
+  "Description": "This plugin enables open account payments"
+}
