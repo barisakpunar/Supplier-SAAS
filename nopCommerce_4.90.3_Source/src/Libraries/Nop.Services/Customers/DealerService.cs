@@ -132,7 +132,9 @@ public partial class DealerService : IDealerService
         var openAccountTransactions = await _dealerTransactionRepository.Table
             .Where(transaction => transaction.DealerId == dealerId
                                   && (transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountOrder
-                                      || transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountCollection))
+                                      || transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountCollection
+                                      || transaction.TransactionTypeId == (int)DealerTransactionType.ManualDebitAdjustment
+                                      || transaction.TransactionTypeId == (int)DealerTransactionType.ManualCreditAdjustment))
             .Select(transaction => new
             {
                 transaction.DirectionId,
