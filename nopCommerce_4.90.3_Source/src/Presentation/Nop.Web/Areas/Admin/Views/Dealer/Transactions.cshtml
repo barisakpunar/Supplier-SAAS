@@ -15,7 +15,7 @@
             <div class="cards-group">
                 <div class="card card-default card-search">
                     <div class="card-body">
-                        <form asp-action="Transactions" asp-controller="Dealer" method="get">
+                        <form asp-action="Transactions" asp-controller="Dealer" method="post">
                             <div class="row">
                                 @if (!Model.IsStoreOwner)
                                 {
@@ -65,9 +65,13 @@
                             </div>
                             <div class="row">
                                 <div class="text-center col-12">
-                                    <button type="submit" class="btn btn-primary btn-search">
+                                    <button type="submit" name="search-transactions" class="btn btn-primary btn-search">
                                         <i class="fas fa-magnifying-glass"></i>
                                         Search
+                                    </button>
+                                    <button type="submit" name="exportcsv-all" class="btn btn-success">
+                                        <i class="fas fa-download"></i>
+                                        Export to CSV
                                     </button>
                                 </div>
                             </div>

@@ -1,6 +1,6 @@
 # Open Account Manual Test Plan
 
-Bu dokuman `codex/feature/dealer-transaction-admin-ui` branch'i icindir.
+Bu dokuman Open Account akisi ve `codex/feature/dealer-transaction-report` rapor eklemeleri icindir.
 
 ## 0. Buradan Basla
 
@@ -8,11 +8,11 @@ Asagidaki sirayla git:
 
 1. `P1 -> P2 -> P3` (plugin kurulum)
 2. `E1 -> E2 -> E3 -> E4` (hizli uc-tan-uca akis)
-3. `OA1 -> OA5` (detay kontroller)
+3. `OA1 -> OA7` (detay kontroller)
 
 ## 1. On Kosullar
 
-- Branch: `codex/feature/dealer-transaction-admin-ui`
+- Branch: `codex/feature/dealer-transaction-report`
 - Build:
   - `dotnet build /Users/baris/Documents/Tedarik-SAAS/nopCommerce_4.90.3_Source/src/Presentation/Nop.Web/Nop.Web.csproj -c Debug --no-restore --nologo -m:1 /nr:false`
 - Test verisi:
@@ -74,7 +74,7 @@ Asagidaki sirayla git:
 - [ ] `Manual debit adjustment` + `30` gir, `Add transaction`
 - [ ] Debt 30 artmali
 
-## 4. Detay Senaryolari (OA1-OA5)
+## 4. Detay Senaryolari (OA1-OA7)
 
 ### OA1 - Open account method visibility (uygun limit)
 
@@ -110,6 +110,13 @@ Asagidaki sirayla git:
 - [ ] Siparis/tahsilat/manuel hareket satirlari listede gorunmeli
 - [ ] `Summary` bolumunde `Total debit`, `Total credit`, `Net balance` degerleri hesaplanmali
 
+### OA7 - Dealer transactions CSV export
+
+- [ ] `Customers > Dealer transactions` ekraninda filtreleri sec
+- [ ] `Export to CSV` butonuna tikla
+- [ ] CSV dosyasi inmeli ve adinda `dealer_transactions_` prefix'i olmali
+- [ ] CSV satirlari ekrandaki filtrelenen kayitlarla uyumlu olmali
+
 ## 5. Kapanis Kriteri
 
 Asagidaki maddeler `OK` ise Open Account + Dealer Ledger akisi kapanabilir:
@@ -120,3 +127,4 @@ Asagidaki maddeler `OK` ise Open Account + Dealer Ledger akisi kapanabilir:
 - [ ] Debt/available credit hesaplari ledger ile tutarli
 - [ ] Manuel credit/debit girisleri hesaplara yansiyor
 - [ ] Dealer transactions rapor ekrani filtre ve ozetleri dogru calisiyor
+- [ ] Dealer transactions CSV export filtrelerle uyumlu veri veriyor
