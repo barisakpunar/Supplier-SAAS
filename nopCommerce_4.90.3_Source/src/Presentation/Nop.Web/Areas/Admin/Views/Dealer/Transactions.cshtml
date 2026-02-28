@@ -1,0 +1,151 @@
+﻿@using System.Globalization
+@model DealerTransactionListModel
+@{
+    ViewBag.PageTitle = "Dealer transactions";
+    NopHtml.SetActiveMenuItemSystemName("DealerTransactions");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">Dealer transactions</h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <form asp-action="Transactions" asp-controller="Dealer" method="get">
+                            <div class="row">
+                                @if (!Model.IsStoreOwner)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="SearchStoreId" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-select asp-for="SearchStoreId" asp-items="Model.AvailableStores" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchDealerId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchDealerId" asp-items="Model.AvailableDealers" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCreatedFromUtc" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchCreatedFromUtc" asp-template="DateNullable" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCreatedToUtc" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchCreatedToUtc" asp-template="DateNullable" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="submit" class="btn btn-primary btn-search">
+                                        <i class="fas fa-magnifying-glass"></i>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Total debit:</strong> @Model.TotalDebit.ToString("0.####", CultureInfo.CurrentCulture)
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Total credit:</strong> @Model.TotalCredit.ToString("0.####", CultureInfo.CurrentCulture)
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Net balance:</strong> @Model.NetBalance.ToString("0.####", CultureInfo.CurrentCulture)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 170px;">Created (UTC)</th>
+                                        <th style="width: 220px;">Dealer</th>
+                                        <th style="width: 160px;">Store</th>
+                                        <th style="width: 210px;">Type</th>
+                                        <th style="width: 90px;">Direction</th>
+                                        <th style="width: 120px;">Amount</th>
+                                        <th style="width: 90px;">Order</th>
+                                        <th style="width: 100px;">Customer</th>
+                                        <th>Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Transactions.Any())
+                                    {
+                                        foreach (var transaction in Model.Transactions)
+                                        {
+                                            <tr>
+                                                <td>@transaction.CreatedOnUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</td>
+                                                <td>
+                                                    @transaction.DealerName
+                                                    <div>
+                                                        <a asp-action="Edit" asp-controller="Dealer" asp-route-id="@transaction.DealerId">Open dealer</a>
+                                                    </div>
+                                                </td>
+                                                <td>@transaction.StoreName</td>
+                                                <td>@transaction.TransactionType</td>
+                                                <td>@transaction.Direction</td>
+                                                <td>@transaction.Amount.ToString("0.####", CultureInfo.CurrentCulture)</td>
+                                                <td>@(transaction.OrderId?.ToString() ?? "-")</td>
+                                                <td>@(transaction.CustomerId?.ToString() ?? "-")</td>
+                                                <td>@(string.IsNullOrWhiteSpace(transaction.Note) ? "-" : transaction.Note)</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="9" class="text-center">No transactions found.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

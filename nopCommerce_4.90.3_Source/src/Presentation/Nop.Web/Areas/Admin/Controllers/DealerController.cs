@@ -388,6 +388,23 @@ public partial class DealerController : BaseAdminController
             ModelState.AddModelError(nameof(model.ManualTransactionAmount), "Amount can contain up to 4 decimal digits.");
     }
 
+    protected virtual DateTime? NormalizeDateFilterFrom(DateTime? value)
+    {
+        if (!value.HasValue)
+            return null;
+
+        return DateTime.SpecifyKind(value.Value.Date, DateTimeKind.Utc);
+    }
+
+    protected virtual DateTime? NormalizeDateFilterTo(DateTime? value)
+    {
+        if (!value.HasValue)
+            return null;
+
+        var endOfDay = value.Value.Date.AddDays(1).AddTicks(-1);
+        return DateTime.SpecifyKind(endOfDay, DateTimeKind.Utc);
+    }
+
     #endregion
 
     #region Methods
@@ -445,6 +462,101 @@ public partial class DealerController : BaseAdminController
                 PaymentMethodsSummary = paymentMethodsSummary
             });
         }
+
+        return View(searchModel);
+    }
+
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> Transactions(DealerTransactionListModel searchModel)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        searchModel ??= new DealerTransactionListModel();
+        searchModel.IsStoreOwner = isStoreOwner;
+
+        var stores = await _storeService.GetAllStoresAsync();
+        if (!isStoreOwner)
+        {
+            searchModel.AvailableStores = new List<SelectListItem>
+            {
+                new() { Text = "All", Value = "0" }
+            };
+
+            foreach (var store in stores)
+                searchModel.AvailableStores.Add(new SelectListItem { Text = store.Name, Value = store.Id.ToString() });
+        }
+        else
+        {
+            searchModel.SearchStoreId = managedStoreId;
+            searchModel.AvailableStores = [];
+        }
+
+        var effectiveStoreId = isStoreOwner ? managedStoreId : searchModel.SearchStoreId;
+        var filteredDealers = (await _dealerService.SearchDealersAsync(storeId: effectiveStoreId, pageSize: int.MaxValue))
+            .OrderBy(dealer => dealer.Name)
+            .ThenBy(dealer => dealer.Id)
+            .ToList();
+
+        searchModel.AvailableDealers = new List<SelectListItem>
+        {
+            new() { Text = "All", Value = "0" }
+        };
+
+        foreach (var dealer in filteredDealers)
+        {
+            searchModel.AvailableDealers.Add(new SelectListItem
+            {
+                Text = $"{dealer.Name} (#{dealer.Id})",
+                Value = dealer.Id.ToString()
+            });
+        }
+
+        if (searchModel.SearchDealerId > 0 && filteredDealers.All(dealer => dealer.Id != searchModel.SearchDealerId))
+            searchModel.SearchDealerId = 0;
+
+        var createdFromUtc = NormalizeDateFilterFrom(searchModel.SearchCreatedFromUtc);
+        var createdToUtc = NormalizeDateFilterTo(searchModel.SearchCreatedToUtc);
+
+        var transactions = await _dealerService.SearchDealerTransactionsAsync(
+            dealerId: searchModel.SearchDealerId,
+            storeId: effectiveStoreId,
+            createdFromUtc: createdFromUtc,
+            createdToUtc: createdToUtc,
+            pageSize: 1000);
+
+        var dealerById = filteredDealers.ToDictionary(dealer => dealer.Id);
+        var storesById = stores.ToDictionary(store => store.Id);
+
+        searchModel.Transactions = transactions.Select(transaction =>
+        {
+            dealerById.TryGetValue(transaction.DealerId, out var dealer);
+            var storeName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : "-";
+
+            return new DealerTransactionListItemModel
+            {
+                Id = transaction.Id,
+                DealerId = transaction.DealerId,
+                DealerName = dealer?.Name ?? $"Dealer #{transaction.DealerId}",
+                StoreId = dealer?.StoreId ?? 0,
+                StoreName = storeName,
+                OrderId = transaction.OrderId,
+                CustomerId = transaction.CustomerId,
+                TransactionType = GetDealerTransactionTypeText(transaction.TransactionTypeId),
+                Direction = GetDealerTransactionDirectionText(transaction.DirectionId),
+                Amount = transaction.Amount,
+                Note = transaction.Note,
+                CreatedOnUtc = transaction.CreatedOnUtc
+            };
+        }).ToList();
+
+        searchModel.TotalDebit = transactions
+            .Where(transaction => transaction.DirectionId == (int)DealerTransactionDirection.Debit)
+            .Sum(transaction => transaction.Amount);
+
+        searchModel.TotalCredit = transactions
+            .Where(transaction => transaction.DirectionId == (int)DealerTransactionDirection.Credit)
+            .Sum(transaction => transaction.Amount);
+
+        searchModel.NetBalance = searchModel.TotalDebit - searchModel.TotalCredit;
 
         return View(searchModel);
     }

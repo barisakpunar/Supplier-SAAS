@@ -103,6 +103,13 @@ Asagidaki sirayla git:
 - [ ] `Dealer transactions` karti gorunmeli
 - [ ] Son hareketler (siparis, tahsilat, manuel hareketler) listelenmeli
 
+### OA6 - Dealer transactions rapor sayfasi
+
+- [ ] `Customers > Dealer transactions` ekranina git
+- [ ] Store/Dealer/Tarih filtreleri calisiyor olmali
+- [ ] Siparis/tahsilat/manuel hareket satirlari listede gorunmeli
+- [ ] `Summary` bolumunde `Total debit`, `Total credit`, `Net balance` degerleri hesaplanmali
+
 ## 5. Kapanis Kriteri
 
 Asagidaki maddeler `OK` ise Open Account + Dealer Ledger akisi kapanabilir:
@@ -112,3 +119,4 @@ Asagidaki maddeler `OK` ise Open Account + Dealer Ledger akisi kapanabilir:
 - [ ] Bypass engeli calisiyor
 - [ ] Debt/available credit hesaplari ledger ile tutarli
 - [ ] Manuel credit/debit girisleri hesaplara yansiyor
+- [ ] Dealer transactions rapor ekrani filtre ve ozetleri dogru calisiyor
