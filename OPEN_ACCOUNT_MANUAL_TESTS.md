@@ -2,17 +2,15 @@
 
 Bu dokuman `codex/feature/dealer-transaction-admin-ui` branch'i icindir.
 
-## 1. Kapsam
+## 0. Buradan Basla
 
-- `Payments.OpenAccount` plugin kurulumu/aktiflestirme
-- Store bazli plugin limitleme
-- Dealer finans profili (`OpenAccountEnabled`, `CreditLimit`)
-- Checkout'ta open account gorunurlugu (limit + yetki)
-- Siparisten sonra ledger hareketleri (`DealerTransaction`)
-- Tahsilat sonrasi borc dusumu
-- Dealer edit ekraninda hareket listesi + manuel hareket girisi
+Asagidaki sirayla git:
 
-## 2. On Kosullar
+1. `P1 -> P2 -> P3` (plugin kurulum)
+2. `E1 -> E2 -> E3 -> E4` (hizli uc-tan-uca akis)
+3. `OA1 -> OA5` (detay kontroller)
+
+## 1. On Kosullar
 
 - Branch: `codex/feature/dealer-transaction-admin-ui`
 - Build:
@@ -23,7 +21,7 @@ Bu dokuman `codex/feature/dealer-transaction-admin-ui` branch'i icindir.
   - Musteri: `buyer-a1` (Dealer A'ya mapli)
   - Urun: checkout yapilabilecek en az 1 urun
 
-## 3. Plugin Kurulum Akisi (Open Account)
+## 2. Plugin Kurulum (P1-P3)
 
 ### P1 - Plugin listede gorunuyor mu?
 
@@ -39,14 +37,14 @@ Bu dokuman `codex/feature/dealer-transaction-admin-ui` branch'i icindir.
 - [ ] Tekrar `Configuration > Local plugins` ac
 - [ ] Plugin durumu `Installed` olmali
 
-### P3 - Payment method aktivasyonu
+### P3 - Payment method aktivasyonu + store limiti
 
 - [ ] `Configuration > Payment > Methods`
 - [ ] `Open Account` methodu aktif olmali
 - [ ] `Configuration > Local plugins > Open Account > Edit`
 - [ ] `Limited to stores` alaninda test store'u (`Store A`) secili olmali
 
-## 4. Uctan Uca Test Akisi (Hizli)
+## 3. Hizli Uctan Uca Akis (E1-E4)
 
 ### E1 - Dealer finans ayari
 
@@ -76,7 +74,7 @@ Bu dokuman `codex/feature/dealer-transaction-admin-ui` branch'i icindir.
 - [ ] `Manual debit adjustment` + `30` gir, `Add transaction`
 - [ ] Debt 30 artmali
 
-## 5. Detay Senaryolari
+## 4. Detay Senaryolari (OA1-OA5)
 
 ### OA1 - Open account method visibility (uygun limit)
 
@@ -105,7 +103,7 @@ Bu dokuman `codex/feature/dealer-transaction-admin-ui` branch'i icindir.
 - [ ] `Dealer transactions` karti gorunmeli
 - [ ] Son hareketler (siparis, tahsilat, manuel hareketler) listelenmeli
 
-## 6. Kapanis Kriteri
+## 5. Kapanis Kriteri
 
 Asagidaki maddeler `OK` ise Open Account + Dealer Ledger akisi kapanabilir:
 
