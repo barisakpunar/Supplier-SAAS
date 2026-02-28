@@ -1,94 +1,116 @@
 # Open Account Manual Test Plan
 
-Bu dokuman `codex/feature/open-account-limit-ledger` branch'i icindir.
+Bu dokuman `codex/feature/dealer-transaction-admin-ui` branch'i icindir.
 
 ## 1. Kapsam
 
+- `Payments.OpenAccount` plugin kurulumu/aktiflestirme
+- Store bazli plugin limitleme
 - Dealer finans profili (`OpenAccountEnabled`, `CreditLimit`)
-- Dealer edit ekraninda finans ozeti (`Current debt`, `Available credit`)
 - Checkout'ta open account gorunurlugu (limit + yetki)
-- Siparis olusturma aninda merkezi limit kontrolu (`Payments.OpenAccount` plugini)
-- Tahsilat sonrasi limitin geri acilmasi (payment status `Paid`)
-- Dealer transaction ledger kayitlari (`DealerTransaction`)
+- Siparisten sonra ledger hareketleri (`DealerTransaction`)
+- Tahsilat sonrasi borc dusumu
+- Dealer edit ekraninda hareket listesi + manuel hareket girisi
 
 ## 2. On Kosullar
 
-- Branch: `codex/feature/open-account-limit-ledger`
+- Branch: `codex/feature/dealer-transaction-admin-ui`
 - Build:
   - `dotnet build /Users/baris/Documents/Tedarik-SAAS/nopCommerce_4.90.3_Source/src/Presentation/Nop.Web/Nop.Web.csproj -c Debug --no-restore --nologo -m:1 /nr:false`
-- `Payments.OpenAccount` plugin aktif ve ilgili store'a limitli
-- Test dealer (`Dealer A`) + test customer (`buyer-a1`) mapping hazir
+- Test verisi:
+  - Store: `Store A`
+  - Dealer: `Dealer A` (Store A)
+  - Musteri: `buyer-a1` (Dealer A'ya mapli)
+  - Urun: checkout yapilabilecek en az 1 urun
 
-## 3. Test Senaryolari
+## 3. Plugin Kurulum Akisi (Open Account)
 
-### OA1 - Finans profil kaydi
+### P1 - Plugin listede gorunuyor mu?
 
-- [ ] Admin ile `Customers > Dealers > Edit Dealer A`
+- [ ] Admin ile giris yap
+- [ ] `Configuration > Local plugins`
+- [ ] `Open Account (Payments.OpenAccount)` satiri gorunmeli
+- [ ] Gorunmuyorsa `Reload list of plugins` yap ve sayfayi yenile
+
+### P2 - Plugin install / update
+
+- [ ] `Open Account` satirinda `Install` tikla
+- [ ] Uygulama restart isterse restart et
+- [ ] Tekrar `Configuration > Local plugins` ac
+- [ ] Plugin durumu `Installed` olmali
+
+### P3 - Payment method aktivasyonu
+
+- [ ] `Configuration > Payment > Methods`
+- [ ] `Open Account` methodu aktif olmali
+- [ ] `Configuration > Local plugins > Open Account > Edit`
+- [ ] `Limited to stores` alaninda test store'u (`Store A`) secili olmali
+
+## 4. Uctan Uca Test Akisi (Hizli)
+
+### E1 - Dealer finans ayari
+
+- [ ] `Customers > Dealers > Edit Dealer A`
 - [ ] `Enable open account = true`, `Credit limit = 1000`
 - [ ] Kaydet
-- [ ] Sayfa tekrar acildiginda degerler korunmali
+- [ ] `Current debt = 0`, `Available credit = 1000` gorunmeli
 
-### OA2 - Finans ozeti goruntuleme
-
-- [ ] Dealer edit ekraninda `Current debt` ve `Available credit` alanlari gorunmeli
-- [ ] Ilk durumda `Current debt = 0`, `Available credit = 1000` beklenir
-
-### OA3 - Checkout method visibility (uygun limit)
+### E2 - Checkout ve borc artisi
 
 - [ ] `buyer-a1` ile checkout'a git
-- [ ] Sepet toplami limitten dusuk olsun (ornek `200`)
-- [ ] `Open account` odeme yontemi listede gorunmeli
+- [ ] Sepet toplami `200` gibi limit altinda olsun
+- [ ] Odeme adiminda `Open account` gorunmeli
+- [ ] Siparisi `Open account` ile tamamla
+- [ ] Dealer edit ekranina donup debt'in arttigini dogrula
 
-### OA4 - Checkout method visibility (yetersiz limit)
+### E3 - Tahsilat ve borc azalis
 
-- [ ] `Credit limit` degerini kucult (ornek `50`)
-- [ ] `buyer-a1` checkout'ta sepet toplam `200`
-- [ ] `Open account` odeme yontemi listeden kalkmali
-
-### OA5 - Merkezi servis kontrolu (bypass guvenlik)
-
-- [ ] Checkout adiminda eski secili method veya craft POST ile `Payments.OpenAccount` dene
-- [ ] Siparis olusmamali
-- [ ] Hata mesaji: `Open account credit limit is exceeded...` veya `Selected payment method is not available`
-
-### OA6 - Borc artis kontrolu
-
-- [ ] Limit uygunken `Open account` ile siparis ver (ornek `300`)
-- [ ] Dealer edit ekranini tekrar ac
-- [ ] `Current debt` artmali, `Available credit` azalmali
-
-### OA7 - Tahsilat sonrasi limit geri acilmasi
-
-- [ ] Admin `Orders` ekraninda ilgili siparisi `Mark as paid` yap
+- [ ] `Orders` ekraninda ilgili siparisi `Mark as paid` yap
 - [ ] Dealer edit ekranini yenile
 - [ ] `Current debt` dusmeli, `Available credit` artmali
 
-### OA8 - Dealer transaction ledger kontrolu
+### E4 - Manuel hareket
+
+- [ ] Dealer editte `Manual transaction entry` kartinda `Manual credit adjustment` + `50` gir, `Add transaction`
+- [ ] Debt 50 dusmeli
+- [ ] `Manual debit adjustment` + `30` gir, `Add transaction`
+- [ ] Debt 30 artmali
+
+## 5. Detay Senaryolari
+
+### OA1 - Open account method visibility (uygun limit)
+
+- [ ] Limit yeterliyken checkout'ta method gorunmeli
+
+### OA2 - Open account method visibility (yetersiz limit)
+
+- [ ] Credit limit `50` yap
+- [ ] Sepet toplam `200` ile checkout ac
+- [ ] `Open account` listede olmamali
+
+### OA3 - Merkezi kontrol (bypass)
+
+- [ ] Craft POST veya eski secimle `Payments.OpenAccount` dene
+- [ ] Siparis olusmamali
+- [ ] Hata: `Open account credit limit is exceeded...` veya `Selected payment method is not available`
+
+### OA4 - Ledger tablosu kontrolu
 
 - [ ] DB'de `DealerTransaction` tablosunu kontrol et
-- [ ] OA6 sonrasi `OpenAccountOrder` tipinde `Debit` bir kayit olusmali
-- [ ] OA7 sonrasi ayni siparis icin `OpenAccountCollection` tipinde `Credit` bir kayit olusmali
+- [ ] Siparis sonrasi `OpenAccountOrder` + `Debit` kaydi olmali
+- [ ] `Mark as paid` sonrasi `OpenAccountCollection` + `Credit` kaydi olmali
 
-### OA9 - Dealer edit ekraninda hareket listesi
+### OA5 - Dealer edit transaction listesi
 
-- [ ] `Customers > Dealers > Edit Dealer A` ac
 - [ ] `Dealer transactions` karti gorunmeli
-- [ ] Son hareketler listesinde OA6/OA7 kayitlari satir olarak gorunmeli
+- [ ] Son hareketler (siparis, tahsilat, manuel hareketler) listelenmeli
 
-### OA10 - Manuel hareket girisi (tahsilat/borc)
+## 6. Kapanis Kriteri
 
-- [ ] `Manual transaction entry` kartinda `Manual credit adjustment` + tutar (ornek `50`) gir ve `Add transaction`
-- [ ] Kayit sonrasi listede yeni satir gorunmeli, `Current debt` 50 azaltilmali
-- [ ] `Manual debit adjustment` + tutar (ornek `30`) gir ve kaydet
-- [ ] Kayit sonrasi listede yeni satir gorunmeli, `Current debt` 30 artmali
+Asagidaki maddeler `OK` ise Open Account + Dealer Ledger akisi kapanabilir:
 
-## 4. Kapanis Kriteri
-
-Asagidaki maddeler `OK` ise Open Account V1 kapanabilir:
-
-- [ ] Open account sadece yetkili ve limit yeterli durumlarda secilebiliyor
-- [ ] Merkezi servis kontrolu ile bypass engelleniyor
-- [ ] Debt/available credit hesaplari siparis ve tahsilatla tutarli ilerliyor
-- [ ] DealerTransaction tablosu siparis/tahsilat akisini dogru yansitiyor
-- [ ] Dealer edit ekranindaki hareket listesi ledger kayitlariyla tutarli
-- [ ] Manuel hareket girisleri debt/available credit hesaplarina yansiyor
+- [ ] Plugin kurulum/aktiflestirme/store limitleme adimlari sorunsuz
+- [ ] Open account sadece yetkili ve limit yeterli durumda secilebiliyor
+- [ ] Bypass engeli calisiyor
+- [ ] Debt/available credit hesaplari ledger ile tutarli
+- [ ] Manuel credit/debit girisleri hesaplara yansiyor

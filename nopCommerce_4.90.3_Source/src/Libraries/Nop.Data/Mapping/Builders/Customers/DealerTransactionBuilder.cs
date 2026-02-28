@@ -20,9 +20,9 @@ public partial class DealerTransactionBuilder : NopEntityBuilder<DealerTransacti
     public override void MapEntity(CreateTableExpressionBuilder table)
     {
         table
-            .WithColumn(nameof(DealerTransaction.DealerId)).AsInt32().NotNullable().ForeignKey<DealerInfo>(onDelete: Rule.Cascade).Indexed()
-            .WithColumn(nameof(DealerTransaction.OrderId)).AsInt32().Nullable().ForeignKey<Order>(onDelete: Rule.None).Indexed()
-            .WithColumn(nameof(DealerTransaction.CustomerId)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None).Indexed()
+            .WithColumn(nameof(DealerTransaction.DealerId)).AsInt32().NotNullable().ForeignKey<DealerInfo>(onDelete: Rule.Cascade)
+            .WithColumn(nameof(DealerTransaction.OrderId)).AsInt32().Nullable().ForeignKey<Order>(onDelete: Rule.None)
+            .WithColumn(nameof(DealerTransaction.CustomerId)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None)
             .WithColumn(nameof(DealerTransaction.TransactionTypeId)).AsInt32().NotNullable().Indexed()
             .WithColumn(nameof(DealerTransaction.DirectionId)).AsInt32().NotNullable()
             .WithColumn(nameof(DealerTransaction.Amount)).AsDecimal(18, 4).NotNullable().WithDefaultValue(0)
