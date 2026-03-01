@@ -462,6 +462,16 @@ public partial class CommonModelFactory : ICommonModelFactory
             });
         }
 
+        //for multistore isolation scenarios this should remain disabled
+        if (_catalogSettings.IgnoreStoreLimitations && (await _storeService.GetAllStoresAsync()).Count > 1)
+        {
+            models.Add(new SystemWarningModel
+            {
+                Level = SystemWarningLevel.Warning,
+                Text = await _localizationService.GetResourceAsync("Admin.System.Warnings.Performance.IgnoreStoreLimitations.Notification")
+            });
+        }
+
         //check whether "IgnoreAcl" setting disabled
         if (!_catalogSettings.IgnoreAcl)
         {
