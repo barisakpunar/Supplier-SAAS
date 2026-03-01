@@ -7,6 +7,7 @@ using Nop.Core.Domain.Customers;
 using Nop.Data;
 using Nop.Services.Catalog;
 using Nop.Services.Customers;
+using Nop.Services.Discounts;
 using Nop.Services.Orders;
 using Nop.Services.Security;
 using Nop.Services.Shipping;
@@ -55,6 +56,7 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
         protected readonly bool _ignoreFilter;
         protected readonly ICategoryService _categoryService;
         protected readonly ICustomerService _customerService;
+        protected readonly IDiscountService _discountService;
         protected readonly IManufacturerService _manufacturerService;
         protected readonly IOrderService _orderService;
         protected readonly IProductReviewService _productReviewService;
@@ -67,6 +69,7 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
         private static readonly HashSet<string> _allowedControllers = new(StringComparer.InvariantCultureIgnoreCase)
         {
             "Home",
+            "Preferences",
             "Product",
             "Category",
             "Manufacturer",
@@ -81,7 +84,8 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
             "RoxyFileman",
             "StoreOwner",
             "Security",
-            "Dealer"
+            "Dealer",
+            "Discount"
         };
 
         private static readonly HashSet<string> _deniedReturnRequestActions = new(StringComparer.InvariantCultureIgnoreCase)
@@ -141,6 +145,7 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
         public ValidateStoreOwnerFilter(bool ignoreFilter,
             ICategoryService categoryService,
             ICustomerService customerService,
+            IDiscountService discountService,
             IManufacturerService manufacturerService,
             IOrderService orderService,
             IProductReviewService productReviewService,
@@ -153,6 +158,7 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
             _ignoreFilter = ignoreFilter;
             _categoryService = categoryService;
             _customerService = customerService;
+            _discountService = discountService;
             _manufacturerService = manufacturerService;
             _orderService = orderService;
             _productReviewService = productReviewService;
@@ -453,6 +459,18 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
 
                     var customer = await _customerService.GetCustomerByIdAsync(customerId);
                     return customer != null && customer.RegisteredInStoreId == managedStoreId;
+
+                case "Discount":
+                    var discountId = TryGetEntityId(context, "discountId", "id");
+                    if (discountId <= 0)
+                        return true;
+
+                    var discount = await _discountService.GetDiscountByIdAsync(discountId);
+                    if (discount is null || !discount.LimitedToStores)
+                        return false;
+
+                    var discountStoreIds = await _storeMappingService.GetStoresIdsWithAccessAsync(discount);
+                    return discountStoreIds.Length == 1 && discountStoreIds[0] == managedStoreId;
 
                 default:
                     return true;
