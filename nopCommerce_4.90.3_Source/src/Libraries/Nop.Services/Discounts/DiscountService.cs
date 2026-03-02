@@ -9,6 +9,7 @@ using Nop.Services.Catalog;
 using Nop.Services.Customers;
 using Nop.Services.Localization;
 using Nop.Services.Orders;
+using Nop.Services.Stores;
 
 namespace Nop.Services.Discounts;
 
@@ -29,6 +30,7 @@ public partial class DiscountService : IDiscountService
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IShortTermCacheManager _shortTermCacheManager;
     protected readonly IStaticCacheManager _staticCacheManager;
+    protected readonly IStoreMappingService _storeMappingService;
     protected readonly IStoreContext _storeContext;
 
     #endregion
@@ -45,6 +47,7 @@ public partial class DiscountService : IDiscountService
         IRepository<Order> orderRepository,
         IShortTermCacheManager shortTermCacheManager,
         IStaticCacheManager staticCacheManager,
+        IStoreMappingService storeMappingService,
         IStoreContext storeContext)
     {
         _customerService = customerService;
@@ -57,6 +60,7 @@ public partial class DiscountService : IDiscountService
         _orderRepository = orderRepository;
         _shortTermCacheManager = shortTermCacheManager;
         _staticCacheManager = staticCacheManager;
+        _storeMappingService = storeMappingService;
         _storeContext = storeContext;
     }
 
@@ -179,13 +183,14 @@ public partial class DiscountService : IDiscountService
     /// <param name="endDateUtc">Discount end date; pass null to load all records</param>
     /// <param name="isActive">A value indicating whether to get active discounts; "null" to load all discounts; "false" to load only inactive discounts; "true" to load only active discounts</param>
     /// <param name="vendorId">Vendor identifier; 0 to load all records</param>
+    /// <param name="storeId">Store identifier; 0 to load all records</param>
     /// <returns>
     /// A task that represents the asynchronous operation
     /// The task result contains the discounts
     /// </returns>
     public virtual async Task<IList<Discount>> GetAllDiscountsAsync(DiscountType? discountType = null,
         string couponCode = null, string discountName = null, bool showHidden = false,
-        DateTime? startDateUtc = null, DateTime? endDateUtc = null, bool? isActive = true, int vendorId = 0)
+        DateTime? startDateUtc = null, DateTime? endDateUtc = null, bool? isActive = true, int vendorId = 0, int storeId = 0)
     {
         //we load all discounts, and filter them using "discountType" and dates later (in memory)
         //we do it because we know that this method is invoked several times per HTTP request with distinct "discountType" parameter and date filters
@@ -230,7 +235,12 @@ public partial class DiscountService : IDiscountService
         if (vendorId > 0)
             discounts = discounts.Where(discount => discount.VendorId == vendorId);
 
-        return await discounts.ToListAsync();
+        var result = await discounts.ToListAsync();
+
+        if (storeId > 0)
+            result = (await result.WhereAwait(async discount => await _storeMappingService.AuthorizeAsync(discount, storeId)).ToListAsync());
+
+        return result;
     }
 
     /// <summary>
@@ -504,6 +514,11 @@ public partial class DiscountService : IDiscountService
             if (!couponCodesToValidate.Any(x => x.Equals(discount.CouponCode, StringComparison.InvariantCultureIgnoreCase)))
                 return result;
         }
+
+        //check store scope
+        var currentStore = await _storeContext.GetCurrentStoreAsync();
+        if (!await _storeMappingService.AuthorizeAsync(discount, currentStore.Id))
+            return result;
 
         //Do not allow discounts applied to order subtotal or total when a customer has gift cards in the cart.
         //Otherwise, this customer can purchase gift cards with discount and get more than paid ("free money").

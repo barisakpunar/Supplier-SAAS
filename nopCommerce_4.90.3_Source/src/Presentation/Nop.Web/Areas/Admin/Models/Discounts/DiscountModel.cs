@@ -8,7 +8,7 @@ namespace Nop.Web.Areas.Admin.Models.Discounts;
 /// <summary>
 /// Represents a discount model
 /// </summary>
-public partial record DiscountModel : BaseNopEntityModel
+public partial record DiscountModel : BaseNopEntityModel, IStoreMappingSupportedModel
 {
     #region Ctor
 
@@ -21,6 +21,8 @@ public partial record DiscountModel : BaseNopEntityModel
         DiscountCategorySearchModel = new DiscountCategorySearchModel();
         DiscountManufacturerSearchModel = new DiscountManufacturerSearchModel();
         AvailableVendors = new List<SelectListItem>();
+        SelectedStoreIds = new List<int>();
+        AvailableStores = new List<SelectListItem>();
     }
 
     #endregion
@@ -98,6 +100,11 @@ public partial record DiscountModel : BaseNopEntityModel
     public int? VendorId { get; set; }
     public IList<SelectListItem> AvailableVendors { get; set; }
 
+    [NopResourceDisplayName("Admin.Configuration.Settings.GeneralCommon.Stores")]
+    public IList<int> SelectedStoreIds { get; set; }
+
+    public IList<SelectListItem> AvailableStores { get; set; }
+
     [NopResourceDisplayName("Admin.Promotions.Discounts.Requirements.DiscountRequirementType")]
     public string AddDiscountRequirement { get; set; }
 
@@ -112,6 +119,10 @@ public partial record DiscountModel : BaseNopEntityModel
     public IList<SelectListItem> AvailableRequirementGroups { get; set; }
 
     public bool IsLoggedInAsVendor { get; set; }
+
+    public bool IsStoreOwner { get; set; }
+
+    public bool CanManageGlobalStoreScope { get; set; }
 
     public DiscountUsageHistorySearchModel DiscountUsageHistorySearchModel { get; set; }
 

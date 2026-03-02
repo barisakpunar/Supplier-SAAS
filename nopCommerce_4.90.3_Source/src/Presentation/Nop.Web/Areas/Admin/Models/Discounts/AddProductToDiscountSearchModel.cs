@@ -43,6 +43,7 @@ public partial record AddProductToDiscountSearchModel : BaseSearchModel
     public int SearchProductTypeId { get; set; }
 
     public bool IsLoggedInAsVendor { get; set; }
+    public bool IsStoreOwner { get; set; }
 
     public IList<SelectListItem> AvailableCategories { get; set; }
 

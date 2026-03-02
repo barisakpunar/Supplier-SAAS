@@ -102,6 +102,14 @@
                                         <nop-select asp-for="IsActiveId" asp-items="Model.AvailableActiveOptions" />
                                     </div>
                                 </div>
+                                <div class="form-group row" @((Model.AvailableStores.SelectionIsNotPossible() || Model.IsStoreOwner) ? Html.Raw("style='display:none'") : null)>
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchStoreId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchStoreId" asp-items="Model.AvailableStores" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -135,7 +143,8 @@
                             new FilterParameter(nameof(Model.SearchStartDate), typeof(DateTime?)),
                             new FilterParameter(nameof(Model.SearchEndDate), typeof(DateTime?)),
                             new FilterParameter(nameof(Model.IsActiveId)),
-                            new FilterParameter(nameof(Model.SearchVendorId))
+                            new FilterParameter(nameof(Model.SearchVendorId)),
+                            new FilterParameter(nameof(Model.SearchStoreId))
                         },
                    ColumnCollection = new List<ColumnProperty>
                         {

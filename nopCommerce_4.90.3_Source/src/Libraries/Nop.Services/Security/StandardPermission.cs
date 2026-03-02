@@ -79,6 +79,7 @@ public partial class StandardPermission
     {
         public const string DISCOUNTS_VIEW = $"{nameof(Promotions)}.DiscountsView";
         public const string DISCOUNTS_CREATE_EDIT_DELETE = $"{nameof(Promotions)}.DiscountsCreateEditDelete";
+        public const string DISCOUNTS_MANAGE_GLOBAL = $"{nameof(Promotions)}.DiscountsManageGlobal";
         public const string AFFILIATES_VIEW = $"{nameof(Promotions)}.AffiliatesView";
         public const string AFFILIATES_CREATE_EDIT_DELETE = $"{nameof(Promotions)}.AffiliatesCreateEditDelete";
         public const string SUBSCRIBERS_VIEW = $"{nameof(Promotions)}.SubscribersView";

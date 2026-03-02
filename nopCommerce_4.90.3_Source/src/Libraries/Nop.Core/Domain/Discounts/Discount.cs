@@ -1,9 +1,11 @@
-﻿namespace Nop.Core.Domain.Discounts;
+﻿using Nop.Core.Domain.Stores;
+
+namespace Nop.Core.Domain.Discounts;
 
 /// <summary>
 /// Represents a discount
 /// </summary>
-public partial class Discount : BaseEntity
+public partial class Discount : BaseEntity, IStoreMappingSupported
 {
     /// <summary>
     /// Gets or sets the name
@@ -96,6 +98,11 @@ public partial class Discount : BaseEntity
     /// Gets or sets a vendor identifier
     /// </summary>
     public int? VendorId { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this discount is limited to certain stores
+    /// </summary>
+    public bool LimitedToStores { get; set; }
 
     /// <summary>
     /// Gets or sets the discount type

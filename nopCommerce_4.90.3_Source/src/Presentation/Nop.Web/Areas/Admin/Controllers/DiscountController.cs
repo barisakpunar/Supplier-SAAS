@@ -2,13 +2,16 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
+using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Discounts;
 using Nop.Services.Catalog;
+using Nop.Services.Customers;
 using Nop.Services.Discounts;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
 using Nop.Services.Messages;
 using Nop.Services.Security;
+using Nop.Services.Stores;
 using Nop.Web.Areas.Admin.Factories;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using Nop.Web.Areas.Admin.Models.Discounts;
@@ -24,6 +27,7 @@ public partial class DiscountController : BaseAdminController
 
     protected readonly CatalogSettings _catalogSettings;
     protected readonly ICategoryService _categoryService;
+    protected readonly ICustomerService _customerService;
     protected readonly ICustomerActivityService _customerActivityService;
     protected readonly IDiscountModelFactory _discountModelFactory;
     protected readonly IDiscountPluginManager _discountPluginManager;
@@ -33,6 +37,8 @@ public partial class DiscountController : BaseAdminController
     protected readonly INotificationService _notificationService;
     protected readonly IPermissionService _permissionService;
     protected readonly IProductService _productService;
+    protected readonly IStoreMappingService _storeMappingService;
+    protected readonly IStoreService _storeService;
     protected readonly IWorkContext _workContext;
 
     #endregion
@@ -41,6 +47,7 @@ public partial class DiscountController : BaseAdminController
 
     public DiscountController(CatalogSettings catalogSettings,
         ICategoryService categoryService,
+        ICustomerService customerService,
         ICustomerActivityService customerActivityService,
         IDiscountModelFactory discountModelFactory,
         IDiscountPluginManager discountPluginManager,
@@ -50,10 +57,13 @@ public partial class DiscountController : BaseAdminController
         INotificationService notificationService,
         IPermissionService permissionService,
         IProductService productService,
+        IStoreMappingService storeMappingService,
+        IStoreService storeService,
         IWorkContext workContext)
     {
         _catalogSettings = catalogSettings;
         _categoryService = categoryService;
+        _customerService = customerService;
         _customerActivityService = customerActivityService;
         _discountModelFactory = discountModelFactory;
         _discountPluginManager = discountPluginManager;
@@ -63,6 +73,8 @@ public partial class DiscountController : BaseAdminController
         _notificationService = notificationService;
         _permissionService = permissionService;
         _productService = productService;
+        _storeMappingService = storeMappingService;
+        _storeService = storeService;
         _workContext = workContext;
     }
 
@@ -71,6 +83,49 @@ public partial class DiscountController : BaseAdminController
     #region Methods
 
     #region Discounts
+
+    protected virtual async Task<(bool isStoreOwner, int managedStoreId)> GetStoreOwnerContextAsync()
+    {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        if (customer is null || await _customerService.IsAdminAsync(customer))
+            return (false, 0);
+
+        var isStoreOwner = await _customerService.IsInCustomerRoleAsync(customer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (!isStoreOwner)
+            return (false, 0);
+
+        return (true, customer.RegisteredInStoreId);
+    }
+
+    protected virtual async Task NormalizeAndValidateStoreScopeAsync(DiscountModel model, bool isStoreOwner, int managedStoreId, bool canManageGlobalStoreScope, bool isVendor)
+    {
+        model.SelectedStoreIds = model.SelectedStoreIds?
+            .Where(storeId => storeId > 0)
+            .Distinct()
+            .ToList() ?? new List<int>();
+
+        var validStoreIds = (await _storeService.GetAllStoresAsync())
+            .Select(store => store.Id)
+            .ToHashSet();
+        model.SelectedStoreIds = model.SelectedStoreIds
+            .Where(validStoreIds.Contains)
+            .ToList();
+
+        if (isStoreOwner)
+        {
+            if (managedStoreId <= 0 || !validStoreIds.Contains(managedStoreId))
+            {
+                ModelState.AddModelError(nameof(model.SelectedStoreIds), "A valid store is required.");
+                return;
+            }
+
+            model.SelectedStoreIds = [managedStoreId];
+            return;
+        }
+
+        if (!isVendor && !canManageGlobalStoreScope && !model.SelectedStoreIds.Any())
+            ModelState.AddModelError(nameof(model.SelectedStoreIds), "At least one store must be selected.");
+    }
 
     public virtual IActionResult Index()
     {
@@ -113,14 +168,19 @@ public partial class DiscountController : BaseAdminController
     [CheckPermission(StandardPermission.Promotions.DISCOUNTS_CREATE_EDIT_DELETE)]
     public virtual async Task<IActionResult> Create(DiscountModel model, bool continueEditing)
     {
+        var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var canManageGlobalStoreScope = await _permissionService.AuthorizeAsync(StandardPermission.Promotions.DISCOUNTS_MANAGE_GLOBAL);
+        var currentVendor = await _workContext.GetCurrentVendorAsync();
+        if (currentVendor != null)
+            model.VendorId = currentVendor.Id;
+
+        await NormalizeAndValidateStoreScopeAsync(model, isStoreOwner, managedStoreId, canManageGlobalStoreScope, currentVendor != null);
+
         if (ModelState.IsValid)
         {
-            var currentVendor = await _workContext.GetCurrentVendorAsync();
-            if (currentVendor != null)
-                model.VendorId = currentVendor.Id;
-
             var discount = model.ToEntity<Discount>();
             await _discountService.InsertDiscountAsync(discount);
+            await _storeMappingService.SaveStoreMappingsAsync(discount, model.SelectedStoreIds);
 
             //activity log
             await _customerActivityService.InsertActivityAsync("AddNewDiscount",
@@ -174,11 +234,16 @@ public partial class DiscountController : BaseAdminController
         if (currentVendor != null && discount.VendorId != currentVendor.Id)
             return RedirectToAction("List");
 
+        var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var canManageGlobalStoreScope = await _permissionService.AuthorizeAsync(StandardPermission.Promotions.DISCOUNTS_MANAGE_GLOBAL);
+        await NormalizeAndValidateStoreScopeAsync(model, isStoreOwner, managedStoreId, canManageGlobalStoreScope, currentVendor != null);
+
         if (ModelState.IsValid)
         {
             var prevDiscountType = discount.DiscountType;
             discount = model.ToEntity(discount);
             await _discountService.UpdateDiscountAsync(discount);
+            await _storeMappingService.SaveStoreMappingsAsync(discount, model.SelectedStoreIds);
 
             //clean up old references (if changed) 
             if (prevDiscountType != discount.DiscountType)

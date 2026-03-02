@@ -42,6 +42,7 @@ public sealed class CheckDiscountCouponAttribute : TypeFilterAttribute
         protected readonly IDiscountService _discountService;
         protected readonly ILocalizationService _localizationService;
         protected readonly INotificationService _notificationService;
+        protected readonly IStoreContext _storeContext;
         protected readonly IWorkContext _workContext;
 
         #endregion
@@ -52,12 +53,14 @@ public sealed class CheckDiscountCouponAttribute : TypeFilterAttribute
             IDiscountService discountService,
             ILocalizationService localizationService,
             INotificationService notificationService,
+            IStoreContext storeContext,
             IWorkContext workContext)
         {
             _customerService = customerService;
             _discountService = discountService;
             _localizationService = localizationService;
             _notificationService = notificationService;
+            _storeContext = storeContext;
             _workContext = workContext;
         }
 
@@ -99,8 +102,9 @@ public sealed class CheckDiscountCouponAttribute : TypeFilterAttribute
             //get validated discounts with passed coupon codes
 
             var validCouponCodes = new List<string>();
+            var store = await _storeContext.GetCurrentStoreAsync();
             var discounts = await couponCodes
-                .SelectManyAwait(async couponCode => await _discountService.GetAllDiscountsAsync(couponCode: couponCode))
+                .SelectManyAwait(async couponCode => await _discountService.GetAllDiscountsAsync(couponCode: couponCode, storeId: store.Id))
                 .Distinct()
                 .ToListAsync();
 
