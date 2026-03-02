@@ -72,6 +72,21 @@ public partial interface IDealerService
     /// Gets dealer transactions
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="createdFromUtc">Created date from (UTC)</param>
+    /// <param name="createdToUtc">Created date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer transactions
+    /// </returns>
+    Task<IList<DealerTransaction>> SearchDealerTransactionsAsync(int dealerId = 0, int storeId = 0,
+        DateTime? createdFromUtc = null, DateTime? createdToUtc = null, int pageSize = int.MaxValue);
+
+    /// <summary>
+    /// Gets dealer transactions
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
     /// <param name="pageSize">Page size</param>
     /// <returns>
     /// A task that represents the asynchronous operation

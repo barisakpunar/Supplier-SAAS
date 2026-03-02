@@ -6,15 +6,19 @@
 
 <div class="content-header clearfix">
     <h1 class="float-left">Dealers</h1>
-    @if (!Model.IsStoreOwner)
-    {
-        <div class="float-right">
+    <div class="float-right">
+        <a asp-action="Transactions" class="btn btn-default">
+            <i class="fas fa-file-invoice-dollar"></i>
+            Transactions
+        </a>
+        @if (!Model.IsStoreOwner)
+        {
             <a asp-action="Create" class="btn btn-primary">
                 <i class="fas fa-square-plus"></i>
                 Add new
             </a>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 <section class="content">

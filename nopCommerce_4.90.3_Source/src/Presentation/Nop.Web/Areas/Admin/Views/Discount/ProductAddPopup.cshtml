@@ -68,7 +68,7 @@ else
                                             }
                                         </div>
                                         <div class="col-sm-6">
-                                            <div class="form-group row" @(Model.AvailableStores.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                            <div class="form-group row" @((Model.AvailableStores.SelectionIsNotPossible() || Model.IsStoreOwner) ? Html.Raw("style=\"display:none\"") : null)>
                                                 <div class="col-sm-5">
                                                     <nop-label asp-for="SearchStoreId" />
                                                 </div>

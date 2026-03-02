@@ -895,7 +895,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
 
         foreach (var couponCode in discountCouponCodes)
         {
-            var discount = await (await _discountService.GetAllDiscountsAsync(couponCode: couponCode))
+            var discount = await (await _discountService.GetAllDiscountsAsync(couponCode: couponCode, storeId: store.Id))
                 .FirstOrDefaultAwaitAsync(async d => d.RequiresCouponCode && (await _discountService.ValidateDiscountAsync(d, customer, discountCouponCodes)).IsValid);
 
             if (discount != null)

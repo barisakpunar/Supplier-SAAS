@@ -191,6 +191,52 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Search dealer transactions
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="createdFromUtc">Created date from (UTC)</param>
+    /// <param name="createdToUtc">Created date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer transactions
+    /// </returns>
+    public virtual async Task<IList<DealerTransaction>> SearchDealerTransactionsAsync(int dealerId = 0, int storeId = 0,
+        DateTime? createdFromUtc = null, DateTime? createdToUtc = null, int pageSize = int.MaxValue)
+    {
+        if (pageSize <= 0)
+            return new List<DealerTransaction>();
+
+        var query = from transaction in _dealerTransactionRepository.Table
+                    join dealer in _dealerInfoRepository.Table on transaction.DealerId equals dealer.Id
+                    select new
+                    {
+                        Transaction = transaction,
+                        dealer.StoreId
+                    };
+
+        if (dealerId > 0)
+            query = query.Where(item => item.Transaction.DealerId == dealerId);
+
+        if (storeId > 0)
+            query = query.Where(item => item.StoreId == storeId);
+
+        if (createdFromUtc.HasValue)
+            query = query.Where(item => item.Transaction.CreatedOnUtc >= createdFromUtc.Value);
+
+        if (createdToUtc.HasValue)
+            query = query.Where(item => item.Transaction.CreatedOnUtc <= createdToUtc.Value);
+
+        return await query
+            .OrderByDescending(item => item.Transaction.CreatedOnUtc)
+            .ThenByDescending(item => item.Transaction.Id)
+            .Select(item => item.Transaction)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Gets dealer transactions
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -204,12 +250,7 @@ public partial class DealerService : IDealerService
         if (dealerId <= 0 || pageSize <= 0)
             return new List<DealerTransaction>();
 
-        return await _dealerTransactionRepository.Table
-            .Where(transaction => transaction.DealerId == dealerId)
-            .OrderByDescending(transaction => transaction.CreatedOnUtc)
-            .ThenByDescending(transaction => transaction.Id)
-            .Take(pageSize)
-            .ToListAsync();
+        return await SearchDealerTransactionsAsync(dealerId: dealerId, pageSize: pageSize);
     }
 
     /// <summary>

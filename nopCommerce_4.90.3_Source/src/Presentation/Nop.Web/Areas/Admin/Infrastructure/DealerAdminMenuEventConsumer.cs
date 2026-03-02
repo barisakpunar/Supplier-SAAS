@@ -20,15 +20,31 @@ public partial class DealerAdminMenuEventConsumer : IConsumer<AdminMenuCreatedEv
     public virtual Task HandleEventAsync(AdminMenuCreatedEvent eventMessage)
     {
         var customersRoot = eventMessage.RootMenuItem.GetItemBySystemName("Customers");
-        if (customersRoot is null || customersRoot.ContainsSystemName("Dealers"))
+        if (customersRoot is null)
             return Task.CompletedTask;
 
-        customersRoot.InsertAfter("Customers list", new AdminMenuItem
+        if (!customersRoot.ContainsSystemName("Dealers"))
+        {
+            customersRoot.InsertAfter("Customers list", new AdminMenuItem
+            {
+                Visible = true,
+                SystemName = "Dealers",
+                Title = "Dealers",
+                Url = eventMessage.GetMenuItemUrl("Dealer", "List"),
+                IconClass = "far fa-dot-circle",
+                PermissionNames = new List<string> { StandardPermission.Customers.CUSTOMERS_VIEW }
+            });
+        }
+
+        if (customersRoot.ContainsSystemName("DealerTransactions"))
+            return Task.CompletedTask;
+
+        customersRoot.InsertAfter("Dealers", new AdminMenuItem
         {
             Visible = true,
-            SystemName = "Dealers",
-            Title = "Dealers",
-            Url = eventMessage.GetMenuItemUrl("Dealer", "List"),
+            SystemName = "DealerTransactions",
+            Title = "Dealer transactions",
+            Url = eventMessage.GetMenuItemUrl("Dealer", "Transactions"),
             IconClass = "far fa-dot-circle",
             PermissionNames = new List<string> { StandardPermission.Customers.CUSTOMERS_VIEW }
         });

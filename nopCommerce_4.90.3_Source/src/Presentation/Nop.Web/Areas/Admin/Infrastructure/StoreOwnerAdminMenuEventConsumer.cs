@@ -33,7 +33,10 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
         "Return requests",
         "Customers",
         "Customers list",
-        "Dealers"
+        "Dealers",
+        "DealerTransactions",
+        "Promotions",
+        "Discounts"
     };
 
     #endregion

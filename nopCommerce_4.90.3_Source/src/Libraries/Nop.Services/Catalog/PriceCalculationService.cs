@@ -1,4 +1,5 @@
-﻿using Nop.Core.Caching;
+﻿using Nop.Core;
+using Nop.Core.Caching;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Directory;
@@ -26,6 +27,7 @@ public partial class PriceCalculationService : IPriceCalculationService
     protected readonly IManufacturerService _manufacturerService;
     protected readonly IProductAttributeParser _productAttributeParser;
     protected readonly IProductService _productService;
+    protected readonly IStoreContext _storeContext;
     protected readonly IStaticCacheManager _staticCacheManager;
 
     #endregion
@@ -41,6 +43,7 @@ public partial class PriceCalculationService : IPriceCalculationService
         IManufacturerService manufacturerService,
         IProductAttributeParser productAttributeParser,
         IProductService productService,
+        IStoreContext storeContext,
         IStaticCacheManager staticCacheManager)
     {
         _catalogSettings = catalogSettings;
@@ -52,6 +55,7 @@ public partial class PriceCalculationService : IPriceCalculationService
         _manufacturerService = manufacturerService;
         _productAttributeParser = productAttributeParser;
         _productService = productService;
+        _storeContext = storeContext;
         _staticCacheManager = staticCacheManager;
     }
 
@@ -99,8 +103,10 @@ public partial class PriceCalculationService : IPriceCalculationService
         if (_catalogSettings.IgnoreDiscounts)
             return allowedDiscounts;
 
+        var store = await _storeContext.GetCurrentStoreAsync();
+
         //load cached discount models (performance optimization)
-        foreach (var discount in await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToCategories))
+        foreach (var discount in await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToCategories, storeId: store.Id))
         {
             //load identifier of categories with this discount applied to
             var discountCategoryIds = await _categoryService.GetAppliedCategoryIdsAsync(discount, customer);
@@ -146,7 +152,9 @@ public partial class PriceCalculationService : IPriceCalculationService
         if (_catalogSettings.IgnoreDiscounts)
             return allowedDiscounts;
 
-        foreach (var discount in await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToManufacturers))
+        var store = await _storeContext.GetCurrentStoreAsync();
+
+        foreach (var discount in await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToManufacturers, storeId: store.Id))
         {
             //load identifier of manufacturers with this discount applied to
             var discountManufacturerIds = await _manufacturerService.GetAppliedManufacturerIdsAsync(discount, customer);

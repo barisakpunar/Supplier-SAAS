@@ -119,7 +119,8 @@ public partial class OrderTotalCalculationService : IOrderTotalCalculationServic
         if (_catalogSettings.IgnoreDiscounts)
             return (discountAmount, new List<Discount>());
 
-        var allDiscounts = await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToOrderSubTotal);
+        var store = await _storeContext.GetCurrentStoreAsync();
+        var allDiscounts = await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToOrderSubTotal, storeId: store.Id);
         var allowedDiscounts = new List<Discount>();
         if (allDiscounts?.Any() == true)
         {
@@ -158,7 +159,8 @@ public partial class OrderTotalCalculationService : IOrderTotalCalculationServic
         if (_catalogSettings.IgnoreDiscounts)
             return (shippingDiscountAmount, appliedDiscounts);
 
-        var allDiscounts = await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToShipping);
+        var store = await _storeContext.GetCurrentStoreAsync();
+        var allDiscounts = await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToShipping, storeId: store.Id);
         var allowedDiscounts = new List<Discount>();
         if (allDiscounts?.Any() == true)
         {
@@ -196,7 +198,8 @@ public partial class OrderTotalCalculationService : IOrderTotalCalculationServic
         if (_catalogSettings.IgnoreDiscounts)
             return (discountAmount, new List<Discount>());
 
-        var allDiscounts = await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToOrderTotal);
+        var store = await _storeContext.GetCurrentStoreAsync();
+        var allDiscounts = await _discountService.GetAllDiscountsAsync(DiscountType.AssignedToOrderTotal, storeId: store.Id);
         var allowedDiscounts = new List<Discount>();
         if (allDiscounts?.Any() == true)
         {

@@ -16,6 +16,7 @@ public partial record DiscountSearchModel : BaseSearchModel
     {
         AvailableActiveOptions = new List<SelectListItem>();
         AvailableDiscountTypes = new List<SelectListItem>();
+        AvailableStores = new List<SelectListItem>();
         AvailableVendors = new List<SelectListItem>();
     }
 
@@ -50,7 +51,14 @@ public partial record DiscountSearchModel : BaseSearchModel
     public int SearchVendorId { get; set; }
     public IList<SelectListItem> AvailableVendors { get; set; }
 
+    [NopResourceDisplayName("Admin.Catalog.Products.List.SearchStore")]
+    public int SearchStoreId { get; set; }
+
+    public IList<SelectListItem> AvailableStores { get; set; }
+
     public bool IsLoggedInAsVendor { get; set; }
+
+    public bool IsStoreOwner { get; set; }
 
     #endregion
 }
