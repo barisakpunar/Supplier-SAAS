@@ -32,6 +32,7 @@ using Nop.Services.Media;
 using Nop.Services.Messages;
 using Nop.Services.Orders;
 using Nop.Services.Security;
+using Nop.Services.Stores;
 using Nop.Services.Tax;
 using Nop.Web.Factories;
 using Nop.Web.Framework;
@@ -86,6 +87,7 @@ public partial class CustomerController : BasePublicController
     protected readonly IProductService _productService;
     protected readonly IStateProvinceService _stateProvinceService;
     protected readonly IStoreContext _storeContext;
+    protected readonly IStoreService _storeService;
     protected readonly ITaxService _taxService;
     protected readonly IWorkContext _workContext;
     protected readonly IWorkflowMessageService _workflowMessageService;
@@ -138,6 +140,7 @@ public partial class CustomerController : BasePublicController
         IProductService productService,
         IStateProvinceService stateProvinceService,
         IStoreContext storeContext,
+        IStoreService storeService,
         ITaxService taxService,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
@@ -185,6 +188,7 @@ public partial class CustomerController : BasePublicController
         _productService = productService;
         _stateProvinceService = stateProvinceService;
         _storeContext = storeContext;
+        _storeService = storeService;
         _taxService = taxService;
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
@@ -232,6 +236,18 @@ public partial class CustomerController : BasePublicController
             .Any(p => p.PluginDescriptor.SystemName.Equals(selectedProvider, StringComparison.InvariantCultureIgnoreCase));
 
         return isValidProvider ? selectedProvider : string.Empty;
+    }
+
+    protected virtual async Task<Store> ResolveRegisterStoreAsync(int? invitedStoreId)
+    {
+        if (invitedStoreId.GetValueOrDefault() > 0)
+        {
+            var invitedStore = await _storeService.GetStoreByIdAsync(invitedStoreId.Value);
+            if (invitedStore != null)
+                return invitedStore;
+        }
+
+        return await _storeContext.GetCurrentStoreAsync();
     }
 
     protected virtual async Task<string> ParseCustomCustomerAttributesAsync(IFormCollection form)
@@ -770,7 +786,7 @@ public partial class CustomerController : BasePublicController
 
     //available even when navigation is not allowed
     [CheckAccessPublicStore(ignore: true)]
-    public virtual async Task<IActionResult> Register(string returnUrl)
+    public virtual async Task<IActionResult> Register(string returnUrl, int? invitedStoreId)
     {
         //check whether registration is allowed
         if (_customerSettings.UserRegistrationType == UserRegistrationType.Disabled)
@@ -778,6 +794,7 @@ public partial class CustomerController : BasePublicController
 
         var model = new RegisterModel();
         model = await _customerModelFactory.PrepareRegisterModelAsync(model, false, setDefaultValues: true);
+        model.InvitedStoreId = invitedStoreId;
 
         return View(model);
     }
@@ -793,7 +810,7 @@ public partial class CustomerController : BasePublicController
         if (_customerSettings.UserRegistrationType == UserRegistrationType.Disabled)
             return RedirectToRoute(NopRouteNames.Standard.REGISTER_RESULT, new { resultId = (int)UserRegistrationType.Disabled, returnUrl });
 
-        var store = await _storeContext.GetCurrentStoreAsync();
+        var store = await ResolveRegisterStoreAsync(model.InvitedStoreId);
         var customer = await _workContext.GetCurrentCustomerAsync();
         var language = await _workContext.GetWorkingLanguageAsync();
 
@@ -1084,7 +1101,9 @@ public partial class CustomerController : BasePublicController
         }
 
         //If we got this far, something failed, redisplay form
+        var invitedStoreId = model.InvitedStoreId;
         model = await _customerModelFactory.PrepareRegisterModelAsync(model, true, customerAttributesXml);
+        model.InvitedStoreId = invitedStoreId;
 
         return View(model);
     }

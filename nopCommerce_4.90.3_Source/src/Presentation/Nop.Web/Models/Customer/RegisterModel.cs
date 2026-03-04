@@ -152,4 +152,6 @@ public partial record RegisterModel : BaseNopModel
     public IList<CustomerAttributeModel> CustomerAttributes { get; set; }
 
     public IList<GdprConsentModel> GdprConsents { get; set; }
+
+    public int? InvitedStoreId { get; set; }
 }
