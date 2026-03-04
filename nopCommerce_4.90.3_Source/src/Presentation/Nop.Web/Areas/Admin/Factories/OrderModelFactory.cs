@@ -1011,6 +1011,12 @@ public partial class OrderModelFactory : IOrderModelFactory
     {
         ArgumentNullException.ThrowIfNull(searchModel);
 
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.StoreId = currentCustomer.RegisteredInStoreId;
+
         //get parameters to filter orders
         var orderStatusIds = (searchModel.OrderStatusIds?.Contains(0) ?? true) ? null : searchModel.OrderStatusIds.ToList();
         var paymentStatusIds = (searchModel.PaymentStatusIds?.Contains(0) ?? true) ? null : searchModel.PaymentStatusIds.ToList();
@@ -1093,6 +1099,12 @@ public partial class OrderModelFactory : IOrderModelFactory
     public virtual async Task<OrderAggreratorModel> PrepareOrderAggregatorModelAsync(OrderSearchModel searchModel)
     {
         ArgumentNullException.ThrowIfNull(searchModel);
+
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.StoreId = currentCustomer.RegisteredInStoreId;
 
         if (!_orderSettings.DisplayOrderSummary)
             return null;

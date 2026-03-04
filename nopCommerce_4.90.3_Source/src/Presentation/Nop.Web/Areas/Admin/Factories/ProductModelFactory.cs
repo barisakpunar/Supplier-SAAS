@@ -774,6 +774,8 @@ public partial class ProductModelFactory : IProductModelFactory
         var currentCustomer = await _workContext.GetCurrentCustomerAsync();
         var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
                            && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.SearchStoreId = currentCustomer.RegisteredInStoreId;
 
         //get parameters to filter comments
         var overridePublished = searchModel.SearchPublishedId == 0 ? null : (bool?)(searchModel.SearchPublishedId == 1);
@@ -787,8 +789,8 @@ public partial class ProductModelFactory : IProductModelFactory
             categoryIds.AddRange(childCategoryIds);
         }
 
-        var pageIndex = isStoreOwner ? 0 : searchModel.Page - 1;
-        var pageSize = isStoreOwner ? int.MaxValue : searchModel.PageSize;
+        var pageIndex = searchModel.Page - 1;
+        var pageSize = searchModel.PageSize;
 
         //get products
         var products = await _productService.SearchProductsAsync(showHidden: true,
@@ -801,9 +803,6 @@ public partial class ProductModelFactory : IProductModelFactory
             keywords: searchModel.SearchProductName,
             pageIndex: pageIndex, pageSize: pageSize,
             overridePublished: overridePublished);
-
-        if (isStoreOwner)
-            products = products.Where(product => product.LimitedToStores).ToList().ToPagedList(searchModel);
 
         var primaryStoreCurrency = await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId);
 
