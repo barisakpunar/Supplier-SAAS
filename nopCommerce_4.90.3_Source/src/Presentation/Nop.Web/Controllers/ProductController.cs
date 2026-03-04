@@ -128,6 +128,9 @@ public partial class ProductController : BasePublicController
 
     public virtual async Task<IActionResult> ProductDetails(int productId, int updatecartitemid = 0, int? customwishlistid = null)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var product = await _productService.GetProductByIdAsync(productId);
         if (product == null || product.Deleted)
             return InvokeHttp404();
@@ -207,6 +210,9 @@ public partial class ProductController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> EstimateShipping([FromQuery] ProductDetailsModel.ProductEstimateShippingModel model, IFormCollection form)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (model == null)
             model = new ProductDetailsModel.ProductEstimateShippingModel();
 
@@ -275,6 +281,9 @@ public partial class ProductController : BasePublicController
     [CheckLanguageSeoCode(ignore: true)]
     public virtual async Task<IActionResult> GetProductCombinations(int productId)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var product = await _productService.GetProductByIdAsync(productId);
         if (product == null)
             return NotFound();
@@ -289,6 +298,9 @@ public partial class ProductController : BasePublicController
 
     public virtual async Task<IActionResult> RecentlyViewedProducts()
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (!_catalogSettings.RecentlyViewedProductsEnabled)
             return Content("");
 
@@ -500,6 +512,9 @@ public partial class ProductController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> AddProductToCompareList(int productId)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var product = await _productService.GetProductByIdAsync(productId);
         if (product == null || product.Deleted || !product.Published)
             return Json(new
@@ -546,6 +561,9 @@ public partial class ProductController : BasePublicController
 
     public virtual async Task<IActionResult> CompareProducts()
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (!_catalogSettings.CompareProductsEnabled)
             return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
 
@@ -580,6 +598,16 @@ public partial class ProductController : BasePublicController
         _compareProductsService.ClearCompareProducts();
 
         return RedirectToRoute(NopRouteNames.General.COMPARE_PRODUCTS);
+    }
+
+    #endregion
+
+    #region Utilities
+
+    protected virtual async Task<bool> IsRegisteredCustomerForCatalogAsync()
+    {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        return await _customerService.IsRegisteredAsync(customer);
     }
 
     #endregion

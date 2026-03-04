@@ -9,6 +9,7 @@ using Nop.Core.Http;
 using Nop.Core.Rss;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
+using Nop.Services.Customers;
 using Nop.Services.FilterLevels;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
@@ -34,6 +35,7 @@ public partial class CatalogController : BasePublicController
     protected readonly ICatalogModelFactory _catalogModelFactory;
     protected readonly ICategoryService _categoryService;
     protected readonly ICustomerActivityService _customerActivityService;
+    protected readonly ICustomerService _customerService;
     protected readonly IFilterLevelValueModelFactory _filterLevelValueModelFactory;
     protected readonly IFilterLevelValueService _filterLevelValueService;
     protected readonly IGenericAttributeService _genericAttributeService;
@@ -62,6 +64,7 @@ public partial class CatalogController : BasePublicController
         ICatalogModelFactory catalogModelFactory,
         ICategoryService categoryService,
         ICustomerActivityService customerActivityService,
+        ICustomerService customerService,
         IFilterLevelValueModelFactory filterLevelValueModelFactory,
         IFilterLevelValueService filterLevelValueService,
         IGenericAttributeService genericAttributeService,
@@ -86,6 +89,7 @@ public partial class CatalogController : BasePublicController
         _catalogModelFactory = catalogModelFactory;
         _categoryService = categoryService;
         _customerActivityService = customerActivityService;
+        _customerService = customerService;
         _filterLevelValueModelFactory = filterLevelValueModelFactory;
         _filterLevelValueService = filterLevelValueService;
         _genericAttributeService = genericAttributeService;
@@ -112,6 +116,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> Category(int categoryId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var category = await _categoryService.GetCategoryByIdAsync(categoryId);
 
         if (!await CheckCategoryAvailabilityAsync(category))
@@ -144,6 +151,9 @@ public partial class CatalogController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> GetCategoryProducts(int categoryId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var category = await _categoryService.GetCategoryByIdAsync(categoryId);
 
         if (!await CheckCategoryAvailabilityAsync(category))
@@ -160,6 +170,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> Manufacturer(int manufacturerId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var manufacturer = await _manufacturerService.GetManufacturerByIdAsync(manufacturerId);
 
         if (!await CheckManufacturerAvailabilityAsync(manufacturer))
@@ -193,6 +206,9 @@ public partial class CatalogController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> GetManufacturerProducts(int manufacturerId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var manufacturer = await _manufacturerService.GetManufacturerByIdAsync(manufacturerId);
 
         if (!await CheckManufacturerAvailabilityAsync(manufacturer))
@@ -205,6 +221,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> ManufacturerAll()
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var model = await _catalogModelFactory.PrepareManufacturerAllModelsAsync();
 
         return View(model);
@@ -216,6 +235,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> Vendor(int vendorId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var vendor = await _vendorService.GetVendorByIdAsync(vendorId);
 
         if (!await CheckVendorAvailabilityAsync(vendor))
@@ -242,6 +264,9 @@ public partial class CatalogController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> GetVendorProducts(int vendorId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var vendor = await _vendorService.GetVendorByIdAsync(vendorId);
 
         if (!await CheckVendorAvailabilityAsync(vendor))
@@ -254,6 +279,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> VendorReviews(int vendorId, VendorReviewsPagingFilteringModel pagingModel)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var vendor = await _vendorService.GetVendorByIdAsync(vendorId);
 
         if (!await CheckVendorAvailabilityAsync(vendor))
@@ -266,6 +294,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> VendorAll()
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         //we don't allow viewing of vendors if "vendors" block is hidden
         if (_vendorSettings.VendorsBlockItemsToDisplay == 0)
             return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
@@ -280,6 +311,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> ProductsByTag(int productTagId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var productTag = await _productTagService.GetProductTagByIdAsync(productTagId);
         if (productTag == null)
             return InvokeHttp404();
@@ -292,6 +326,9 @@ public partial class CatalogController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> GetTagProducts(int tagId, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var productTag = await _productTagService.GetProductTagByIdAsync(tagId);
         if (productTag == null)
             return NotFound();
@@ -303,6 +340,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> ProductTagsAll()
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var model = await _catalogModelFactory.PreparePopularProductTagsModelAsync();
 
         return View(model);
@@ -314,6 +354,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> NewProducts(CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (!_catalogSettings.NewProductsEnabled)
             return InvokeHttp404();
 
@@ -328,6 +371,9 @@ public partial class CatalogController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> GetNewProducts(CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (!_catalogSettings.NewProductsEnabled)
             return NotFound();
 
@@ -380,6 +426,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> Search(SearchModel model, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         var store = await _storeContext.GetCurrentStoreAsync();
 
         //'Continue shopping' URL
@@ -399,6 +448,9 @@ public partial class CatalogController : BasePublicController
     [CheckLanguageSeoCode(ignore: true)]
     public virtual async Task<IActionResult> SearchTermAutoComplete(string term, int categoryId)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Content(string.Empty);
+
         if (string.IsNullOrWhiteSpace(term))
             return Content("");
 
@@ -442,6 +494,9 @@ public partial class CatalogController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> SearchProducts(SearchModel searchModel, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (searchModel == null)
             searchModel = new SearchModel();
 
@@ -525,6 +580,9 @@ public partial class CatalogController : BasePublicController
 
     public virtual async Task<IActionResult> SearchByFilterLevelValues(SearchFilterLevelValueModel model, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (!_filterLevelSettings.FilterLevelEnabled)
             return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
 
@@ -547,6 +605,9 @@ public partial class CatalogController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> SearchProductsByFilterLevelValues(SearchFilterLevelValueModel searchModel, CatalogProductsCommand command)
     {
+        if (!await IsRegisteredCustomerForCatalogAsync())
+            return Challenge();
+
         if (searchModel == null)
             searchModel = new SearchFilterLevelValueModel();
 
@@ -558,6 +619,12 @@ public partial class CatalogController : BasePublicController
     #endregion
 
     #region Utilities
+
+    protected virtual async Task<bool> IsRegisteredCustomerForCatalogAsync()
+    {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        return await _customerService.IsRegisteredAsync(customer);
+    }
 
     protected virtual async Task<bool> CheckCategoryAvailabilityAsync(Category category)
     {

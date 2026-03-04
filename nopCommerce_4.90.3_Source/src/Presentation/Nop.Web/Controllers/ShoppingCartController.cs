@@ -553,6 +553,10 @@ public partial class ShoppingCartController : BasePublicController
     public virtual async Task<IActionResult> AddProductToCart_Catalog(int productId, int shoppingCartTypeId,
         int quantity, bool forceredirection = false)
     {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        if (!await _customerService.IsRegisteredAsync(customer))
+            return Json(new { success = false, redirect = Url.RouteUrl(NopRouteNames.General.LOGIN) });
+
         var cartType = (ShoppingCartType)shoppingCartTypeId;
 
         var product = await _productService.GetProductByIdAsync(productId);
@@ -623,7 +627,6 @@ public partial class ShoppingCartController : BasePublicController
 
         //get standard warnings without attribute validations
         //first, try to find existing shopping cart item
-        var customer = await _workContext.GetCurrentCustomerAsync();
         var store = await _storeContext.GetCurrentStoreAsync();
         var cart = await _shoppingCartService.GetShoppingCartAsync(customer, cartType, store.Id);
         var shoppingCartItem = await _shoppingCartService.FindShoppingCartItemInTheCartAsync(cart, cartType, product);
@@ -750,6 +753,10 @@ public partial class ShoppingCartController : BasePublicController
     [HttpPost]
     public virtual async Task<IActionResult> AddProductToCart_Details(int productId, int shoppingCartTypeId, IFormCollection form)
     {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        if (!await _customerService.IsRegisteredAsync(customer))
+            return Json(new { success = false, redirect = Url.RouteUrl(NopRouteNames.General.LOGIN) });
+
         var product = await _productService.GetProductByIdAsync(productId);
         if (product == null)
         {

@@ -164,9 +164,11 @@ public partial class CategoryModelFactory : ICategoryModelFactory
         var currentCustomer = await _workContext.GetCurrentCustomerAsync();
         var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
                            && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.SearchStoreId = currentCustomer.RegisteredInStoreId;
 
-        var pageIndex = isStoreOwner ? 0 : searchModel.Page - 1;
-        var pageSize = isStoreOwner ? int.MaxValue : searchModel.PageSize;
+        var pageIndex = searchModel.Page - 1;
+        var pageSize = searchModel.PageSize;
 
         //get categories
         var categories = await _categoryService.GetAllCategoriesAsync(categoryName: searchModel.SearchCategoryName,
@@ -174,9 +176,6 @@ public partial class CategoryModelFactory : ICategoryModelFactory
             storeId: searchModel.SearchStoreId,
             pageIndex: pageIndex, pageSize: pageSize,
             overridePublished: searchModel.SearchPublishedId == 0 ? null : (bool?)(searchModel.SearchPublishedId == 1));
-
-        if (isStoreOwner)
-            categories = categories.Where(category => category.LimitedToStores).ToList().ToPagedList(searchModel);
 
         //prepare grid model
         var model = await new CategoryListModel().PrepareToGridAsync(searchModel, categories, () =>

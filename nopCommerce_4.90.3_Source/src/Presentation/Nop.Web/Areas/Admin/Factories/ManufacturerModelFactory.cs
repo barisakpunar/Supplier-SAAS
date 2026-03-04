@@ -165,9 +165,11 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
         var currentCustomer = await _workContext.GetCurrentCustomerAsync();
         var isStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
                            && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+        if (isStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+            searchModel.SearchStoreId = currentCustomer.RegisteredInStoreId;
 
-        var pageIndex = isStoreOwner ? 0 : searchModel.Page - 1;
-        var pageSize = isStoreOwner ? int.MaxValue : searchModel.PageSize;
+        var pageIndex = searchModel.Page - 1;
+        var pageSize = searchModel.PageSize;
 
         //get manufacturers
         var manufacturers = await _manufacturerService.GetAllManufacturersAsync(showHidden: true,
@@ -175,9 +177,6 @@ public partial class ManufacturerModelFactory : IManufacturerModelFactory
             storeId: searchModel.SearchStoreId,
             pageIndex: pageIndex, pageSize: pageSize,
             overridePublished: searchModel.SearchPublishedId == 0 ? null : (bool?)(searchModel.SearchPublishedId == 1));
-
-        if (isStoreOwner)
-            manufacturers = manufacturers.Where(manufacturer => manufacturer.LimitedToStores).ToList().ToPagedList(searchModel);
 
         //prepare grid model
         var model = await new ManufacturerListModel().PrepareToGridAsync(searchModel, manufacturers, () =>
