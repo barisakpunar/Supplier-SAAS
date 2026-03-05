@@ -326,4 +326,115 @@
   <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.CreditLimitExceeded">
     <Value>Open account credit limit is exceeded. Available credit: {0}, order total: {1}.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections">
+    <Value>Dealer collections</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.AddNew">
+    <Value>Add new collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.CollectionDate">
+    <Value>Collection date (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Customer">
+    <Value>Customer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Method">
+    <Value>Method</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Note">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.ReferenceNo">
+    <Value>Reference no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionDate">
+    <Value>Collection date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionDateFrom">
+    <Value>Collection date from</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionDateTo">
+    <Value>Collection date to</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionMethod">
+    <Value>Collection method</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Customer">
+    <Value>Customer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.ReferenceNo">
+    <Value>Reference no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Info">
+    <Value>Collection info</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.BankTransfer">
+    <Value>Bank transfer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.Cash">
+    <Value>Cash</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.Check">
+    <Value>Check</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.CreditCard">
+    <Value>Credit card</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.Other">
+    <Value>Other</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.PromissoryNote">
+    <Value>Promissory note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.NoData">
+    <Value>No collections found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Status.Cancelled">
+    <Value>Cancelled</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Status.Posted">
+    <Value>Posted</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.AmountRange">
+    <Value>Amount must be between 0.0001 and {0}.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.AmountScale">
+    <Value>Amount can contain up to 4 decimal digits.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.CustomerInvalid">
+    <Value>The selected customer is not mapped to this dealer.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DealerRequired">
+    <Value>A valid dealer is required.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.MethodRequired">
+    <Value>A valid collection method is required.</Value>
+  </LocaleResource>
 </Language>

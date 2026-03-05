@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
@@ -99,6 +100,18 @@ public partial class DealerController : BaseAdminController
         if (string.IsNullOrEmpty(resourceKey))
             return string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Direction.Unknown"), directionId);
 
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual async Task<string> GetDealerCollectionMethodTextAsync(int collectionMethodId)
+    {
+        var resourceKey = $"Admin.Customers.DealerCollections.Method.{((DealerCollectionMethod)collectionMethodId)}";
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual async Task<string> GetDealerCollectionStatusTextAsync(int collectionStatusId)
+    {
+        var resourceKey = $"Admin.Customers.DealerCollections.Status.{((DealerCollectionStatus)collectionStatusId)}";
         return await _localizationService.GetResourceAsync(resourceKey);
     }
 
@@ -240,6 +253,203 @@ public partial class DealerController : BaseAdminController
         }
     }
 
+    protected virtual async Task PrepareDealerCollectionModelAsync(DealerCollectionModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        model.IsStoreOwner = isStoreOwner;
+
+        var stores = await _storeService.GetAllStoresAsync();
+        if (isStoreOwner && managedStoreId > 0)
+            model.StoreId = managedStoreId;
+
+        if (!isStoreOwner)
+        {
+            model.AvailableStores = stores
+                .Select(store => new SelectListItem { Text = store.Name, Value = store.Id.ToString() })
+                .ToList();
+        }
+        else
+        {
+            model.StoreName = stores.FirstOrDefault(store => store.Id == model.StoreId)?.Name ?? "-";
+            model.AvailableStores = [];
+        }
+
+        if (model.StoreId <= 0)
+            model.StoreId = stores.FirstOrDefault()?.Id ?? 0;
+
+        var dealers = await _dealerService.SearchDealersAsync(storeId: model.StoreId, active: true, pageSize: int.MaxValue);
+        model.AvailableDealers = dealers
+            .OrderBy(dealer => dealer.Name)
+            .ThenBy(dealer => dealer.Id)
+            .Select(dealer => new SelectListItem
+            {
+                Value = dealer.Id.ToString(),
+                Text = $"{dealer.Name} (#{dealer.Id})"
+            })
+            .ToList();
+
+        if (model.DealerId > 0 && dealers.All(dealer => dealer.Id != model.DealerId))
+            model.DealerId = 0;
+
+        if (model.DealerId <= 0 && dealers.Any())
+            model.DealerId = dealers.First().Id;
+
+        model.AvailableCustomers = new List<SelectListItem>
+        {
+            new() { Value = "0", Text = await _localizationService.GetResourceAsync("Admin.Common.None") }
+        };
+
+        if (model.DealerId > 0)
+        {
+            var customerIds = await _dealerService.GetCustomerIdsByDealerIdAsync(model.DealerId);
+            if (customerIds.Any())
+            {
+                var customers = await _customerService.GetCustomersByIdsAsync(customerIds.ToArray());
+                foreach (var customer in customers.OrderBy(customer => customer.Email).ThenBy(customer => customer.Id))
+                {
+                    var identity = !string.IsNullOrWhiteSpace(customer.Email) ? customer.Email : customer.Username;
+                    model.AvailableCustomers.Add(new SelectListItem
+                    {
+                        Value = customer.Id.ToString(),
+                        Text = $"{identity} (#{customer.Id})"
+                    });
+                }
+            }
+        }
+
+        if (model.CustomerId > 0 && model.AvailableCustomers.All(customer => customer.Value != model.CustomerId.ToString()))
+            model.CustomerId = 0;
+
+        model.AvailableCollectionMethods = new List<SelectListItem>();
+        foreach (var method in Enum.GetValues<DealerCollectionMethod>())
+        {
+            model.AvailableCollectionMethods.Add(new SelectListItem
+            {
+                Value = ((int)method).ToString(),
+                Text = await GetDealerCollectionMethodTextAsync((int)method)
+            });
+        }
+
+        if (model.CollectionMethodId <= 0)
+            model.CollectionMethodId = (int)DealerCollectionMethod.BankTransfer;
+
+        if (model.CollectionDateUtc == default)
+            model.CollectionDateUtc = DateTime.UtcNow;
+    }
+
+    protected virtual async Task<DealerCollectionListModel> PrepareDealerCollectionListModelAsync(DealerCollectionListModel searchModel)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        searchModel ??= new DealerCollectionListModel();
+        searchModel.IsStoreOwner = isStoreOwner;
+
+        var stores = await _storeService.GetAllStoresAsync();
+        if (!isStoreOwner)
+        {
+            searchModel.AvailableStores = new List<SelectListItem>
+            {
+                new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+            };
+
+            foreach (var store in stores)
+                searchModel.AvailableStores.Add(new SelectListItem { Text = store.Name, Value = store.Id.ToString() });
+        }
+        else
+        {
+            searchModel.SearchStoreId = managedStoreId;
+            searchModel.AvailableStores = [];
+        }
+
+        var effectiveStoreId = isStoreOwner ? managedStoreId : searchModel.SearchStoreId;
+        var dealers = await _dealerService.SearchDealersAsync(storeId: effectiveStoreId, pageSize: int.MaxValue);
+        searchModel.AvailableDealers = new List<SelectListItem>
+        {
+            new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+        };
+
+        foreach (var dealer in dealers.OrderBy(item => item.Name).ThenBy(item => item.Id))
+        {
+            searchModel.AvailableDealers.Add(new SelectListItem
+            {
+                Value = dealer.Id.ToString(),
+                Text = $"{dealer.Name} (#{dealer.Id})"
+            });
+        }
+
+        searchModel.AvailableCollectionMethods = new List<SelectListItem>
+        {
+            new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+        };
+        foreach (var method in Enum.GetValues<DealerCollectionMethod>())
+        {
+            searchModel.AvailableCollectionMethods.Add(new SelectListItem
+            {
+                Value = ((int)method).ToString(),
+                Text = await GetDealerCollectionMethodTextAsync((int)method)
+            });
+        }
+
+        searchModel.AvailableCollectionStatuses = new List<SelectListItem>
+        {
+            new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+        };
+        foreach (var status in Enum.GetValues<DealerCollectionStatus>())
+        {
+            searchModel.AvailableCollectionStatuses.Add(new SelectListItem
+            {
+                Value = ((int)status).ToString(),
+                Text = await GetDealerCollectionStatusTextAsync((int)status)
+            });
+        }
+
+        var collectionFromUtc = NormalizeDateFilterFrom(searchModel.SearchCollectionDateFromUtc);
+        var collectionToUtc = NormalizeDateFilterTo(searchModel.SearchCollectionDateToUtc);
+        var collections = await _dealerService.SearchDealerCollectionsAsync(
+            dealerId: searchModel.SearchDealerId,
+            storeId: effectiveStoreId,
+            collectionMethodId: searchModel.SearchCollectionMethodId,
+            collectionStatusId: searchModel.SearchCollectionStatusId,
+            collectionFromUtc: collectionFromUtc,
+            collectionToUtc: collectionToUtc,
+            pageSize: int.MaxValue);
+
+        var storesById = stores.ToDictionary(store => store.Id);
+        var dealersById = dealers.ToDictionary(dealer => dealer.Id);
+        var allCustomerIds = collections.Where(item => item.CustomerId.HasValue).Select(item => item.CustomerId!.Value).Distinct().ToArray();
+        var customersById = allCustomerIds.Any()
+            ? (await _customerService.GetCustomersByIdsAsync(allCustomerIds)).ToDictionary(customer => customer.Id)
+            : new Dictionary<int, Customer>();
+
+        var unavailableText = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Common.NotAvailable");
+        searchModel.Collections = new List<DealerCollectionListItemModel>();
+        foreach (var collection in collections)
+        {
+            dealersById.TryGetValue(collection.DealerId, out var dealer);
+            customersById.TryGetValue(collection.CustomerId ?? 0, out var customer);
+
+            searchModel.Collections.Add(new DealerCollectionListItemModel
+            {
+                Id = collection.Id,
+                DealerId = collection.DealerId,
+                DealerName = dealer?.Name ?? string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.DealerFallback"), collection.DealerId),
+                StoreId = dealer?.StoreId ?? 0,
+                StoreName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : unavailableText,
+                CustomerId = collection.CustomerId,
+                CustomerName = customer is null ? string.Empty : (!string.IsNullOrWhiteSpace(customer.Email) ? customer.Email : customer.Username),
+                CollectionMethod = await GetDealerCollectionMethodTextAsync(collection.CollectionMethodId),
+                CollectionStatus = await GetDealerCollectionStatusTextAsync(collection.CollectionStatusId),
+                Amount = collection.Amount,
+                CollectionDateUtc = collection.CollectionDateUtc,
+                ReferenceNo = collection.ReferenceNo,
+                Note = collection.Note
+            });
+        }
+
+        return searchModel;
+    }
+
     protected virtual async Task SaveDealerMappingsAsync(DealerInfo dealer, DealerModel model)
     {
         ArgumentNullException.ThrowIfNull(dealer);
@@ -379,6 +589,23 @@ public partial class DealerController : BaseAdminController
         if (decimal.Round(model.ManualTransactionAmount, 4) != model.ManualTransactionAmount)
             ModelState.AddModelError(nameof(model.ManualTransactionAmount),
                 await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.ManualTransactionAmountScale"));
+    }
+
+    protected virtual async Task ValidateDealerCollectionInputsAsync(DealerCollectionModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        if (model.DealerId <= 0)
+            ModelState.AddModelError(nameof(model.DealerId), await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.DealerRequired"));
+
+        if (model.CollectionMethodId <= 0 || !Enum.IsDefined(typeof(DealerCollectionMethod), model.CollectionMethodId))
+            ModelState.AddModelError(nameof(model.CollectionMethodId), await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.MethodRequired"));
+
+        if (model.Amount <= 0 || model.Amount > MaxDealerCreditLimit)
+            ModelState.AddModelError(nameof(model.Amount), string.Format(await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.AmountRange"), MaxDealerCreditLimit.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)));
+
+        if (decimal.Round(model.Amount, 4) != model.Amount)
+            ModelState.AddModelError(nameof(model.Amount), await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.AmountScale"));
     }
 
     protected virtual DateTime? NormalizeDateFilterFrom(DateTime? value)
@@ -608,6 +835,13 @@ public partial class DealerController : BaseAdminController
         return View(model);
     }
 
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> Collections(DealerCollectionListModel searchModel)
+    {
+        var model = await PrepareDealerCollectionListModelAsync(searchModel);
+        return View(model);
+    }
+
     [HttpPost, ActionName("Transactions")]
     [FormValueRequired("search-transactions")]
     [ValidateAntiForgeryToken]
@@ -659,6 +893,91 @@ public partial class DealerController : BaseAdminController
 
         var fileName = $"dealer_transactions_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_{CommonHelper.GenerateRandomDigitCode(4)}.csv";
         return File(Encoding.UTF8.GetBytes(builder.ToString()), MimeTypes.TextCsv, fileName);
+    }
+
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    public virtual async Task<IActionResult> CreateCollection(int storeId = 0, int dealerId = 0, int customerId = 0)
+    {
+        var model = new DealerCollectionModel
+        {
+            StoreId = storeId,
+            DealerId = dealerId,
+            CustomerId = customerId
+        };
+        await PrepareDealerCollectionModelAsync(model);
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    [FormValueRequired("save")]
+    public virtual async Task<IActionResult> CreateCollection(DealerCollectionModel model)
+    {
+        var (currentCustomer, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+
+        if (isStoreOwner)
+            model.StoreId = managedStoreId;
+
+        var store = await _storeService.GetStoreByIdAsync(model.StoreId);
+        if (store is null)
+            ModelState.AddModelError(nameof(model.StoreId), await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.StoreRequired"));
+
+        var dealer = await _dealerService.GetDealerByIdAsync(model.DealerId);
+        if (dealer is null || !dealer.Active || (model.StoreId > 0 && dealer.StoreId != model.StoreId))
+            ModelState.AddModelError(nameof(model.DealerId), await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.DealerRequired"));
+
+        if (isStoreOwner && dealer is not null && managedStoreId > 0 && dealer.StoreId != managedStoreId)
+            return AccessDeniedView();
+
+        if (model.CustomerId > 0)
+        {
+            var isMapped = await _dealerService.IsCustomerMappedToDealerAsync(model.DealerId, model.CustomerId);
+            if (!isMapped)
+                ModelState.AddModelError(nameof(model.CustomerId), await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.CustomerInvalid"));
+        }
+
+        await ValidateDealerCollectionInputsAsync(model);
+
+        if (!ModelState.IsValid)
+        {
+            await PrepareDealerCollectionModelAsync(model);
+            return View(model);
+        }
+
+        var transaction = new DealerTransaction
+        {
+            DealerId = model.DealerId,
+            CustomerId = model.CustomerId > 0 ? model.CustomerId : null,
+            TransactionTypeId = (int)DealerTransactionType.OpenAccountCollection,
+            DirectionId = (int)DealerTransactionDirection.Credit,
+            Amount = model.Amount,
+            Note = string.IsNullOrWhiteSpace(model.ReferenceNo)
+                ? $"Manual collection entry. {model.Note}".Trim()
+                : $"Manual collection entry. Ref: {model.ReferenceNo}. {model.Note}".Trim(),
+            CreatedOnUtc = model.CollectionDateUtc
+        };
+
+        await _dealerService.InsertDealerTransactionAsync(transaction);
+
+        var collection = new DealerCollection
+        {
+            DealerId = model.DealerId,
+            CustomerId = model.CustomerId > 0 ? model.CustomerId : null,
+            DealerTransactionId = transaction.Id,
+            CollectionMethodId = model.CollectionMethodId,
+            CollectionStatusId = (int)DealerCollectionStatus.Posted,
+            Amount = model.Amount,
+            CollectionDateUtc = model.CollectionDateUtc,
+            ReferenceNo = string.IsNullOrWhiteSpace(model.ReferenceNo) ? null : model.ReferenceNo.Trim(),
+            Note = string.IsNullOrWhiteSpace(model.Note) ? null : model.Note.Trim(),
+            CreatedByCustomerId = currentCustomer.Id,
+            CreatedOnUtc = DateTime.UtcNow
+        };
+
+        await _dealerService.InsertDealerCollectionAsync(collection);
+
+        return RedirectToAction(nameof(Collections), new { SearchStoreId = model.StoreId, SearchDealerId = model.DealerId });
     }
 
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]

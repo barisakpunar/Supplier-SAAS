@@ -326,4 +326,115 @@
   <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.CreditLimitExceeded">
     <Value>Açık hesap kredi limiti aşıldı. Kullanılabilir limit: {0}, sipariş toplamı: {1}.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections">
+    <Value>Bayi tahsilatları</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.AddNew">
+    <Value>Yeni tahsilat ekle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.CollectionDate">
+    <Value>Tahsilat tarihi (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Customer">
+    <Value>Müşteri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Method">
+    <Value>Yöntem</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Note">
+    <Value>Not</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.ReferenceNo">
+    <Value>Referans no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Status">
+    <Value>Durum</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Store">
+    <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionDate">
+    <Value>Tahsilat tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionDateFrom">
+    <Value>Tahsilat tarihi başlangıcı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionDateTo">
+    <Value>Tahsilat tarihi bitişi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CollectionMethod">
+    <Value>Tahsilat yöntemi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Customer">
+    <Value>Müşteri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
+    <Value>Not</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.ReferenceNo">
+    <Value>Referans no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Status">
+    <Value>Durum</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Store">
+    <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Info">
+    <Value>Tahsilat bilgisi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.BankTransfer">
+    <Value>Havale/EFT</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.Cash">
+    <Value>Nakit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.Check">
+    <Value>Çek</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.CreditCard">
+    <Value>Kredi kartı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.Other">
+    <Value>Diğer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Method.PromissoryNote">
+    <Value>Senet</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.NoData">
+    <Value>Tahsilat bulunamadı.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Status.Cancelled">
+    <Value>İptal</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Status.Posted">
+    <Value>İşlendi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.AmountRange">
+    <Value>Tutar 0.0001 ile {0} arasında olmalıdır.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.AmountScale">
+    <Value>Tutar en fazla 4 ondalık basamak içerebilir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.CustomerInvalid">
+    <Value>Seçilen müşteri bu bayi ile eşleşmiyor.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DealerRequired">
+    <Value>Geçerli bir bayi gereklidir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.MethodRequired">
+    <Value>Geçerli bir tahsilat yöntemi gereklidir.</Value>
+  </LocaleResource>
 </Language>

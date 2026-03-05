@@ -1,0 +1,129 @@
+@model DealerCollectionModel
+@{
+    ViewBag.PageTitle = T("Admin.Customers.DealerCollections.AddNew").Text;
+    NopHtml.SetActiveMenuItemSystemName("DealerCollections");
+}
+
+<form asp-action="CreateCollection" asp-controller="Dealer" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">@T("Admin.Customers.DealerCollections.AddNew")</h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div asp-validation-summary="All"></div>
+
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerCollections.Info")</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="StoreId" />
+                            </div>
+                            <div class="col-md-9">
+                                @if (Model.IsStoreOwner)
+                                {
+                                    <input type="text" class="form-control" value="@Model.StoreName" disabled />
+                                    <input asp-for="StoreId" type="hidden" />
+                                }
+                                else
+                                {
+                                    <nop-select asp-for="StoreId" asp-items="Model.AvailableStores" />
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="DealerId" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-select asp-for="DealerId" asp-items="Model.AvailableDealers" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="CustomerId" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-select asp-for="CustomerId" asp-items="Model.AvailableCustomers" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="CollectionMethodId" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-select asp-for="CollectionMethodId" asp-items="Model.AvailableCollectionMethods" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Amount" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="Amount" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="CollectionDateUtc" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="CollectionDateUtc" asp-template="DateTime" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="ReferenceNo" />
+                            </div>
+                            <div class="col-md-9">
+                                <input asp-for="ReferenceNo" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Note" />
+                            </div>
+                            <div class="col-md-9">
+                                <textarea asp-for="Note" class="form-control" rows="4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+
+<script asp-location="Footer">
+    $(function() {
+        var storeInput = $('#@Html.IdFor(model => model.StoreId)');
+        var dealerInput = $('#@Html.IdFor(model => model.DealerId)');
+        var customerInput = $('#@Html.IdFor(model => model.CustomerId)');
+
+        function refreshCollectionContext() {
+            var url = new URL('@Url.Action("CreateCollection", "Dealer")', window.location.origin);
+            url.searchParams.set('storeId', storeInput.val() || '0');
+            url.searchParams.set('dealerId', dealerInput.val() || '0');
+            url.searchParams.set('customerId', customerInput.val() || '0');
+            window.location.href = url.toString();
+        }
+
+        storeInput.on('change', function() {
+            refreshCollectionContext();
+        });
+
+        dealerInput.on('change', function() {
+            refreshCollectionContext();
+        });
+    });
+</script>
