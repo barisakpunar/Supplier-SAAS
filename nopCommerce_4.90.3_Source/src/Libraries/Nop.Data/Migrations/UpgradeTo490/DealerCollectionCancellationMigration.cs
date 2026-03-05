@@ -1,5 +1,6 @@
 ﻿using FluentMigrator;
 using Nop.Core.Domain.Customers;
+using Nop.Data.Mapping;
 
 namespace Nop.Data.Migrations.UpgradeTo490;
 
@@ -19,14 +20,14 @@ public class DealerCollectionCancellationMigration : ForwardOnlyMigration
         {
             Alter.Table(tableName)
                 .AddColumn(nameof(DealerCollection.CancelledDealerTransactionId)).AsInt32().Nullable()
-                .ForeignKey<DealerTransaction>();
+                .ForeignKey(NameCompatibilityManager.GetTableName(typeof(DealerTransaction)), nameof(DealerTransaction.Id));
         }
 
         if (!Schema.Table(tableName).Column(nameof(DealerCollection.CancelledByCustomerId)).Exists())
         {
             Alter.Table(tableName)
                 .AddColumn(nameof(DealerCollection.CancelledByCustomerId)).AsInt32().Nullable()
-                .ForeignKey<Customer>();
+                .ForeignKey(NameCompatibilityManager.GetTableName(typeof(Customer)), nameof(Customer.Id));
         }
 
         if (!Schema.Table(tableName).Column(nameof(DealerCollection.CancelledOnUtc)).Exists())
