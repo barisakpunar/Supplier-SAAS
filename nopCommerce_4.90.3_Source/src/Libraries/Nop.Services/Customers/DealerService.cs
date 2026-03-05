@@ -142,30 +142,31 @@ public partial class DealerService : IDealerService
             })
             .ToListAsync();
 
-        if (openAccountTransactions.Any())
-        {
-            var balance = openAccountTransactions.Sum(transaction =>
-                transaction.DirectionId == (int)DealerTransactionDirection.Debit
-                    ? transaction.Amount
-                    : -transaction.Amount);
-
-            return balance > 0 ? balance : 0;
-        }
+        var transactionBalance = openAccountTransactions.Sum(transaction =>
+            transaction.DirectionId == (int)DealerTransactionDirection.Debit
+                ? transaction.Amount
+                : -transaction.Amount);
 
         var customerIds = await GetCustomerIdsByDealerIdAsync(dealerId);
         if (!customerIds.Any())
-            return 0;
+            return transactionBalance > 0 ? transactionBalance : 0;
 
-        var debt = await _orderRepository.Table
+        // Keep compatibility with legacy open-account orders created before ledger postings existed.
+        var unmappedOpenAccountOrdersDebt = await _orderRepository.Table
             .Where(order => customerIds.Contains(order.CustomerId)
                             && !order.Deleted
                             && order.OrderStatusId != (int)OrderStatus.Cancelled
                             && order.PaymentMethodSystemName == OpenAccountPaymentMethodSystemName
                             && (order.PaymentStatusId == (int)PaymentStatus.Pending
-                                || order.PaymentStatusId == (int)PaymentStatus.Authorized))
+                                || order.PaymentStatusId == (int)PaymentStatus.Authorized)
+                            && !_dealerTransactionRepository.Table.Any(transaction =>
+                                transaction.DealerId == dealerId
+                                && transaction.OrderId == order.Id
+                                && transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountOrder))
             .SumAsync(order => order.OrderTotal);
 
-        return debt;
+        var debt = transactionBalance + unmappedOpenAccountOrdersDebt;
+        return debt > 0 ? debt : 0;
     }
 
     /// <summary>
