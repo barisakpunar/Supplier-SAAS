@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Language Name="Turkish">
+  <LocaleResource Name="Admin.Customers.Dealers">
+    <Value>Bayiler</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.AddNew">
+    <Value>Yeni bayi ekle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.BackToList">
+    <Value>Listeye dön</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Common.NotAvailable">
+    <Value>Yok</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Common.Open">
+    <Value>Aç</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers">
+    <Value>Bayi müşterileri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers.Hint.Create">
+    <Value>Müşteri eşlemesi müşteri düzenleme ekranından yönetilir. Referans için seçili mağazadaki müşteriler listelenir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers.Hint.Edit">
+    <Value>Müşteri eşlemesi müşteri düzenleme ekranından yönetilir. Sadece eşlenmiş müşteriler gösterilir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers.NoData">
+    <Value>Gösterilecek müşteri yok.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Edit">
+    <Value>Bayiyi düzenle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.EditName">
+    <Value>Bayiyi düzenle - {0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Errors.CannotManageOutsideStore">
+    <Value>Store owner, kendi mağazası dışındaki ödeme yöntemlerini yönetemez.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.Active">
+    <Value>Aktif</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.AvailableCredit">
+    <Value>Kullanılabilir limit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CreditLimit">
+    <Value>Kredi limiti</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CreditLimit.Hint">
+    <Value>Açık hesap doğrulaması için kullanılır (MVP).</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CurrentDebt">
+    <Value>Mevcut borç</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CustomerCount">
+    <Value>Müşteri sayısı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.ManualTransactionAmount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.ManualTransactionNote">
+    <Value>Not</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.ManualTransactionType">
+    <Value>İşlem tipi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.Name">
+    <Value>Ad</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.OpenAccountEnabled">
+    <Value>Açık hesabı etkinleştir</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.PaymentMethods">
+    <Value>İzinli ödeme yöntemleri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.Store">
+    <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Info">
+    <Value>Bayi bilgileri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.List.NoDealers">
+    <Value>Bayi bulunamadı.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.List.SearchName">
+    <Value>Bayi adı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.ManualTransactions">
+    <Value>Manuel işlem girişi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.ManualTransactions.AddButton">
+    <Value>İşlem ekle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.ManualTransactions.Hint">
+    <Value>Bu alan manuel tahsilat veya manuel borç düzeltmesi eklemek için kullanılır.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.OpenAccount">
+    <Value>Açık hesap</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.PaymentMethods.AllActive">
+    <Value>Tüm aktif ödeme yöntemleri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.PaymentMethods.Hint">
+    <Value>Boş bırakılırsa bu bayi için tüm aktif ödeme yöntemlerine izin verilir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.PaymentMethods.NoData">
+    <Value>Seçili mağaza için aktif ödeme yöntemi bulunamadı.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.StoreOwnerInfo">
+    <Value>Atanan bayi kapsamınızı düzenliyorsunuz. Mağaza mevcut mağazanıza sabitlenmiştir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions">
+    <Value>Bayi işlemleri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.CreatedOnUtc">
+    <Value>Oluşturulma (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Customer">
+    <Value>Müşteri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Direction">
+    <Value>Yön</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Note">
+    <Value>Not</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Order">
+    <Value>Sipariş</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Store">
+    <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Type">
+    <Value>Tip</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.DealerFallback">
+    <Value>Bayi #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Direction.Credit">
+    <Value>Alacak</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Direction.Debit">
+    <Value>Borç</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Direction.Unknown">
+    <Value>Yön #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.CreatedFrom">
+    <Value>Oluşturma başlangıcı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.CreatedTo">
+    <Value>Oluşturma bitişi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.Store">
+    <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.NoData">
+    <Value>İşlem bulunamadı.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.OpenDealer">
+    <Value>Bayiyi aç</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Preview">
+    <Value>Son {0} işlem gösterilir. Tam hesap ekstresi işlemleri bir sonraki iterasyonda eklenecektir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary">
+    <Value>Özet</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.NetBalance">
+    <Value>Net bakiye</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalCredit">
+    <Value>Toplam alacak</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalDebit">
+    <Value>Toplam borç</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
+    <Value>Manuel alacak düzeltmesi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualDebitAdjustment">
+    <Value>Manuel borç düzeltmesi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.OpenAccountCollection">
+    <Value>Açık hesap tahsilat kaydı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.OpenAccountOrder">
+    <Value>Açık hesap sipariş kaydı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.Unknown">
+    <Value>Tip #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.CreditLimitRange">
+    <Value>Kredi limiti 0 ile {0} arasında olmalıdır.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.CreditLimitScale">
+    <Value>Kredi limiti en fazla 4 ondalık basamak içerebilir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.ManualTransactionAmountRange">
+    <Value>Tutar 0.0001 ile {0} arasında olmalıdır.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.ManualTransactionAmountScale">
+    <Value>Tutar en fazla 4 ondalık basamak içerebilir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.ManualTransactionType">
+    <Value>Geçerli bir işlem tipi zorunludur.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.StoreRequired">
+    <Value>Geçerli bir mağaza zorunludur.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.StoreOwner.Panel">
+    <Value>Store Owner Paneli</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Account">
+    <Value>Hesap</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Fields.Store">
+    <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Fields.StoreId">
+    <Value>Mağaza Id</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Fields.User">
+    <Value>Kullanıcı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Info">
+    <Value>Bu panel tedarikçi/store-owner akışları için ayrılmıştır. Yeni modüller buraya eklenecektir.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.Customers.Customers.Fields.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.Fields.Dealer.InvalidForStore">
+    <Value>Seçilen bayi bu mağaza için uygun değildir.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.GenerateButton">
+    <Value>Kayıt linki oluştur</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Title">
+    <Value>Müşteri kayıt linki oluştur</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Store">
+    <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Url">
+    <Value>Kayıt URL</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Generate">
+    <Value>Oluştur</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Copy">
+    <Value>Kopyala</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.NoPermission">
+    <Value>Kayıt linki oluşturma yetkiniz yok.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.StoreRequired">
+    <Value>Geçerli bir mağaza zorunludur.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.StoreNotFound">
+    <Value>Seçilen mağaza bulunamadı.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.UrlGeneration">
+    <Value>Kayıt URL oluşturulamadı.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.StoreRequired">
+    <Value>Geçerli bir mağaza zorunludur.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.StoreSelectionRequired">
+    <Value>En az bir mağaza seçilmelidir.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText">
+    <Value>Açıklama</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText.Hint">
+    <Value>Açık hesap ödeme yöntemi için ödeme adımında gösterilecek bilgi metni.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.PaymentMethodDescription">
+    <Value>Açık hesap ile öde (bayi kredisi)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.NoDealer">
+    <Value>Açık hesap bu müşteri için kullanılamaz.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.DealerInactive">
+    <Value>Bayi pasif olduğu için açık hesap kullanılamaz.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.NotEnabled">
+    <Value>Bu bayi için açık hesap kapalıdır.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.CreditLimitExceeded">
+    <Value>Açık hesap kredi limiti aşıldı. Kullanılabilir limit: {0}, sipariş toplamı: {1}.</Value>
+  </LocaleResource>
+</Language>

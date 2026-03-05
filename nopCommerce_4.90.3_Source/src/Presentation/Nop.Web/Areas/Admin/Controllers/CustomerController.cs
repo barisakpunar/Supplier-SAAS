@@ -9,8 +9,10 @@ using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Forums;
 using Nop.Core.Domain.Gdpr;
 using Nop.Core.Domain.Messages;
+using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Events;
+using Nop.Core.Http;
 using Nop.Services.Attributes;
 using Nop.Services.Common;
 using Nop.Services.Customers;
@@ -23,6 +25,7 @@ using Nop.Services.Logging;
 using Nop.Services.Messages;
 using Nop.Services.Orders;
 using Nop.Services.Security;
+using Nop.Services.Stores;
 using Nop.Services.Tax;
 using Nop.Web.Areas.Admin.Factories;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
@@ -53,6 +56,7 @@ public partial class CustomerController : BaseAdminController
     protected readonly IDateTimeHelper _dateTimeHelper;
     protected readonly IDealerService _dealerService;
     protected readonly IEmailAccountService _emailAccountService;
+    protected readonly IEncryptionService _encryptionService;
     protected readonly IEventPublisher _eventPublisher;
     protected readonly IExportManager _exportManager;
     protected readonly IForumService _forumService;
@@ -66,11 +70,14 @@ public partial class CustomerController : BaseAdminController
     protected readonly IQueuedEmailService _queuedEmailService;
     protected readonly IRewardPointService _rewardPointService;
     protected readonly IStoreContext _storeContext;
+    protected readonly IStoreService _storeService;
     protected readonly ITaxService _taxService;
     protected readonly IWorkContext _workContext;
     protected readonly IWorkflowMessageService _workflowMessageService;
+    protected readonly SecuritySettings _securitySettings;
     protected readonly TaxSettings _taxSettings;
     private static readonly char[] _separator = [','];
+    private const int RegistrationInviteTokenLifetimeDays = 7;
 
     #endregion
 
@@ -92,6 +99,7 @@ public partial class CustomerController : BaseAdminController
         IDateTimeHelper dateTimeHelper,
         IDealerService dealerService,
         IEmailAccountService emailAccountService,
+        IEncryptionService encryptionService,
         IEventPublisher eventPublisher,
         IExportManager exportManager,
         IForumService forumService,
@@ -105,9 +113,11 @@ public partial class CustomerController : BaseAdminController
         IQueuedEmailService queuedEmailService,
         IRewardPointService rewardPointService,
         IStoreContext storeContext,
+        IStoreService storeService,
         ITaxService taxService,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
+        SecuritySettings securitySettings,
         TaxSettings taxSettings)
     {
         _customerSettings = customerSettings;
@@ -126,6 +136,7 @@ public partial class CustomerController : BaseAdminController
         _dateTimeHelper = dateTimeHelper;
         _dealerService = dealerService;
         _emailAccountService = emailAccountService;
+        _encryptionService = encryptionService;
         _eventPublisher = eventPublisher;
         _exportManager = exportManager;
         _forumService = forumService;
@@ -139,9 +150,11 @@ public partial class CustomerController : BaseAdminController
         _queuedEmailService = queuedEmailService;
         _rewardPointService = rewardPointService;
         _storeContext = storeContext;
+        _storeService = storeService;
         _taxService = taxService;
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
+        _securitySettings = securitySettings;
         _taxSettings = taxSettings;
     }
 
@@ -261,6 +274,15 @@ public partial class CustomerController : BaseAdminController
         return customers.Any(c => c.Active && c.Id != customer.Id);
     }
 
+    protected virtual string BuildRegistrationInviteToken(int storeId)
+    {
+        var expiresOnTicks = DateTime.UtcNow.AddDays(RegistrationInviteTokenLifetimeDays).Ticks;
+        var payload = $"{storeId}:{expiresOnTicks}";
+        var signature = HashHelper.CreateHash(Encoding.UTF8.GetBytes($"{payload}:{_securitySettings.EncryptionKey}"), "SHA256");
+
+        return _encryptionService.EncryptText($"{payload}:{signature}");
+    }
+
     #endregion
 
     #region Customers
@@ -289,6 +311,35 @@ public partial class CustomerController : BaseAdminController
         return Json(model);
     }
 
+    [HttpPost]
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> GenerateRegistrationLink(int storeId)
+    {
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        var isAdmin = await _customerService.IsAdminAsync(currentCustomer);
+        var isStoreOwner = !isAdmin
+                           && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+
+        if (!isAdmin && !isStoreOwner)
+            return Json(new { error = await _localizationService.GetResourceAsync("Admin.Customers.Customers.RegistrationLink.Error.NoPermission") });
+
+        var targetStoreId = isStoreOwner ? currentCustomer.RegisteredInStoreId : storeId;
+        if (targetStoreId <= 0)
+            return Json(new { error = await _localizationService.GetResourceAsync("Admin.Customers.Customers.RegistrationLink.Error.StoreRequired") });
+
+        var store = await _storeService.GetStoreByIdAsync(targetStoreId);
+        if (store == null)
+            return Json(new { error = await _localizationService.GetResourceAsync("Admin.Customers.Customers.RegistrationLink.Error.StoreNotFound") });
+
+        var inviteToken = BuildRegistrationInviteToken(targetStoreId);
+        var registrationUrl = Url.RouteUrl(NopRouteNames.Standard.REGISTER, new { inviteToken }, Request.Scheme, Request.Host.Value);
+
+        if (string.IsNullOrEmpty(registrationUrl))
+            return Json(new { error = await _localizationService.GetResourceAsync("Admin.Customers.Customers.RegistrationLink.Error.UrlGeneration") });
+
+        return Json(new { result = true, registrationUrl });
+    }
+
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
     public virtual async Task<IActionResult> Create()
     {
@@ -304,12 +355,12 @@ public partial class CustomerController : BaseAdminController
     public virtual async Task<IActionResult> Create(CustomerModel model, bool continueEditing, IFormCollection form)
     {
         if (!string.IsNullOrWhiteSpace(model.Email) && await _customerService.GetCustomerByEmailAsync(model.Email) != null)
-            ModelState.AddModelError(string.Empty, "Email is already registered");
+            ModelState.AddModelError(string.Empty, await _localizationService.GetResourceAsync("Account.Register.Errors.EmailAlreadyExists"));
 
         if (!string.IsNullOrWhiteSpace(model.Username) && _customerSettings.UsernamesEnabled &&
             await _customerService.GetCustomerByUsernameAsync(model.Username) != null)
         {
-            ModelState.AddModelError(string.Empty, "Username is already registered");
+            ModelState.AddModelError(string.Empty, await _localizationService.GetResourceAsync("Account.Register.Errors.UsernameAlreadyExists"));
         }
 
         //validate customer roles
@@ -361,7 +412,8 @@ public partial class CustomerController : BaseAdminController
                 selectedDealer = await _dealerService.GetDealerByIdAsync(model.DealerId);
                 if (selectedDealer == null || managedStoreId > 0 && selectedDealer.StoreId != managedStoreId)
                 {
-                    ModelState.AddModelError(nameof(model.DealerId), "Selected dealer is not available for this store.");
+                    ModelState.AddModelError(nameof(model.DealerId),
+                        await _localizationService.GetResourceAsync("Admin.Customers.Customers.Fields.Dealer.InvalidForStore"));
                     model = await _customerModelFactory.PrepareCustomerModelAsync(model, null, true);
                     return View(model);
                 }
@@ -542,7 +594,8 @@ public partial class CustomerController : BaseAdminController
         {
             selectedDealer = await _dealerService.GetDealerByIdAsync(model.DealerId);
             if (selectedDealer == null || managedStoreId > 0 && selectedDealer.StoreId != managedStoreId)
-                ModelState.AddModelError(nameof(model.DealerId), "Selected dealer is not available for this store.");
+                ModelState.AddModelError(nameof(model.DealerId),
+                    await _localizationService.GetResourceAsync("Admin.Customers.Customers.Fields.Dealer.InvalidForStore"));
         }
 
         if (ModelState.IsValid)

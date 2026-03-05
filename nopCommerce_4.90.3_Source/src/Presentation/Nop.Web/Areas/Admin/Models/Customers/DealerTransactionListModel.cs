@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Web.Framework.Models;
+using Nop.Web.Framework.Mvc.ModelBinding;
 
 namespace Nop.Web.Areas.Admin.Models.Customers;
 
@@ -24,16 +24,16 @@ public partial record DealerTransactionListModel : BaseNopModel
 
     public bool IsStoreOwner { get; set; }
 
-    [Display(Name = "Store")]
+    [NopResourceDisplayName("Admin.Customers.Dealers.Transactions.Fields.Store")]
     public int SearchStoreId { get; set; }
 
-    [Display(Name = "Dealer")]
+    [NopResourceDisplayName("Admin.Customers.Dealers.Transactions.Fields.Dealer")]
     public int SearchDealerId { get; set; }
 
-    [Display(Name = "Created from")]
+    [NopResourceDisplayName("Admin.Customers.Dealers.Transactions.Fields.CreatedFrom")]
     public DateTime? SearchCreatedFromUtc { get; set; }
 
-    [Display(Name = "Created to")]
+    [NopResourceDisplayName("Admin.Customers.Dealers.Transactions.Fields.CreatedTo")]
     public DateTime? SearchCreatedToUtc { get; set; }
 
     public IList<SelectListItem> AvailableStores { get; set; }

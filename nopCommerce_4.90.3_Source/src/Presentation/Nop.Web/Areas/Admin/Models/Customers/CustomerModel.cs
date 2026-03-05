@@ -60,7 +60,7 @@ public partial record CustomerModel : BaseNopEntityModel, IAclSupportedModel
 
     public IList<SelectListItem> AvailableVendors { get; set; }
 
-    [Display(Name = "Dealer")]
+    [NopResourceDisplayName("Admin.Customers.Customers.Fields.Dealer")]
     public int DealerId { get; set; }
 
     public IList<SelectListItem> AvailableDealers { get; set; }

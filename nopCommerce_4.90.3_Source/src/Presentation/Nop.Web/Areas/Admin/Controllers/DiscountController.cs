@@ -115,7 +115,8 @@ public partial class DiscountController : BaseAdminController
         {
             if (managedStoreId <= 0 || !validStoreIds.Contains(managedStoreId))
             {
-                ModelState.AddModelError(nameof(model.SelectedStoreIds), "A valid store is required.");
+                ModelState.AddModelError(nameof(model.SelectedStoreIds),
+                    await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreRequired"));
                 return;
             }
 
@@ -124,7 +125,8 @@ public partial class DiscountController : BaseAdminController
         }
 
         if (!isVendor && !canManageGlobalStoreScope && !model.SelectedStoreIds.Any())
-            ModelState.AddModelError(nameof(model.SelectedStoreIds), "At least one store must be selected.");
+            ModelState.AddModelError(nameof(model.SelectedStoreIds),
+                await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreSelectionRequired"));
     }
 
     public virtual IActionResult Index()

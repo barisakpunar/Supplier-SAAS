@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Web.Framework.Models;
+using Nop.Web.Framework.Mvc.ModelBinding;
 
 namespace Nop.Web.Areas.Admin.Models.Customers;
 
@@ -20,8 +21,10 @@ public partial record DealerListModel : BaseNopModel
 
     #region Properties
 
+    [NopResourceDisplayName("Admin.Customers.Dealers.List.SearchName")]
     public string SearchName { get; set; }
 
+    [NopResourceDisplayName("Admin.Customers.Dealers.Fields.Store")]
     public int SearchStoreId { get; set; }
 
     public bool IsStoreOwner { get; set; }
