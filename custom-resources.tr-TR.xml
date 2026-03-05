@@ -117,11 +117,17 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.CreatedOnUtc">
     <Value>Oluşturulma (UTC)</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Credit">
+    <Value>Alacak</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Customer">
     <Value>Müşteri</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Dealer">
     <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Debit">
+    <Value>Borç</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Direction">
     <Value>Yön</Value>
@@ -137,6 +143,9 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Type">
     <Value>Tip</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.RunningBalance">
+    <Value>Bakiye</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.DealerFallback">
     <Value>Bayi #{0}</Value>
@@ -171,11 +180,26 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Preview">
     <Value>Son {0} işlem gösterilir. Tam hesap ekstresi işlemleri bir sonraki iterasyonda eklenecektir.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.StatementDealer">
+    <Value>Ekstre bayisi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.StatementModeHint">
+    <Value>Mod</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.StatementModeHint.Text">
+    <Value>Açılış, kapanış ve satır bazlı bakiye görmek için bayi seçin.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary">
     <Value>Özet</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.ClosingBalance">
+    <Value>Kapanış bakiyesi</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.NetBalance">
     <Value>Net bakiye</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.OpeningBalance">
+    <Value>Açılış bakiyesi</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalCredit">
     <Value>Toplam alacak</Value>

@@ -457,6 +457,9 @@ public partial class DealerController : BaseAdminController
 
         var createdFromUtc = NormalizeDateFilterFrom(searchModel.SearchCreatedFromUtc);
         var createdToUtc = NormalizeDateFilterTo(searchModel.SearchCreatedToUtc);
+        searchModel.IsStatementMode = searchModel.SearchDealerId > 0;
+        searchModel.StatementDealerName = filteredDealers
+            .FirstOrDefault(dealer => dealer.Id == searchModel.SearchDealerId)?.Name;
 
         var transactions = await _dealerService.SearchDealerTransactionsAsync(
             dealerId: searchModel.SearchDealerId,
@@ -470,10 +473,36 @@ public partial class DealerController : BaseAdminController
 
         var unavailableText = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Common.NotAvailable");
         searchModel.Transactions = new List<DealerTransactionListItemModel>();
-        foreach (var transaction in transactions)
+        var orderedTransactions = searchModel.IsStatementMode
+            ? transactions.OrderBy(transaction => transaction.CreatedOnUtc).ThenBy(transaction => transaction.Id).ToList()
+            : transactions.OrderByDescending(transaction => transaction.CreatedOnUtc).ThenByDescending(transaction => transaction.Id).ToList();
+
+        var runningBalance = decimal.Zero;
+        if (searchModel.IsStatementMode && createdFromUtc.HasValue)
+        {
+            var openingTransactions = await _dealerService.SearchDealerTransactionsAsync(
+                dealerId: searchModel.SearchDealerId,
+                storeId: effectiveStoreId,
+                createdToUtc: createdFromUtc.Value.AddTicks(-1),
+                pageSize: int.MaxValue);
+
+            runningBalance = openingTransactions.Sum(transaction =>
+                transaction.DirectionId == (int)DealerTransactionDirection.Debit
+                    ? transaction.Amount
+                    : -transaction.Amount);
+        }
+
+        searchModel.OpeningBalance = searchModel.IsStatementMode ? runningBalance : decimal.Zero;
+        foreach (var transaction in orderedTransactions)
         {
             dealerById.TryGetValue(transaction.DealerId, out var dealer);
             var storeName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : unavailableText;
+            var isDebit = transaction.DirectionId == (int)DealerTransactionDirection.Debit;
+            var debitAmount = isDebit ? transaction.Amount : decimal.Zero;
+            var creditAmount = isDebit ? decimal.Zero : transaction.Amount;
+
+            if (searchModel.IsStatementMode)
+                runningBalance += isDebit ? transaction.Amount : -transaction.Amount;
 
             searchModel.Transactions.Add(new DealerTransactionListItemModel
             {
@@ -487,6 +516,9 @@ public partial class DealerController : BaseAdminController
                 TransactionType = await GetDealerTransactionTypeTextAsync(transaction.TransactionTypeId),
                 Direction = await GetDealerTransactionDirectionTextAsync(transaction.DirectionId),
                 Amount = transaction.Amount,
+                DebitAmount = debitAmount,
+                CreditAmount = creditAmount,
+                RunningBalance = searchModel.IsStatementMode ? runningBalance : null,
                 Note = transaction.Note,
                 CreatedOnUtc = transaction.CreatedOnUtc
             });
@@ -501,6 +533,9 @@ public partial class DealerController : BaseAdminController
             .Sum(transaction => transaction.Amount);
 
         searchModel.NetBalance = searchModel.TotalDebit - searchModel.TotalCredit;
+        searchModel.ClosingBalance = searchModel.IsStatementMode
+            ? searchModel.OpeningBalance + searchModel.NetBalance
+            : decimal.Zero;
 
         return searchModel;
     }
@@ -602,7 +637,7 @@ public partial class DealerController : BaseAdminController
         }
 
         var builder = new StringBuilder();
-        builder.AppendLine("Id,CreatedOnUtc,DealerId,DealerName,StoreName,Type,Direction,Amount,OrderId,CustomerId,Note");
+        builder.AppendLine("Id,CreatedOnUtc,DealerId,DealerName,StoreName,Type,Direction,DebitAmount,CreditAmount,RunningBalance,OrderId,CustomerId,Note");
 
         foreach (var item in model.Transactions)
         {
@@ -613,7 +648,9 @@ public partial class DealerController : BaseAdminController
             builder.Append(EscapeCsv(item.StoreName)).Append(',');
             builder.Append(EscapeCsv(item.TransactionType)).Append(',');
             builder.Append(EscapeCsv(item.Direction)).Append(',');
-            builder.Append(item.Amount.ToString("0.####", CultureInfo.InvariantCulture)).Append(',');
+            builder.Append(item.DebitAmount.ToString("0.####", CultureInfo.InvariantCulture)).Append(',');
+            builder.Append(item.CreditAmount.ToString("0.####", CultureInfo.InvariantCulture)).Append(',');
+            builder.Append(item.RunningBalance?.ToString("0.####", CultureInfo.InvariantCulture) ?? string.Empty).Append(',');
             builder.Append(item.OrderId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty).Append(',');
             builder.Append(item.CustomerId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty).Append(',');
             builder.Append(EscapeCsv(item.Note));

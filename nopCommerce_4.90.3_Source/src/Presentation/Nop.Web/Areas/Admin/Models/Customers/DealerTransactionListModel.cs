@@ -48,5 +48,13 @@ public partial record DealerTransactionListModel : BaseNopModel
 
     public decimal NetBalance { get; set; }
 
+    public bool IsStatementMode { get; set; }
+
+    public string StatementDealerName { get; set; }
+
+    public decimal OpeningBalance { get; set; }
+
+    public decimal ClosingBalance { get; set; }
+
     #endregion
 }

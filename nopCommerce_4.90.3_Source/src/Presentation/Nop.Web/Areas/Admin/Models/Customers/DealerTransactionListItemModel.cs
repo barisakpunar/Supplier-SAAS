@@ -27,6 +27,12 @@ public partial record DealerTransactionListItemModel : BaseNopEntityModel
 
     public decimal Amount { get; set; }
 
+    public decimal DebitAmount { get; set; }
+
+    public decimal CreditAmount { get; set; }
+
+    public decimal? RunningBalance { get; set; }
+
     public string Note { get; set; }
 
     public DateTime CreatedOnUtc { get; set; }
