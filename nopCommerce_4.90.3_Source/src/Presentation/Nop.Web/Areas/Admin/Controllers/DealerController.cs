@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
@@ -89,43 +88,6 @@ public partial class DealerController : BaseAdminController
             (int)DealerTransactionType.ManualCreditAdjustment => (int)DealerTransactionDirection.Credit,
             _ => 0
         };
-    }
-
-    protected virtual bool TryParseDecimalValue(string rawValue, out decimal value)
-    {
-        value = 0;
-
-        if (string.IsNullOrWhiteSpace(rawValue))
-            return false;
-
-        var normalizedValue = rawValue.Trim().Replace(" ", string.Empty);
-
-        if (decimal.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.CurrentCulture, out value))
-            return true;
-
-        if (decimal.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out value))
-            return true;
-
-        if (decimal.TryParse(normalizedValue.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out value))
-            return true;
-
-        return false;
-    }
-
-    protected virtual void NormalizeDecimalInput(DealerModel model, string fieldName, Action<decimal> setter)
-    {
-        ArgumentNullException.ThrowIfNull(model);
-        ArgumentNullException.ThrowIfNull(setter);
-
-        if (!Request.HasFormContentType || !Request.Form.ContainsKey(fieldName))
-            return;
-
-        var rawValue = Request.Form[fieldName].ToString();
-        if (!TryParseDecimalValue(rawValue, out var parsedValue))
-            return;
-
-        setter(parsedValue);
-        ModelState.Remove(fieldName);
     }
 
     protected virtual async Task PrepareDealerModelAsync(DealerModel model)
@@ -654,7 +616,6 @@ public partial class DealerController : BaseAdminController
             return AccessDeniedView();
 
         NormalizeSelectedPaymentMethodsFromRequest(model);
-        NormalizeDecimalInput(model, nameof(DealerModel.CreditLimit), value => model.CreditLimit = value);
 
         var store = await _storeService.GetStoreByIdAsync(model.StoreId);
         if (store is null)
@@ -732,7 +693,6 @@ public partial class DealerController : BaseAdminController
         if (isStoreOwner && managedStoreId > 0 && dealer.StoreId != managedStoreId)
             return AccessDeniedView();
 
-        NormalizeDecimalInput(model, nameof(DealerModel.ManualTransactionAmount), value => model.ManualTransactionAmount = value);
         ModelState.Remove(nameof(DealerModel.CreditLimit));
 
         var directionId = GetDirectionIdByManualTransactionType(model.ManualTransactionTypeId);
@@ -776,7 +736,6 @@ public partial class DealerController : BaseAdminController
     {
         var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
         NormalizeSelectedPaymentMethodsFromRequest(model);
-        NormalizeDecimalInput(model, nameof(DealerModel.CreditLimit), value => model.CreditLimit = value);
 
         var dealer = await _dealerService.GetDealerByIdAsync(model.Id);
         if (dealer is null)
