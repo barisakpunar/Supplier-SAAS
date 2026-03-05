@@ -117,11 +117,17 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.CreatedOnUtc">
     <Value>Created (UTC)</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Credit">
+    <Value>Credit</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Customer">
     <Value>Customer</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Dealer">
     <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Debit">
+    <Value>Debit</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Direction">
     <Value>Direction</Value>
@@ -137,6 +143,9 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Type">
     <Value>Type</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.RunningBalance">
+    <Value>Running balance</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.DealerFallback">
     <Value>Dealer #{0}</Value>
@@ -171,11 +180,26 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Preview">
     <Value>Shows latest {0} transaction(s). Full ledger actions will be added in the next iteration.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.StatementDealer">
+    <Value>Statement dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.StatementModeHint">
+    <Value>Mode</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.StatementModeHint.Text">
+    <Value>Select a dealer to see opening, closing, and running balance.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary">
     <Value>Summary</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.ClosingBalance">
+    <Value>Closing balance</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.NetBalance">
     <Value>Net balance</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.OpeningBalance">
+    <Value>Opening balance</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalCredit">
     <Value>Total credit</Value>
