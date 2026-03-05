@@ -49,6 +49,16 @@ public partial interface IDealerService
     Task<DealerFinancialProfile> GetDealerFinancialProfileByDealerIdAsync(int dealerId);
 
     /// <summary>
+    /// Gets dealer collection by identifier
+    /// </summary>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer collection
+    /// </returns>
+    Task<DealerCollection> GetDealerCollectionByIdAsync(int dealerCollectionId);
+
+    /// <summary>
     /// Gets current open account debt for dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -95,11 +105,55 @@ public partial interface IDealerService
     Task<IList<DealerTransaction>> GetDealerTransactionsAsync(int dealerId, int pageSize = int.MaxValue);
 
     /// <summary>
+    /// Searches dealer collections
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <param name="collectionMethodId">Collection method identifier</param>
+    /// <param name="collectionStatusId">Collection status identifier</param>
+    /// <param name="collectionFromUtc">Collection date from (UTC)</param>
+    /// <param name="collectionToUtc">Collection date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer collections
+    /// </returns>
+    Task<IList<DealerCollection>> SearchDealerCollectionsAsync(int dealerId = 0, int storeId = 0, int customerId = 0,
+        int collectionMethodId = 0, int collectionStatusId = 0, DateTime? collectionFromUtc = null,
+        DateTime? collectionToUtc = null, int pageSize = int.MaxValue);
+
+    /// <summary>
+    /// Gets dealer collections by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer collections
+    /// </returns>
+    Task<IList<DealerCollection>> GetDealerCollectionsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Inserts a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task InsertDealerTransactionAsync(DealerTransaction dealerTransaction);
+
+    /// <summary>
+    /// Inserts a dealer collection
+    /// </summary>
+    /// <param name="dealerCollection">Dealer collection</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerCollectionAsync(DealerCollection dealerCollection);
+
+    /// <summary>
+    /// Updates a dealer collection
+    /// </summary>
+    /// <param name="dealerCollection">Dealer collection</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerCollectionAsync(DealerCollection dealerCollection);
 
     /// <summary>
     /// Indicates whether a dealer transaction exists for the order and transaction type

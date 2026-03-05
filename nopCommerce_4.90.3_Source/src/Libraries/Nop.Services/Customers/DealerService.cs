@@ -16,6 +16,7 @@ public partial class DealerService : IDealerService
     protected readonly IRepository<DealerInfo> _dealerInfoRepository;
     protected readonly IRepository<DealerFinancialProfile> _dealerFinancialProfileRepository;
     protected readonly IRepository<DealerTransaction> _dealerTransactionRepository;
+    protected readonly IRepository<DealerCollection> _dealerCollectionRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
@@ -29,6 +30,7 @@ public partial class DealerService : IDealerService
     public DealerService(IRepository<DealerInfo> dealerInfoRepository,
         IRepository<DealerFinancialProfile> dealerFinancialProfileRepository,
         IRepository<DealerTransaction> dealerTransactionRepository,
+        IRepository<DealerCollection> dealerCollectionRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
         IRepository<Order> orderRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
@@ -36,6 +38,7 @@ public partial class DealerService : IDealerService
         _dealerInfoRepository = dealerInfoRepository;
         _dealerFinancialProfileRepository = dealerFinancialProfileRepository;
         _dealerTransactionRepository = dealerTransactionRepository;
+        _dealerCollectionRepository = dealerCollectionRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
         _orderRepository = orderRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
@@ -114,6 +117,22 @@ public partial class DealerService : IDealerService
 
         return await _dealerFinancialProfileRepository.Table
             .FirstOrDefaultAsync(profile => profile.DealerId == dealerId);
+    }
+
+    /// <summary>
+    /// Gets dealer collection by identifier
+    /// </summary>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer collection
+    /// </returns>
+    public virtual async Task<DealerCollection> GetDealerCollectionByIdAsync(int dealerCollectionId)
+    {
+        if (dealerCollectionId <= 0)
+            return null;
+
+        return await _dealerCollectionRepository.GetByIdAsync(dealerCollectionId, cache => default);
     }
 
     /// <summary>
@@ -255,6 +274,82 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Searches dealer collections
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <param name="collectionMethodId">Collection method identifier</param>
+    /// <param name="collectionStatusId">Collection status identifier</param>
+    /// <param name="collectionFromUtc">Collection date from (UTC)</param>
+    /// <param name="collectionToUtc">Collection date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer collections
+    /// </returns>
+    public virtual async Task<IList<DealerCollection>> SearchDealerCollectionsAsync(int dealerId = 0, int storeId = 0,
+        int customerId = 0, int collectionMethodId = 0, int collectionStatusId = 0, DateTime? collectionFromUtc = null,
+        DateTime? collectionToUtc = null, int pageSize = int.MaxValue)
+    {
+        if (pageSize <= 0)
+            return new List<DealerCollection>();
+
+        var query = from collection in _dealerCollectionRepository.Table
+                    join dealer in _dealerInfoRepository.Table on collection.DealerId equals dealer.Id
+                    select new
+                    {
+                        Collection = collection,
+                        dealer.StoreId
+                    };
+
+        if (dealerId > 0)
+            query = query.Where(item => item.Collection.DealerId == dealerId);
+
+        if (storeId > 0)
+            query = query.Where(item => item.StoreId == storeId);
+
+        if (customerId > 0)
+            query = query.Where(item => item.Collection.CustomerId == customerId);
+
+        if (collectionMethodId > 0)
+            query = query.Where(item => item.Collection.CollectionMethodId == collectionMethodId);
+
+        if (collectionStatusId > 0)
+            query = query.Where(item => item.Collection.CollectionStatusId == collectionStatusId);
+
+        if (collectionFromUtc.HasValue)
+            query = query.Where(item => item.Collection.CollectionDateUtc >= collectionFromUtc.Value);
+
+        if (collectionToUtc.HasValue)
+            query = query.Where(item => item.Collection.CollectionDateUtc <= collectionToUtc.Value);
+
+        return await query
+            .OrderByDescending(item => item.Collection.CollectionDateUtc)
+            .ThenByDescending(item => item.Collection.Id)
+            .Select(item => item.Collection)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Gets dealer collections by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer collections
+    /// </returns>
+    public virtual async Task<IList<DealerCollection>> GetDealerCollectionsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue)
+    {
+        if (dealerId <= 0 || pageSize <= 0)
+            return new List<DealerCollection>();
+
+        return await SearchDealerCollectionsAsync(dealerId: dealerId, pageSize: pageSize);
+    }
+
+    /// <summary>
     /// Inserts a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>
@@ -273,6 +368,52 @@ public partial class DealerService : IDealerService
             dealerTransaction.CreatedOnUtc = DateTime.UtcNow;
 
         await _dealerTransactionRepository.InsertAsync(dealerTransaction);
+    }
+
+    /// <summary>
+    /// Inserts a dealer collection
+    /// </summary>
+    /// <param name="dealerCollection">Dealer collection</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerCollectionAsync(DealerCollection dealerCollection)
+    {
+        ArgumentNullException.ThrowIfNull(dealerCollection);
+
+        if (dealerCollection.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerCollection.DealerId));
+
+        if (dealerCollection.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerCollection.Amount));
+
+        if (dealerCollection.CreatedByCustomerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerCollection.CreatedByCustomerId));
+
+        if (dealerCollection.CreatedOnUtc == default)
+            dealerCollection.CreatedOnUtc = DateTime.UtcNow;
+
+        if (dealerCollection.CollectionDateUtc == default)
+            dealerCollection.CollectionDateUtc = DateTime.UtcNow;
+
+        await _dealerCollectionRepository.InsertAsync(dealerCollection);
+    }
+
+    /// <summary>
+    /// Updates a dealer collection
+    /// </summary>
+    /// <param name="dealerCollection">Dealer collection</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpdateDealerCollectionAsync(DealerCollection dealerCollection)
+    {
+        ArgumentNullException.ThrowIfNull(dealerCollection);
+
+        if (dealerCollection.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerCollection.DealerId));
+
+        if (dealerCollection.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerCollection.Amount));
+
+        dealerCollection.UpdatedOnUtc = DateTime.UtcNow;
+        await _dealerCollectionRepository.UpdateAsync(dealerCollection);
     }
 
     /// <summary>
