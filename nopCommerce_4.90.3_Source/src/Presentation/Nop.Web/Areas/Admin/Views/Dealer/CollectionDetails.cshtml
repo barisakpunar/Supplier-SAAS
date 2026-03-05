@@ -1,0 +1,121 @@
+@using System.Globalization
+@model DealerCollectionDetailsModel
+@{
+    ViewBag.PageTitle = T("Admin.Customers.DealerCollections.Details").Text;
+    NopHtml.SetActiveMenuItemSystemName("DealerCollections");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">@T("Admin.Customers.DealerCollections.Details")</h1>
+    <div class="float-right">
+        <a asp-action="Collections" class="btn btn-default">
+            <i class="fas fa-arrow-left"></i>
+            @T("Admin.Customers.Dealers.BackToList")
+        </a>
+        @if (Model.CanCancel)
+        {
+            <form asp-action="CancelCollection" asp-controller="Dealer" method="post" class="d-inline">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-ban"></i>
+                    @T("Admin.Customers.DealerCollections.Cancel")
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerCollections.Info")</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.Dealer"):</strong> @Model.DealerName
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.Store"):</strong> @Model.StoreName
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.Customer"):</strong> @(string.IsNullOrWhiteSpace(Model.CustomerName) ? "-" : Model.CustomerName)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.CollectionMethod"):</strong> @Model.CollectionMethod
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.Status"):</strong> @Model.CollectionStatus
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.Amount"):</strong> @Model.Amount.ToString("0.####", CultureInfo.CurrentCulture)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.CollectionDate"):</strong> @Model.CollectionDateUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.ReferenceNo"):</strong> @(string.IsNullOrWhiteSpace(Model.ReferenceNo) ? "-" : Model.ReferenceNo)
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.Note"):</strong> @(string.IsNullOrWhiteSpace(Model.Note) ? "-" : Model.Note)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerCollections.Audit")</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.CreatedBy"):</strong> @(string.IsNullOrWhiteSpace(Model.CreatedByCustomerName) ? "-" : Model.CreatedByCustomerName)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.CreatedOnUtc"):</strong> @Model.CreatedOnUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.UpdatedOnUtc"):</strong> @(Model.UpdatedOnUtc.HasValue ? Model.UpdatedOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.DealerTransaction"):</strong> @(Model.DealerTransactionId?.ToString() ?? "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.DealerTransactionDate"):</strong> @(Model.DealerTransactionCreatedOnUtc.HasValue ? Model.DealerTransactionCreatedOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!Model.CanCancel || Model.CancelledOnUtc.HasValue)
+                {
+                    <div class="card card-default">
+                        <div class="card-header">
+                            <h3 class="card-title">@T("Admin.Customers.DealerCollections.Cancellation")</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <strong>@T("Admin.Customers.DealerCollections.Fields.CancelledBy"):</strong> @(string.IsNullOrWhiteSpace(Model.CancelledByCustomerName) ? "-" : Model.CancelledByCustomerName)
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>@T("Admin.Customers.DealerCollections.Fields.CancelledOnUtc"):</strong> @(Model.CancelledOnUtc.HasValue ? Model.CancelledOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>@T("Admin.Customers.DealerCollections.Fields.CancelledDealerTransaction"):</strong> @(Model.CancelledDealerTransactionId?.ToString() ?? "-")
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>@T("Admin.Customers.DealerCollections.Fields.CancelledDealerTransactionDate"):</strong> @(Model.CancelledDealerTransactionCreatedOnUtc.HasValue ? Model.CancelledDealerTransactionCreatedOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

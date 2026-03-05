@@ -22,6 +22,7 @@ public partial class DealerCollectionBuilder : NopEntityBuilder<DealerCollection
             .WithColumn(nameof(DealerCollection.DealerId)).AsInt32().NotNullable().ForeignKey<DealerInfo>(onDelete: Rule.Cascade)
             .WithColumn(nameof(DealerCollection.CustomerId)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None)
             .WithColumn(nameof(DealerCollection.DealerTransactionId)).AsInt32().Nullable().ForeignKey<DealerTransaction>(onDelete: Rule.None)
+            .WithColumn(nameof(DealerCollection.CancelledDealerTransactionId)).AsInt32().Nullable().ForeignKey<DealerTransaction>(onDelete: Rule.None)
             .WithColumn(nameof(DealerCollection.CollectionMethodId)).AsInt32().NotNullable().Indexed()
             .WithColumn(nameof(DealerCollection.CollectionStatusId)).AsInt32().NotNullable().Indexed()
             .WithColumn(nameof(DealerCollection.Amount)).AsDecimal(18, 4).NotNullable().WithDefaultValue(0)
@@ -30,7 +31,9 @@ public partial class DealerCollectionBuilder : NopEntityBuilder<DealerCollection
             .WithColumn(nameof(DealerCollection.Note)).AsString(1000).Nullable()
             .WithColumn(nameof(DealerCollection.CreatedByCustomerId)).AsInt32().NotNullable().ForeignKey<Customer>(onDelete: Rule.None)
             .WithColumn(nameof(DealerCollection.CreatedOnUtc)).AsDateTime2().NotNullable().Indexed()
-            .WithColumn(nameof(DealerCollection.UpdatedOnUtc)).AsDateTime2().Nullable();
+            .WithColumn(nameof(DealerCollection.UpdatedOnUtc)).AsDateTime2().Nullable()
+            .WithColumn(nameof(DealerCollection.CancelledByCustomerId)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None)
+            .WithColumn(nameof(DealerCollection.CancelledOnUtc)).AsDateTime2().Nullable().Indexed();
     }
 
     #endregion

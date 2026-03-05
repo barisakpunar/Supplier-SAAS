@@ -130,6 +130,7 @@
                                         <th style="width: 220px;">@T("Admin.Customers.Dealers.Transactions.Columns.Dealer")</th>
                                         <th style="width: 160px;">@T("Admin.Customers.Dealers.Transactions.Columns.Store")</th>
                                         <th style="width: 210px;">@T("Admin.Customers.Dealers.Transactions.Columns.Type")</th>
+                                        <th style="width: 130px;">@T("Admin.Customers.Dealers.Transactions.Columns.Source")</th>
                                         <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.Debit")</th>
                                         <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.Credit")</th>
                                         <th style="width: 140px;">@T("Admin.Customers.Dealers.Transactions.Columns.RunningBalance")</th>
@@ -153,6 +154,16 @@
                                                 </td>
                                                 <td>@transaction.StoreName</td>
                                                 <td>@transaction.TransactionType</td>
+                                                <td>
+                                                    @if (transaction.CollectionId.HasValue)
+                                                    {
+                                                        <a asp-action="CollectionDetails" asp-controller="Dealer" asp-route-id="@transaction.CollectionId.Value">@transaction.SourceText</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        @:-
+                                                    }
+                                                </td>
                                                 <td>@(transaction.DebitAmount > 0 ? transaction.DebitAmount.ToString("0.####", CultureInfo.CurrentCulture) : "-")</td>
                                                 <td>@(transaction.CreditAmount > 0 ? transaction.CreditAmount.ToString("0.####", CultureInfo.CurrentCulture) : "-")</td>
                                                 <td>@(transaction.RunningBalance.HasValue ? transaction.RunningBalance.Value.ToString("0.####", CultureInfo.CurrentCulture) : "-")</td>
@@ -165,7 +176,7 @@
                                     else
                                     {
                                         <tr>
-                                            <td colspan="10" class="text-center">@T("Admin.Customers.Dealers.Transactions.NoData")</td>
+                                            <td colspan="11" class="text-center">@T("Admin.Customers.Dealers.Transactions.NoData")</td>
                                         </tr>
                                     }
                                 </tbody>

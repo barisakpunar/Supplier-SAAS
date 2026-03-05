@@ -59,6 +59,16 @@ public partial interface IDealerService
     Task<DealerCollection> GetDealerCollectionByIdAsync(int dealerCollectionId);
 
     /// <summary>
+    /// Gets dealer transaction by identifier
+    /// </summary>
+    /// <param name="dealerTransactionId">Dealer transaction identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer transaction
+    /// </returns>
+    Task<DealerTransaction> GetDealerTransactionByIdAsync(int dealerTransactionId);
+
+    /// <summary>
     /// Gets current open account debt for dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>

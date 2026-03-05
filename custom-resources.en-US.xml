@@ -138,6 +138,9 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Order">
     <Value>Order</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Source">
+    <Value>Source</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Store">
     <Value>Store</Value>
   </LocaleResource>
@@ -206,6 +209,9 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalDebit">
     <Value>Total debit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Collection">
+    <Value>Collection #{0}</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
     <Value>Manual credit adjustment</Value>
@@ -332,6 +338,15 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.AddNew">
     <Value>Add new collection</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Audit">
+    <Value>Audit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Cancel">
+    <Value>Cancel collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Cancellation">
+    <Value>Cancellation</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Amount">
     <Value>Amount</Value>
   </LocaleResource>
@@ -377,8 +392,20 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Customer">
     <Value>Customer</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CreatedBy">
+    <Value>Created by</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CreatedOnUtc">
+    <Value>Created on (UTC)</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Dealer">
     <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransaction">
+    <Value>Dealer transaction</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransactionDate">
+    <Value>Dealer transaction date (UTC)</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
     <Value>Note</Value>
@@ -391,6 +418,24 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Store">
     <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.UpdatedOnUtc">
+    <Value>Updated on (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledBy">
+    <Value>Cancelled by</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledOnUtc">
+    <Value>Cancelled on (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledDealerTransaction">
+    <Value>Cancellation dealer transaction</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledDealerTransactionDate">
+    <Value>Cancellation transaction date (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Details">
+    <Value>Collection details</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Info">
     <Value>Collection info</Value>

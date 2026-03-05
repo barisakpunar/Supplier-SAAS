@@ -115,6 +115,14 @@ public partial class DealerController : BaseAdminController
         return await _localizationService.GetResourceAsync(resourceKey);
     }
 
+    protected virtual string GetCustomerDisplayText(Customer customer)
+    {
+        if (customer is null)
+            return string.Empty;
+
+        return !string.IsNullOrWhiteSpace(customer.Email) ? customer.Email : customer.Username;
+    }
+
     protected virtual int GetDirectionIdByManualTransactionType(int manualTransactionTypeId)
     {
         return manualTransactionTypeId switch
@@ -450,6 +458,50 @@ public partial class DealerController : BaseAdminController
         return searchModel;
     }
 
+    protected virtual async Task<DealerCollectionDetailsModel> PrepareDealerCollectionDetailsModelAsync(DealerCollection collection, DealerInfo dealer)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+        ArgumentNullException.ThrowIfNull(dealer);
+
+        var store = await _storeService.GetStoreByIdAsync(dealer.StoreId);
+        var createdByCustomer = await _customerService.GetCustomerByIdAsync(collection.CreatedByCustomerId);
+        var mappedCustomer = collection.CustomerId.HasValue ? await _customerService.GetCustomerByIdAsync(collection.CustomerId.Value) : null;
+        var cancelledByCustomer = collection.CancelledByCustomerId.HasValue ? await _customerService.GetCustomerByIdAsync(collection.CancelledByCustomerId.Value) : null;
+        var originalTransaction = collection.DealerTransactionId.HasValue
+            ? await _dealerService.GetDealerTransactionByIdAsync(collection.DealerTransactionId.Value)
+            : null;
+        var cancelledTransaction = collection.CancelledDealerTransactionId.HasValue
+            ? await _dealerService.GetDealerTransactionByIdAsync(collection.CancelledDealerTransactionId.Value)
+            : null;
+
+        return new DealerCollectionDetailsModel
+        {
+            Id = collection.Id,
+            DealerId = dealer.Id,
+            DealerName = dealer.Name,
+            StoreId = dealer.StoreId,
+            StoreName = store?.Name ?? "-",
+            CustomerId = collection.CustomerId,
+            CustomerName = GetCustomerDisplayText(mappedCustomer),
+            CollectionMethod = await GetDealerCollectionMethodTextAsync(collection.CollectionMethodId),
+            CollectionStatus = await GetDealerCollectionStatusTextAsync(collection.CollectionStatusId),
+            Amount = collection.Amount,
+            CollectionDateUtc = collection.CollectionDateUtc,
+            ReferenceNo = collection.ReferenceNo,
+            Note = collection.Note,
+            CreatedByCustomerName = GetCustomerDisplayText(createdByCustomer),
+            CreatedOnUtc = collection.CreatedOnUtc,
+            UpdatedOnUtc = collection.UpdatedOnUtc,
+            DealerTransactionId = collection.DealerTransactionId,
+            DealerTransactionCreatedOnUtc = originalTransaction?.CreatedOnUtc,
+            CancelledDealerTransactionId = collection.CancelledDealerTransactionId,
+            CancelledDealerTransactionCreatedOnUtc = cancelledTransaction?.CreatedOnUtc,
+            CancelledByCustomerName = GetCustomerDisplayText(cancelledByCustomer),
+            CancelledOnUtc = collection.CancelledOnUtc,
+            CanCancel = collection.CollectionStatusId == (int)DealerCollectionStatus.Posted
+        };
+    }
+
     protected virtual async Task SaveDealerMappingsAsync(DealerInfo dealer, DealerModel model)
     {
         ArgumentNullException.ThrowIfNull(dealer);
@@ -694,6 +746,23 @@ public partial class DealerController : BaseAdminController
             createdFromUtc: createdFromUtc,
             createdToUtc: createdToUtc,
             pageSize: pageSize);
+        var collectionsByTransactionId = new Dictionary<int, DealerCollection>();
+        if (transactions.Any())
+        {
+            var collections = await _dealerService.SearchDealerCollectionsAsync(
+                dealerId: searchModel.SearchDealerId,
+                storeId: effectiveStoreId,
+                pageSize: int.MaxValue);
+
+            foreach (var collection in collections)
+            {
+                if (collection.DealerTransactionId.HasValue && !collectionsByTransactionId.ContainsKey(collection.DealerTransactionId.Value))
+                    collectionsByTransactionId[collection.DealerTransactionId.Value] = collection;
+
+                if (collection.CancelledDealerTransactionId.HasValue && !collectionsByTransactionId.ContainsKey(collection.CancelledDealerTransactionId.Value))
+                    collectionsByTransactionId[collection.CancelledDealerTransactionId.Value] = collection;
+            }
+        }
 
         var dealerById = filteredDealers.ToDictionary(dealer => dealer.Id);
         var storesById = stores.ToDictionary(store => store.Id);
@@ -723,6 +792,7 @@ public partial class DealerController : BaseAdminController
         foreach (var transaction in orderedTransactions)
         {
             dealerById.TryGetValue(transaction.DealerId, out var dealer);
+            collectionsByTransactionId.TryGetValue(transaction.Id, out var sourceCollection);
             var storeName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : unavailableText;
             var isDebit = transaction.DirectionId == (int)DealerTransactionDirection.Debit;
             var debitAmount = isDebit ? transaction.Amount : decimal.Zero;
@@ -746,6 +816,10 @@ public partial class DealerController : BaseAdminController
                 DebitAmount = debitAmount,
                 CreditAmount = creditAmount,
                 RunningBalance = searchModel.IsStatementMode ? runningBalance : null,
+                CollectionId = sourceCollection?.Id,
+                SourceText = sourceCollection is null
+                    ? string.Empty
+                    : string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Collection"), sourceCollection.Id),
                 Note = transaction.Note,
                 CreatedOnUtc = transaction.CreatedOnUtc
             });
@@ -842,6 +916,25 @@ public partial class DealerController : BaseAdminController
         return View(model);
     }
 
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> CollectionDetails(int id)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var collection = await _dealerService.GetDealerCollectionByIdAsync(id);
+        if (collection is null)
+            return RedirectToAction(nameof(Collections));
+
+        var dealer = await _dealerService.GetDealerByIdAsync(collection.DealerId);
+        if (dealer is null)
+            return RedirectToAction(nameof(Collections));
+
+        if (isStoreOwner && managedStoreId > 0 && dealer.StoreId != managedStoreId)
+            return AccessDeniedView();
+
+        var model = await PrepareDealerCollectionDetailsModelAsync(collection, dealer);
+        return View(model);
+    }
+
     [HttpPost, ActionName("Transactions")]
     [FormValueRequired("search-transactions")]
     [ValidateAntiForgeryToken]
@@ -871,7 +964,7 @@ public partial class DealerController : BaseAdminController
         }
 
         var builder = new StringBuilder();
-        builder.AppendLine("Id,CreatedOnUtc,DealerId,DealerName,StoreName,Type,Direction,DebitAmount,CreditAmount,RunningBalance,OrderId,CustomerId,Note");
+        builder.AppendLine("Id,CreatedOnUtc,DealerId,DealerName,StoreName,Type,Source,Direction,DebitAmount,CreditAmount,RunningBalance,OrderId,CustomerId,Note");
 
         foreach (var item in model.Transactions)
         {
@@ -881,6 +974,7 @@ public partial class DealerController : BaseAdminController
             builder.Append(EscapeCsv(item.DealerName)).Append(',');
             builder.Append(EscapeCsv(item.StoreName)).Append(',');
             builder.Append(EscapeCsv(item.TransactionType)).Append(',');
+            builder.Append(EscapeCsv(item.SourceText)).Append(',');
             builder.Append(EscapeCsv(item.Direction)).Append(',');
             builder.Append(item.DebitAmount.ToString("0.####", CultureInfo.InvariantCulture)).Append(',');
             builder.Append(item.CreditAmount.ToString("0.####", CultureInfo.InvariantCulture)).Append(',');
@@ -978,6 +1072,51 @@ public partial class DealerController : BaseAdminController
         await _dealerService.InsertDealerCollectionAsync(collection);
 
         return RedirectToAction(nameof(Collections), new { SearchStoreId = model.StoreId, SearchDealerId = model.DealerId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    public virtual async Task<IActionResult> CancelCollection(int id)
+    {
+        var (currentCustomer, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var collection = await _dealerService.GetDealerCollectionByIdAsync(id);
+        if (collection is null)
+            return RedirectToAction(nameof(Collections));
+
+        var dealer = await _dealerService.GetDealerByIdAsync(collection.DealerId);
+        if (dealer is null)
+            return RedirectToAction(nameof(Collections));
+
+        if (isStoreOwner && managedStoreId > 0 && dealer.StoreId != managedStoreId)
+            return AccessDeniedView();
+
+        if (collection.CollectionStatusId == (int)DealerCollectionStatus.Cancelled)
+            return RedirectToAction(nameof(CollectionDetails), new { id = collection.Id });
+
+        var reversalTransaction = new DealerTransaction
+        {
+            DealerId = collection.DealerId,
+            CustomerId = collection.CustomerId,
+            TransactionTypeId = (int)DealerTransactionType.OpenAccountCollection,
+            DirectionId = (int)DealerTransactionDirection.Debit,
+            Amount = collection.Amount,
+            Note = string.IsNullOrWhiteSpace(collection.ReferenceNo)
+                ? $"Collection cancellation for dealer collection #{collection.Id}"
+                : $"Collection cancellation for dealer collection #{collection.Id}. Ref: {collection.ReferenceNo}",
+            CreatedOnUtc = DateTime.UtcNow
+        };
+
+        await _dealerService.InsertDealerTransactionAsync(reversalTransaction);
+
+        collection.CollectionStatusId = (int)DealerCollectionStatus.Cancelled;
+        collection.CancelledDealerTransactionId = reversalTransaction.Id;
+        collection.CancelledByCustomerId = currentCustomer.Id;
+        collection.CancelledOnUtc = DateTime.UtcNow;
+
+        await _dealerService.UpdateDealerCollectionAsync(collection);
+
+        return RedirectToAction(nameof(CollectionDetails), new { id = collection.Id });
     }
 
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]

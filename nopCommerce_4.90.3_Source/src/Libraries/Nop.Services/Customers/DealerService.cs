@@ -136,6 +136,22 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Gets dealer transaction by identifier
+    /// </summary>
+    /// <param name="dealerTransactionId">Dealer transaction identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer transaction
+    /// </returns>
+    public virtual async Task<DealerTransaction> GetDealerTransactionByIdAsync(int dealerTransactionId)
+    {
+        if (dealerTransactionId <= 0)
+            return null;
+
+        return await _dealerTransactionRepository.GetByIdAsync(dealerTransactionId, cache => default);
+    }
+
+    /// <summary>
     /// Gets current open account debt for dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>

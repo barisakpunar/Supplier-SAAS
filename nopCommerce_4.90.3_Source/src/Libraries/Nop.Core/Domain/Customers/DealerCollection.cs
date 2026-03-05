@@ -21,6 +21,11 @@ public partial class DealerCollection : BaseEntity
     public int? DealerTransactionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the cancellation dealer transaction identifier
+    /// </summary>
+    public int? CancelledDealerTransactionId { get; set; }
+
+    /// <summary>
     /// Gets or sets the collection method identifier
     /// </summary>
     public int CollectionMethodId { get; set; }
@@ -64,6 +69,16 @@ public partial class DealerCollection : BaseEntity
     /// Gets or sets the updated date and time in UTC
     /// </summary>
     public DateTime? UpdatedOnUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the cancellation customer identifier
+    /// </summary>
+    public int? CancelledByCustomerId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the cancelled date and time in UTC
+    /// </summary>
+    public DateTime? CancelledOnUtc { get; set; }
 
     /// <summary>
     /// Gets or sets the collection method

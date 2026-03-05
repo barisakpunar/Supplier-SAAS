@@ -138,6 +138,9 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Order">
     <Value>Sipariş</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Source">
+    <Value>Kaynak</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Store">
     <Value>Mağaza</Value>
   </LocaleResource>
@@ -206,6 +209,9 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalDebit">
     <Value>Toplam borç</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Collection">
+    <Value>Tahsilat #{0}</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
     <Value>Manuel alacak düzeltmesi</Value>
@@ -332,6 +338,15 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.AddNew">
     <Value>Yeni tahsilat ekle</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Audit">
+    <Value>Denetim</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Cancel">
+    <Value>Tahsilatı iptal et</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Cancellation">
+    <Value>İptal bilgisi</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Amount">
     <Value>Tutar</Value>
   </LocaleResource>
@@ -377,8 +392,20 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Customer">
     <Value>Müşteri</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CreatedBy">
+    <Value>Oluşturan</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CreatedOnUtc">
+    <Value>Oluşturulma zamanı (UTC)</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Dealer">
     <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransaction">
+    <Value>Bayi hareketi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransactionDate">
+    <Value>Bayi hareket tarihi (UTC)</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
     <Value>Not</Value>
@@ -391,6 +418,24 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Store">
     <Value>Mağaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.UpdatedOnUtc">
+    <Value>Güncellenme zamanı (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledBy">
+    <Value>İptal eden</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledOnUtc">
+    <Value>İptal zamanı (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledDealerTransaction">
+    <Value>İptal bayi hareketi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.CancelledDealerTransactionDate">
+    <Value>İptal hareket tarihi (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Details">
+    <Value>Tahsilat detayı</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Info">
     <Value>Tahsilat bilgisi</Value>
