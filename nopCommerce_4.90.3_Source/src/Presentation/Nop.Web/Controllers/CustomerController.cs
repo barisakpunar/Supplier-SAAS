@@ -1,4 +1,5 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Text;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Nop.Core;
@@ -11,6 +12,7 @@ using Nop.Core.Domain.Gdpr;
 using Nop.Core.Domain.Localization;
 using Nop.Core.Domain.Media;
 using Nop.Core.Domain.Security;
+using Nop.Core.Domain.Stores;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Events;
 using Nop.Core.Http;
@@ -69,6 +71,7 @@ public partial class CustomerController : BasePublicController
     protected readonly ICustomerRegistrationService _customerRegistrationService;
     protected readonly ICustomerService _customerService;
     protected readonly IDownloadService _downloadService;
+    protected readonly IEncryptionService _encryptionService;
     protected readonly IEventPublisher _eventPublisher;
     protected readonly IExportManager _exportManager;
     protected readonly IExternalAuthenticationService _externalAuthenticationService;
@@ -91,6 +94,7 @@ public partial class CustomerController : BasePublicController
     protected readonly ITaxService _taxService;
     protected readonly IWorkContext _workContext;
     protected readonly IWorkflowMessageService _workflowMessageService;
+    protected readonly SecuritySettings _securitySettings;
     protected readonly LocalizationSettings _localizationSettings;
     protected readonly MediaSettings _mediaSettings;
     protected readonly MultiFactorAuthenticationSettings _multiFactorAuthenticationSettings;
@@ -122,6 +126,7 @@ public partial class CustomerController : BasePublicController
         ICustomerRegistrationService customerRegistrationService,
         ICustomerService customerService,
         IDownloadService downloadService,
+        IEncryptionService encryptionService,
         IEventPublisher eventPublisher,
         IExportManager exportManager,
         IExternalAuthenticationService externalAuthenticationService,
@@ -144,6 +149,7 @@ public partial class CustomerController : BasePublicController
         ITaxService taxService,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
+        SecuritySettings securitySettings,
         LocalizationSettings localizationSettings,
         MediaSettings mediaSettings,
         MultiFactorAuthenticationSettings multiFactorAuthenticationSettings,
@@ -170,6 +176,7 @@ public partial class CustomerController : BasePublicController
         _customerRegistrationService = customerRegistrationService;
         _customerService = customerService;
         _downloadService = downloadService;
+        _encryptionService = encryptionService;
         _eventPublisher = eventPublisher;
         _exportManager = exportManager;
         _externalAuthenticationService = externalAuthenticationService;
@@ -192,6 +199,7 @@ public partial class CustomerController : BasePublicController
         _taxService = taxService;
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
+        _securitySettings = securitySettings;
         _localizationSettings = localizationSettings;
         _mediaSettings = mediaSettings;
         _multiFactorAuthenticationSettings = multiFactorAuthenticationSettings;
@@ -231,23 +239,59 @@ public partial class CustomerController : BasePublicController
         var customer = await _workContext.GetCurrentCustomerAsync();
         var multiFactorAuthenticationProviders = await _multiFactorAuthenticationPluginManager
             .LoadActivePluginsAsync(customer, store.Id);
-        
+
         var isValidProvider = multiFactorAuthenticationProviders
             .Any(p => p.PluginDescriptor.SystemName.Equals(selectedProvider, StringComparison.InvariantCultureIgnoreCase));
 
         return isValidProvider ? selectedProvider : string.Empty;
     }
 
-    protected virtual async Task<Store> ResolveRegisterStoreAsync(int? invitedStoreId)
+    protected virtual bool TryReadRegistrationInviteToken(string inviteToken, out int storeId)
     {
-        if (invitedStoreId.GetValueOrDefault() > 0)
-        {
-            var invitedStore = await _storeService.GetStoreByIdAsync(invitedStoreId.Value);
-            if (invitedStore != null)
-                return invitedStore;
-        }
+        storeId = 0;
+        if (string.IsNullOrWhiteSpace(inviteToken))
+            return false;
 
-        return await _storeContext.GetCurrentStoreAsync();
+        try
+        {
+            var decryptedToken = _encryptionService.DecryptText(inviteToken);
+            var tokenParts = decryptedToken.Split(':');
+            if (tokenParts.Length != 3)
+                return false;
+
+            if (!int.TryParse(tokenParts[0], out var parsedStoreId) || parsedStoreId <= 0)
+                return false;
+
+            if (!long.TryParse(tokenParts[1], out var expiresOnTicks))
+                return false;
+
+            var signaturePayload = $"{tokenParts[0]}:{tokenParts[1]}:{_securitySettings.EncryptionKey}";
+            var expectedSignature = HashHelper.CreateHash(Encoding.UTF8.GetBytes(signaturePayload), "SHA256");
+            if (!string.Equals(tokenParts[2], expectedSignature, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var expiresOnUtc = new DateTime(expiresOnTicks, DateTimeKind.Utc);
+            if (expiresOnUtc <= DateTime.UtcNow)
+                return false;
+
+            storeId = parsedStoreId;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    protected virtual async Task<Store> ResolveRegisterStoreAsync(string inviteToken)
+    {
+        var currentStore = await _storeContext.GetCurrentStoreAsync();
+
+        if (!TryReadRegistrationInviteToken(inviteToken, out var invitedStoreId))
+            return currentStore;
+
+        var invitedStore = await _storeService.GetStoreByIdAsync(invitedStoreId);
+        return invitedStore ?? currentStore;
     }
 
     protected virtual async Task<string> ParseCustomCustomerAttributesAsync(IFormCollection form)
@@ -263,57 +307,57 @@ public partial class CustomerController : BasePublicController
             {
                 case AttributeControlType.DropdownList:
                 case AttributeControlType.RadioList:
-                {
-                    var ctrlAttributes = form[controlId];
-                    if (!StringValues.IsNullOrEmpty(ctrlAttributes))
                     {
-                        var selectedAttributeId = int.Parse(ctrlAttributes);
-                        if (selectedAttributeId > 0)
-                            attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
-                                attribute, selectedAttributeId.ToString());
-                    }
-                }
-                    break;
-                case AttributeControlType.Checkboxes:
-                {
-                    var cblAttributes = form[controlId];
-                    if (!StringValues.IsNullOrEmpty(cblAttributes))
-                    {
-                        foreach (var item in cblAttributes.ToString().Split(_separator, StringSplitOptions.RemoveEmptyEntries))
+                        var ctrlAttributes = form[controlId];
+                        if (!StringValues.IsNullOrEmpty(ctrlAttributes))
                         {
-                            var selectedAttributeId = int.Parse(item);
+                            var selectedAttributeId = int.Parse(ctrlAttributes);
                             if (selectedAttributeId > 0)
                                 attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
                                     attribute, selectedAttributeId.ToString());
                         }
                     }
-                }
+                    break;
+                case AttributeControlType.Checkboxes:
+                    {
+                        var cblAttributes = form[controlId];
+                        if (!StringValues.IsNullOrEmpty(cblAttributes))
+                        {
+                            foreach (var item in cblAttributes.ToString().Split(_separator, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                var selectedAttributeId = int.Parse(item);
+                                if (selectedAttributeId > 0)
+                                    attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
+                                        attribute, selectedAttributeId.ToString());
+                            }
+                        }
+                    }
                     break;
                 case AttributeControlType.ReadonlyCheckboxes:
-                {
-                    //load read-only (already server-side selected) values
-                    var attributeValues = await _customerAttributeService.GetAttributeValuesAsync(attribute.Id);
-                    foreach (var selectedAttributeId in attributeValues
-                                 .Where(v => v.IsPreSelected)
-                                 .Select(v => v.Id)
-                                 .ToList())
                     {
-                        attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
-                            attribute, selectedAttributeId.ToString());
+                        //load read-only (already server-side selected) values
+                        var attributeValues = await _customerAttributeService.GetAttributeValuesAsync(attribute.Id);
+                        foreach (var selectedAttributeId in attributeValues
+                                     .Where(v => v.IsPreSelected)
+                                     .Select(v => v.Id)
+                                     .ToList())
+                        {
+                            attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
+                                attribute, selectedAttributeId.ToString());
+                        }
                     }
-                }
                     break;
                 case AttributeControlType.TextBox:
                 case AttributeControlType.MultilineTextbox:
-                {
-                    var ctrlAttributes = form[controlId];
-                    if (!StringValues.IsNullOrEmpty(ctrlAttributes))
                     {
-                        var enteredText = ctrlAttributes.ToString().Trim();
-                        attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
-                            attribute, enteredText);
+                        var ctrlAttributes = form[controlId];
+                        if (!StringValues.IsNullOrEmpty(ctrlAttributes))
+                        {
+                            var enteredText = ctrlAttributes.ToString().Trim();
+                            attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
+                                attribute, enteredText);
+                        }
                     }
-                }
                     break;
                 case AttributeControlType.Datepicker:
                 case AttributeControlType.ColorSquares:
@@ -473,26 +517,26 @@ public partial class CustomerController : BasePublicController
             switch (loginResult)
             {
                 case CustomerLoginResults.Successful:
-                {
-                    var customer = _customerSettings.UsernamesEnabled
-                        ? await _customerService.GetCustomerByUsernameAsync(customerUserName)
-                        : await _customerService.GetCustomerByEmailAsync(customerEmail);
-
-                    return await _customerRegistrationService.SignInCustomerAsync(customer, returnUrl, model.RememberMe);
-                }
-                case CustomerLoginResults.MultiFactorAuthenticationRequired:
-                {
-                    var customerMultiFactorAuthenticationInfo = new CustomerMultiFactorAuthenticationInfo
                     {
-                        UserName = userNameOrEmail,
-                        RememberMe = model.RememberMe,
-                        ReturnUrl = returnUrl
-                    };
-                    await HttpContext.Session.SetAsync(
-                        NopCustomerDefaults.CustomerMultiFactorAuthenticationInfo,
-                        customerMultiFactorAuthenticationInfo);
-                    return RedirectToRoute(NopRouteNames.Standard.MULTIFACTOR_VERIFICATION);
-                }
+                        var customer = _customerSettings.UsernamesEnabled
+                            ? await _customerService.GetCustomerByUsernameAsync(customerUserName)
+                            : await _customerService.GetCustomerByEmailAsync(customerEmail);
+
+                        return await _customerRegistrationService.SignInCustomerAsync(customer, returnUrl, model.RememberMe);
+                    }
+                case CustomerLoginResults.MultiFactorAuthenticationRequired:
+                    {
+                        var customerMultiFactorAuthenticationInfo = new CustomerMultiFactorAuthenticationInfo
+                        {
+                            UserName = userNameOrEmail,
+                            RememberMe = model.RememberMe,
+                            ReturnUrl = returnUrl
+                        };
+                        await HttpContext.Session.SetAsync(
+                            NopCustomerDefaults.CustomerMultiFactorAuthenticationInfo,
+                            customerMultiFactorAuthenticationInfo);
+                        return RedirectToRoute(NopRouteNames.Standard.MULTIFACTOR_VERIFICATION);
+                    }
                 case CustomerLoginResults.CustomerNotExist:
                     ModelState.AddModelError("", await _localizationService.GetResourceAsync("Account.Login.WrongCredentials.CustomerNotExist"));
                     break;
@@ -786,7 +830,7 @@ public partial class CustomerController : BasePublicController
 
     //available even when navigation is not allowed
     [CheckAccessPublicStore(ignore: true)]
-    public virtual async Task<IActionResult> Register(string returnUrl, int? invitedStoreId)
+    public virtual async Task<IActionResult> Register(string returnUrl, string inviteToken)
     {
         //check whether registration is allowed
         if (_customerSettings.UserRegistrationType == UserRegistrationType.Disabled)
@@ -794,7 +838,7 @@ public partial class CustomerController : BasePublicController
 
         var model = new RegisterModel();
         model = await _customerModelFactory.PrepareRegisterModelAsync(model, false, setDefaultValues: true);
-        model.InvitedStoreId = invitedStoreId;
+        model.RegistrationInviteToken = inviteToken;
 
         return View(model);
     }
@@ -810,7 +854,7 @@ public partial class CustomerController : BasePublicController
         if (_customerSettings.UserRegistrationType == UserRegistrationType.Disabled)
             return RedirectToRoute(NopRouteNames.Standard.REGISTER_RESULT, new { resultId = (int)UserRegistrationType.Disabled, returnUrl });
 
-        var store = await ResolveRegisterStoreAsync(model.InvitedStoreId);
+        var store = await ResolveRegisterStoreAsync(model.RegistrationInviteToken);
         var customer = await _workContext.GetCurrentCustomerAsync();
         var language = await _workContext.GetWorkingLanguageAsync();
 
@@ -1101,9 +1145,9 @@ public partial class CustomerController : BasePublicController
         }
 
         //If we got this far, something failed, redisplay form
-        var invitedStoreId = model.InvitedStoreId;
+        var inviteToken = model.RegistrationInviteToken;
         model = await _customerModelFactory.PrepareRegisterModelAsync(model, true, customerAttributesXml);
-        model.InvitedStoreId = invitedStoreId;
+        model.RegistrationInviteToken = inviteToken;
 
         return View(model);
     }

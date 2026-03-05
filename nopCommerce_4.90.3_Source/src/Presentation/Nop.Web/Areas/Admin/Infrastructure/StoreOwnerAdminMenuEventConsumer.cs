@@ -1,7 +1,8 @@
-﻿using Nop.Core;
+using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Services.Customers;
 using Nop.Services.Events;
+using Nop.Services.Localization;
 using Nop.Services.Security;
 using Nop.Web.Framework.Events;
 using Nop.Web.Framework.Menu;
@@ -16,6 +17,7 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
     #region Fields
 
     protected readonly ICustomerService _customerService;
+    protected readonly ILocalizationService _localizationService;
     protected readonly IWorkContext _workContext;
 
     private static readonly HashSet<string> _allowedMenuItems = new(StringComparer.InvariantCultureIgnoreCase)
@@ -43,9 +45,12 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
 
     #region Ctor
 
-    public StoreOwnerAdminMenuEventConsumer(ICustomerService customerService, IWorkContext workContext)
+    public StoreOwnerAdminMenuEventConsumer(ICustomerService customerService,
+        ILocalizationService localizationService,
+        IWorkContext workContext)
     {
         _customerService = customerService;
+        _localizationService = localizationService;
         _workContext = workContext;
     }
 
@@ -82,6 +87,7 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
         if (dashboard != null)
         {
             dashboard.PermissionNames = new List<string> { StandardPermission.Security.ACCESS_STORE_OWNER_PANEL };
+            dashboard.Title = await _localizationService.GetResourceAsync("Admin.StoreOwner.Panel");
             return;
         }
 
@@ -89,7 +95,7 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
         {
             Visible = true,
             SystemName = "Dashboard",
-            Title = "Dashboard",
+            Title = await _localizationService.GetResourceAsync("Admin.StoreOwner.Panel"),
             Url = eventMessage.GetMenuItemUrl("Home", "Index"),
             IconClass = "fas fa-desktop",
             PermissionNames = new List<string> { StandardPermission.Security.ACCESS_STORE_OWNER_PANEL }

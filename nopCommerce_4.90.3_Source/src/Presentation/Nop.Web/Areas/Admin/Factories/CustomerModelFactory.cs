@@ -533,6 +533,27 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             new(await _localizationService.GetResourceAsync("Admin.Common.No"), false.ToString())
         };
 
+        await _baseAdminModelFactory.PrepareStoresAsync(searchModel.AvailableStores, withSpecialDefaultItem: false);
+
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        searchModel.IsStoreOwner = !await _customerService.IsAdminAsync(currentCustomer)
+                                   && await _customerService.IsInCustomerRoleAsync(currentCustomer, NopCustomerDefaults.StoreOwnersRoleName);
+
+        if (searchModel.IsStoreOwner && currentCustomer.RegisteredInStoreId > 0)
+        {
+            searchModel.RegistrationLinkStoreId = currentCustomer.RegisteredInStoreId;
+            searchModel.AvailableStores = searchModel.AvailableStores
+                .Where(item => item.Value == currentCustomer.RegisteredInStoreId.ToString())
+                .ToList();
+        }
+
+        if (searchModel.RegistrationLinkStoreId <= 0
+            && searchModel.AvailableStores.Any()
+            && int.TryParse(searchModel.AvailableStores.First().Value, out var firstStoreId))
+        {
+            searchModel.RegistrationLinkStoreId = firstStoreId;
+        }
+
         //prepare page parameters
         searchModel.SetGridPageSize();
 

@@ -1,26 +1,26 @@
-﻿@model DealerModel
+@model DealerModel
 @{
-    ViewBag.PageTitle = "Edit dealer";
+    ViewBag.PageTitle = T("Admin.Customers.Dealers.Edit").Text;
     NopHtml.SetActiveMenuItemSystemName("Dealers");
 }
 
 <form asp-controller="Dealer" asp-action="Edit" method="post">
     <div class="content-header clearfix">
         <h1 class="float-left">
-            Edit dealer - @Model.Name
+            @string.Format(T("Admin.Customers.Dealers.EditName").Text, Model.Name)
             <small>
                 <i class="fas fa-arrow-circle-left"></i>
-                <a asp-action="List">Back to list</a>
+                <a asp-action="List">@T("Admin.Customers.Dealers.BackToList")</a>
             </small>
         </h1>
         <div class="float-right">
             <button type="submit" name="save" class="btn btn-primary">
                 <i class="far fa-floppy-disk"></i>
-                Save
+                @T("Admin.Common.Save")
             </button>
             <button type="submit" name="save-continue" class="btn btn-primary">
                 <i class="far fa-floppy-disk"></i>
-                Save and continue
+                @T("Admin.Common.SaveContinue")
             </button>
         </div>
     </div>

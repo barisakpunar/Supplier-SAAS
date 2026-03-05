@@ -16,7 +16,7 @@
     <div class="page-body">
         @await Component.InvokeAsync(typeof(WidgetViewComponent), new { widgetZone = PublicWidgetZones.RegisterTop, additionalData = Model })
         <form asp-route="@NopRouteNames.Standard.REGISTER" asp-route-returnurl="@Context.Request.Query["ReturnUrl"]" method="post" autocomplete="off">
-            <input asp-for="InvitedStoreId" type="hidden" />
+            <input asp-for="RegistrationInviteToken" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="message-error"></div>
             <section class="fieldset">
                 <h2 class="title">

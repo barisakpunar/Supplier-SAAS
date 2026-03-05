@@ -1,4 +1,5 @@
-﻿using Nop.Services.Events;
+using Nop.Services.Events;
+using Nop.Services.Localization;
 using Nop.Services.Security;
 using Nop.Web.Framework.Events;
 using Nop.Web.Framework.Menu;
@@ -10,6 +11,21 @@ namespace Nop.Web.Areas.Admin.Infrastructure;
 /// </summary>
 public partial class DealerAdminMenuEventConsumer : IConsumer<AdminMenuCreatedEvent>
 {
+    #region Fields
+
+    protected readonly ILocalizationService _localizationService;
+
+    #endregion
+
+    #region Ctor
+
+    public DealerAdminMenuEventConsumer(ILocalizationService localizationService)
+    {
+        _localizationService = localizationService;
+    }
+
+    #endregion
+
     #region Methods
 
     /// <summary>
@@ -17,11 +33,11 @@ public partial class DealerAdminMenuEventConsumer : IConsumer<AdminMenuCreatedEv
     /// </summary>
     /// <param name="eventMessage">Event message</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    public virtual Task HandleEventAsync(AdminMenuCreatedEvent eventMessage)
+    public virtual async Task HandleEventAsync(AdminMenuCreatedEvent eventMessage)
     {
         var customersRoot = eventMessage.RootMenuItem.GetItemBySystemName("Customers");
         if (customersRoot is null)
-            return Task.CompletedTask;
+            return;
 
         if (!customersRoot.ContainsSystemName("Dealers"))
         {
@@ -29,7 +45,7 @@ public partial class DealerAdminMenuEventConsumer : IConsumer<AdminMenuCreatedEv
             {
                 Visible = true,
                 SystemName = "Dealers",
-                Title = "Dealers",
+                Title = await _localizationService.GetResourceAsync("Admin.Customers.Dealers"),
                 Url = eventMessage.GetMenuItemUrl("Dealer", "List"),
                 IconClass = "far fa-dot-circle",
                 PermissionNames = new List<string> { StandardPermission.Customers.CUSTOMERS_VIEW }
@@ -37,19 +53,17 @@ public partial class DealerAdminMenuEventConsumer : IConsumer<AdminMenuCreatedEv
         }
 
         if (customersRoot.ContainsSystemName("DealerTransactions"))
-            return Task.CompletedTask;
+            return;
 
         customersRoot.InsertAfter("Dealers", new AdminMenuItem
         {
             Visible = true,
             SystemName = "DealerTransactions",
-            Title = "Dealer transactions",
+            Title = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions"),
             Url = eventMessage.GetMenuItemUrl("Dealer", "Transactions"),
             IconClass = "far fa-dot-circle",
             PermissionNames = new List<string> { StandardPermission.Customers.CUSTOMERS_VIEW }
         });
-
-        return Task.CompletedTask;
     }
 
     #endregion

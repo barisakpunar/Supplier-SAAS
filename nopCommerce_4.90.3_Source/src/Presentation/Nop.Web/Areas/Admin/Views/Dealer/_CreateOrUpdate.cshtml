@@ -1,4 +1,4 @@
-﻿@using System.Globalization
+@using System.Globalization
 @model DealerModel
 
 <div asp-validation-summary="All"></div>
@@ -10,18 +10,18 @@
             @if (Model.IsStoreOwner)
             {
                 <div class="alert alert-info">
-                    You are editing your assigned dealer scope. Store is fixed to your current store.
+                    @T("Admin.Customers.Dealers.StoreOwnerInfo")
                 </div>
             }
 
             <div class="card card-default">
                 <div class="card-header">
-                    <h3 class="card-title">Dealer information</h3>
+                    <h3 class="card-title">@T("Admin.Customers.Dealers.Info")</h3>
                 </div>
                 <div class="card-body">
                     <div class="form-group row">
                         <div class="col-md-3">
-                            <label asp-for="Name" class="col-form-label">Name</label>
+                            <nop-label asp-for="Name" />
                         </div>
                         <div class="col-md-9">
                             <input asp-for="Name" class="form-control" />
@@ -31,7 +31,7 @@
 
                     <div class="form-group row">
                         <div class="col-md-3">
-                            <label asp-for="StoreId" class="col-form-label">Store</label>
+                            <nop-label asp-for="StoreId" />
                         </div>
                         <div class="col-md-9">
                             @if (Model.IsStoreOwner)
@@ -49,7 +49,7 @@
 
                     <div class="form-group row">
                         <div class="col-md-3">
-                            <label asp-for="Active" class="col-form-label">Active</label>
+                            <nop-label asp-for="Active" />
                         </div>
                         <div class="col-md-9">
                             <nop-editor asp-for="Active" />
@@ -61,12 +61,12 @@
 
             <div class="card card-default">
                 <div class="card-header">
-                    <h3 class="card-title">Open account</h3>
+                    <h3 class="card-title">@T("Admin.Customers.Dealers.OpenAccount")</h3>
                 </div>
                 <div class="card-body">
                     <div class="form-group row">
                         <div class="col-md-3">
-                            <label asp-for="OpenAccountEnabled" class="col-form-label">Enable open account</label>
+                            <nop-label asp-for="OpenAccountEnabled" />
                         </div>
                         <div class="col-md-9">
                             <nop-editor asp-for="OpenAccountEnabled" />
@@ -80,14 +80,14 @@
                         <div class="col-md-9">
                             <nop-editor asp-for="CreditLimit" />
                             <span asp-validation-for="CreditLimit"></span>
-                            <small class="form-text text-muted">Used for open account validation (MVP).</small>
+                            <small class="form-text text-muted">@T("Admin.Customers.Dealers.Fields.CreditLimit.Hint")</small>
                         </div>
                     </div>
                     @if (Model.Id > 0)
                     {
                         <div class="form-group row">
                             <div class="col-md-3">
-                                <label class="col-form-label">Current debt</label>
+                                <label class="col-form-label">@T("Admin.Customers.Dealers.Fields.CurrentDebt")</label>
                             </div>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" value="@Model.CurrentDebt.ToString("0.####", CultureInfo.CurrentCulture)" readonly />
@@ -95,7 +95,7 @@
                         </div>
                         <div class="form-group row">
                             <div class="col-md-3">
-                                <label class="col-form-label">Available credit</label>
+                                <label class="col-form-label">@T("Admin.Customers.Dealers.Fields.AvailableCredit")</label>
                             </div>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" value="@Model.AvailableCredit.ToString("0.####", CultureInfo.CurrentCulture)" readonly />
@@ -107,7 +107,7 @@
 
             <div class="card card-default">
                 <div class="card-header">
-                    <h3 class="card-title">Dealer customers</h3>
+                    <h3 class="card-title">@T("Admin.Customers.Dealers.DealerCustomers")</h3>
                 </div>
                 <div class="card-body">
                     @{
@@ -122,8 +122,14 @@
                     }
 
                     <p class="text-muted">
-                        Customer mapping is managed from customer edit screen.
-                        @(Model.Id > 0 ? "Only mapped customers are shown." : "Customers in selected store are listed for reference.")
+                        @if (Model.Id > 0)
+                        {
+                            @T("Admin.Customers.Dealers.DealerCustomers.Hint.Edit")
+                        }
+                        else
+                        {
+                            @T("Admin.Customers.Dealers.DealerCustomers.Hint.Create")
+                        }
                     </p>
 
                     @if (displayedCustomers.Any())
@@ -132,8 +138,8 @@
                             <table class="table table-bordered table-striped mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Customer</th>
-                                        <th style="width: 120px;">Edit</th>
+                                        <th>@T("Admin.Customers.Dealers.Transactions.Columns.Customer")</th>
+                                        <th style="width: 120px;">@T("Admin.Common.Edit")</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -142,7 +148,7 @@
                                         <tr>
                                             <td>@customerItem.Text</td>
                                             <td class="text-center">
-                                                <a class="btn btn-default btn-sm" href="@Url.Action("Edit", "Customer", new { id = customerItem.Value })">Open</a>
+                                                <a class="btn btn-default btn-sm" href="@Url.Action("Edit", "Customer", new { id = customerItem.Value })">@T("Admin.Customers.Dealers.Common.Open")</a>
                                             </td>
                                         </tr>
                                     }
@@ -152,17 +158,17 @@
                     }
                     else
                     {
-                        <div class="alert alert-warning mb-0">No customers to display.</div>
+                        <div class="alert alert-warning mb-0">@T("Admin.Customers.Dealers.DealerCustomers.NoData")</div>
                     }
                 </div>
             </div>
 
             <div class="card card-default">
                 <div class="card-header">
-                    <h3 class="card-title">Allowed payment methods</h3>
+                    <h3 class="card-title">@T("Admin.Customers.Dealers.Fields.PaymentMethods")</h3>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Leave empty to allow all active payment methods for this dealer.</p>
+                    <p class="text-muted">@T("Admin.Customers.Dealers.PaymentMethods.Hint")</p>
                     @if (Model.AvailablePaymentMethods.Any())
                     {
                         <div class="row">
@@ -200,7 +206,7 @@
                     }
                     else
                     {
-                        <div class="alert alert-warning mb-0">No active payment methods found for selected store.</div>
+                        <div class="alert alert-warning mb-0">@T("Admin.Customers.Dealers.PaymentMethods.NoData")</div>
                     }
                 </div>
             </div>
@@ -209,13 +215,13 @@
             {
                 <div class="card card-default">
                     <div class="card-header">
-                        <h3 class="card-title">Manual transaction entry</h3>
+                        <h3 class="card-title">@T("Admin.Customers.Dealers.ManualTransactions")</h3>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted">Use this section to add manual collection or manual debt adjustments.</p>
+                        <p class="text-muted">@T("Admin.Customers.Dealers.ManualTransactions.Hint")</p>
                         <div class="form-group row">
                             <div class="col-md-3">
-                                <label asp-for="ManualTransactionTypeId" class="col-form-label">Transaction type</label>
+                                <nop-label asp-for="ManualTransactionTypeId" />
                             </div>
                             <div class="col-md-9">
                                 <select asp-for="ManualTransactionTypeId" asp-items="Model.AvailableManualTransactionTypes" class="form-control"></select>
@@ -233,7 +239,7 @@
                         </div>
                         <div class="form-group row">
                             <div class="col-md-3">
-                                <label asp-for="ManualTransactionNote" class="col-form-label">Note</label>
+                                <nop-label asp-for="ManualTransactionNote" />
                             </div>
                             <div class="col-md-9">
                                 <textarea asp-for="ManualTransactionNote" class="form-control" rows="3"></textarea>
@@ -243,7 +249,7 @@
                         <div class="form-group row mb-0">
                             <div class="col-md-9 offset-md-3">
                                 <button type="submit" name="add-transaction" value="add-transaction" class="btn btn-secondary">
-                                    Add transaction
+                                    @T("Admin.Customers.Dealers.ManualTransactions.AddButton")
                                 </button>
                             </div>
                         </div>
@@ -252,10 +258,13 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <h3 class="card-title">Dealer transactions</h3>
+                        <h3 class="card-title">@T("Admin.Customers.Dealers.Transactions")</h3>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted">Shows latest @Model.Transactions.Count transaction(s). Full ledger actions will be added in the next iteration.</p>
+                        @{
+                            var previewMessage = string.Format(T("Admin.Customers.Dealers.Transactions.Preview").Text, Model.Transactions.Count);
+                        }
+                        <p class="text-muted">@previewMessage</p>
 
                         @if (Model.Transactions.Any())
                         {
@@ -263,13 +272,13 @@
                                 <table class="table table-bordered table-striped mb-0">
                                     <thead>
                                         <tr>
-                                            <th style="width: 180px;">Created (UTC)</th>
-                                            <th style="width: 210px;">Type</th>
-                                            <th style="width: 90px;">Direction</th>
-                                            <th style="width: 120px;">Amount</th>
-                                            <th style="width: 90px;">Order</th>
-                                            <th style="width: 100px;">Customer</th>
-                                            <th>Note</th>
+                                            <th style="width: 180px;">@T("Admin.Customers.Dealers.Transactions.Columns.CreatedOnUtc")</th>
+                                            <th style="width: 210px;">@T("Admin.Customers.Dealers.Transactions.Columns.Type")</th>
+                                            <th style="width: 90px;">@T("Admin.Customers.Dealers.Transactions.Columns.Direction")</th>
+                                            <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.Amount")</th>
+                                            <th style="width: 90px;">@T("Admin.Customers.Dealers.Transactions.Columns.Order")</th>
+                                            <th style="width: 100px;">@T("Admin.Customers.Dealers.Transactions.Columns.Customer")</th>
+                                            <th>@T("Admin.Customers.Dealers.Transactions.Columns.Note")</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -291,7 +300,7 @@
                         }
                         else
                         {
-                            <div class="alert alert-warning mb-0">No transactions to display.</div>
+                            <div class="alert alert-warning mb-0">@T("Admin.Customers.Dealers.Transactions.NoData")</div>
                         }
                     </div>
                 </div>

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Services.Customers;
+using Nop.Services.Localization;
 using Nop.Services.Payments;
 using Nop.Services.Security;
 using Nop.Services.Stores;
@@ -21,6 +22,7 @@ public partial class DealerController : BaseAdminController
     protected const int DealerTransactionPreviewPageSize = 100;
     protected readonly ICustomerService _customerService;
     protected readonly IDealerService _dealerService;
+    protected readonly ILocalizationService _localizationService;
     protected readonly IPaymentPluginManager _paymentPluginManager;
     protected readonly IStoreService _storeService;
     protected readonly IWorkContext _workContext;
@@ -31,12 +33,14 @@ public partial class DealerController : BaseAdminController
 
     public DealerController(ICustomerService customerService,
         IDealerService dealerService,
+        ILocalizationService localizationService,
         IPaymentPluginManager paymentPluginManager,
         IStoreService storeService,
         IWorkContext workContext)
     {
         _customerService = customerService;
         _dealerService = dealerService;
+        _localizationService = localizationService;
         _paymentPluginManager = paymentPluginManager;
         _storeService = storeService;
         _workContext = workContext;
@@ -58,26 +62,44 @@ public partial class DealerController : BaseAdminController
         return (customer, isStoreOwner, managedStoreId, managedDealerId);
     }
 
-    protected virtual string GetDealerTransactionTypeText(int transactionTypeId)
+    protected virtual string GetDealerTransactionTypeResourceKey(int transactionTypeId)
     {
         return transactionTypeId switch
         {
-            (int)DealerTransactionType.OpenAccountOrder => "Open account order",
-            (int)DealerTransactionType.OpenAccountCollection => "Open account collection",
-            (int)DealerTransactionType.ManualDebitAdjustment => "Manual debit adjustment",
-            (int)DealerTransactionType.ManualCreditAdjustment => "Manual credit adjustment",
-            _ => $"Type #{transactionTypeId}"
+            (int)DealerTransactionType.OpenAccountOrder => "Admin.Customers.Dealers.Transactions.Type.OpenAccountOrder",
+            (int)DealerTransactionType.OpenAccountCollection => "Admin.Customers.Dealers.Transactions.Type.OpenAccountCollection",
+            (int)DealerTransactionType.ManualDebitAdjustment => "Admin.Customers.Dealers.Transactions.Type.ManualDebitAdjustment",
+            (int)DealerTransactionType.ManualCreditAdjustment => "Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment",
+            _ => string.Empty
         };
     }
 
-    protected virtual string GetDealerTransactionDirectionText(int directionId)
+    protected virtual string GetDealerTransactionDirectionResourceKey(int directionId)
     {
         return directionId switch
         {
-            (int)DealerTransactionDirection.Debit => "Debit",
-            (int)DealerTransactionDirection.Credit => "Credit",
-            _ => $"Direction #{directionId}"
+            (int)DealerTransactionDirection.Debit => "Admin.Customers.Dealers.Transactions.Direction.Debit",
+            (int)DealerTransactionDirection.Credit => "Admin.Customers.Dealers.Transactions.Direction.Credit",
+            _ => string.Empty
         };
+    }
+
+    protected virtual async Task<string> GetDealerTransactionTypeTextAsync(int transactionTypeId)
+    {
+        var resourceKey = GetDealerTransactionTypeResourceKey(transactionTypeId);
+        if (string.IsNullOrEmpty(resourceKey))
+            return string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Type.Unknown"), transactionTypeId);
+
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual async Task<string> GetDealerTransactionDirectionTextAsync(int directionId)
+    {
+        var resourceKey = GetDealerTransactionDirectionResourceKey(directionId);
+        if (string.IsNullOrEmpty(resourceKey))
+            return string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Direction.Unknown"), directionId);
+
+        return await _localizationService.GetResourceAsync(resourceKey);
     }
 
     protected virtual int GetDirectionIdByManualTransactionType(int manualTransactionTypeId)
@@ -172,12 +194,12 @@ public partial class DealerController : BaseAdminController
         [
             new SelectListItem
             {
-                Text = "Manual credit adjustment",
+                Text = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment"),
                 Value = ((int)DealerTransactionType.ManualCreditAdjustment).ToString()
             },
             new SelectListItem
             {
-                Text = "Manual debit adjustment",
+                Text = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Type.ManualDebitAdjustment"),
                 Value = ((int)DealerTransactionType.ManualDebitAdjustment).ToString()
             }
         ];
@@ -194,18 +216,21 @@ public partial class DealerController : BaseAdminController
         {
             model.CurrentDebt = await _dealerService.GetOpenAccountCurrentDebtAsync(model.Id);
             model.AvailableCredit = await _dealerService.GetOpenAccountAvailableCreditAsync(model.Id);
-            model.Transactions = (await _dealerService.GetDealerTransactionsAsync(model.Id, DealerTransactionPreviewPageSize))
-                .Select(transaction => new DealerTransactionItemModel
+            model.Transactions = new List<DealerTransactionItemModel>();
+            var transactions = await _dealerService.GetDealerTransactionsAsync(model.Id, DealerTransactionPreviewPageSize);
+            foreach (var transaction in transactions)
+            {
+                model.Transactions.Add(new DealerTransactionItemModel
                 {
                     OrderId = transaction.OrderId,
                     CustomerId = transaction.CustomerId,
-                    TransactionType = GetDealerTransactionTypeText(transaction.TransactionTypeId),
-                    Direction = GetDealerTransactionDirectionText(transaction.DirectionId),
+                    TransactionType = await GetDealerTransactionTypeTextAsync(transaction.TransactionTypeId),
+                    Direction = await GetDealerTransactionDirectionTextAsync(transaction.DirectionId),
                     Amount = transaction.Amount,
                     Note = transaction.Note,
                     CreatedOnUtc = transaction.CreatedOnUtc
-                })
-                .ToList();
+                });
+            }
         }
         else
         {
@@ -245,7 +270,7 @@ public partial class DealerController : BaseAdminController
 
         var (_, isStoreOwner, managedStoreId, managedDealerId) = await GetAccessContextAsync();
         if (isStoreOwner && (managedStoreId <= 0 || dealer.StoreId != managedStoreId))
-            throw new InvalidOperationException("Store owner cannot manage payment methods outside own store.");
+            throw new InvalidOperationException(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Errors.CannotManageOutsideStore"));
 
         var availablePaymentMethodSystemNames = (await _paymentPluginManager.LoadAllPluginsAsync(storeId: dealer.StoreId))
             .Select(method => method.PluginDescriptor.SystemName)
@@ -325,30 +350,35 @@ public partial class DealerController : BaseAdminController
             .ToList();
     }
 
-    protected virtual void ValidateDealerFinancialInputs(DealerModel model)
+    protected virtual async Task ValidateDealerFinancialInputsAsync(DealerModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
         if (model.CreditLimit < 0 || model.CreditLimit > MaxDealerCreditLimit)
-            ModelState.AddModelError(nameof(model.CreditLimit), $"Credit limit must be between 0 and {MaxDealerCreditLimit:0.####}.");
+            ModelState.AddModelError(nameof(model.CreditLimit),
+                string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.CreditLimitRange"), MaxDealerCreditLimit.ToString("0.####", CultureInfo.InvariantCulture)));
 
         if (decimal.Round(model.CreditLimit, 4) != model.CreditLimit)
-            ModelState.AddModelError(nameof(model.CreditLimit), "Credit limit can contain up to 4 decimal digits.");
+            ModelState.AddModelError(nameof(model.CreditLimit),
+                await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.CreditLimitScale"));
     }
 
-    protected virtual void ValidateManualTransactionInputs(DealerModel model)
+    protected virtual async Task ValidateManualTransactionInputsAsync(DealerModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
         var directionId = GetDirectionIdByManualTransactionType(model.ManualTransactionTypeId);
         if (directionId <= 0)
-            ModelState.AddModelError(nameof(model.ManualTransactionTypeId), "A valid transaction type is required.");
+            ModelState.AddModelError(nameof(model.ManualTransactionTypeId),
+                await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.ManualTransactionType"));
 
         if (model.ManualTransactionAmount <= 0 || model.ManualTransactionAmount > MaxDealerCreditLimit)
-            ModelState.AddModelError(nameof(model.ManualTransactionAmount), $"Amount must be between 0.0001 and {MaxDealerCreditLimit:0.####}.");
+            ModelState.AddModelError(nameof(model.ManualTransactionAmount),
+                string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.ManualTransactionAmountRange"), MaxDealerCreditLimit.ToString("0.####", CultureInfo.InvariantCulture)));
 
         if (decimal.Round(model.ManualTransactionAmount, 4) != model.ManualTransactionAmount)
-            ModelState.AddModelError(nameof(model.ManualTransactionAmount), "Amount can contain up to 4 decimal digits.");
+            ModelState.AddModelError(nameof(model.ManualTransactionAmount),
+                await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.ManualTransactionAmountScale"));
     }
 
     protected virtual DateTime? NormalizeDateFilterFrom(DateTime? value)
@@ -390,7 +420,7 @@ public partial class DealerController : BaseAdminController
         {
             searchModel.AvailableStores = new List<SelectListItem>
             {
-                new() { Text = "All", Value = "0" }
+                new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
             };
 
             foreach (var store in stores)
@@ -410,7 +440,7 @@ public partial class DealerController : BaseAdminController
 
         searchModel.AvailableDealers = new List<SelectListItem>
         {
-            new() { Text = "All", Value = "0" }
+            new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
         };
 
         foreach (var dealer in filteredDealers)
@@ -438,27 +468,29 @@ public partial class DealerController : BaseAdminController
         var dealerById = filteredDealers.ToDictionary(dealer => dealer.Id);
         var storesById = stores.ToDictionary(store => store.Id);
 
-        searchModel.Transactions = transactions.Select(transaction =>
+        var unavailableText = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Common.NotAvailable");
+        searchModel.Transactions = new List<DealerTransactionListItemModel>();
+        foreach (var transaction in transactions)
         {
             dealerById.TryGetValue(transaction.DealerId, out var dealer);
-            var storeName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : "-";
+            var storeName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : unavailableText;
 
-            return new DealerTransactionListItemModel
+            searchModel.Transactions.Add(new DealerTransactionListItemModel
             {
                 Id = transaction.Id,
                 DealerId = transaction.DealerId,
-                DealerName = dealer?.Name ?? $"Dealer #{transaction.DealerId}",
+                DealerName = dealer?.Name ?? string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.DealerFallback"), transaction.DealerId),
                 StoreId = dealer?.StoreId ?? 0,
                 StoreName = storeName,
                 OrderId = transaction.OrderId,
                 CustomerId = transaction.CustomerId,
-                TransactionType = GetDealerTransactionTypeText(transaction.TransactionTypeId),
-                Direction = GetDealerTransactionDirectionText(transaction.DirectionId),
+                TransactionType = await GetDealerTransactionTypeTextAsync(transaction.TransactionTypeId),
+                Direction = await GetDealerTransactionDirectionTextAsync(transaction.DirectionId),
                 Amount = transaction.Amount,
                 Note = transaction.Note,
                 CreatedOnUtc = transaction.CreatedOnUtc
-            };
-        }).ToList();
+            });
+        }
 
         searchModel.TotalDebit = transactions
             .Where(transaction => transaction.DirectionId == (int)DealerTransactionDirection.Debit)
@@ -489,7 +521,7 @@ public partial class DealerController : BaseAdminController
         {
             searchModel.AvailableStores = new List<SelectListItem>
             {
-                new() { Text = "All", Value = "0" }
+                new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
             };
 
             foreach (var store in stores)
@@ -515,7 +547,7 @@ public partial class DealerController : BaseAdminController
             var customerIds = await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id);
             var paymentMethodSystemNames = await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id);
             var paymentMethodsSummary = !paymentMethodSystemNames.Any()
-                ? "All active payment methods"
+                ? await _localizationService.GetResourceAsync("Admin.Customers.Dealers.PaymentMethods.AllActive")
                 : string.Join(", ", paymentMethodSystemNames.Take(4))
                   + (paymentMethodSystemNames.Count > 4 ? ", ..." : string.Empty);
 
@@ -619,8 +651,10 @@ public partial class DealerController : BaseAdminController
 
         var store = await _storeService.GetStoreByIdAsync(model.StoreId);
         if (store is null)
-            ModelState.AddModelError(nameof(model.StoreId), "A valid store is required.");
-        ValidateDealerFinancialInputs(model);
+        {
+            ModelState.AddModelError(nameof(model.StoreId), await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.StoreRequired"));
+        }
+        await ValidateDealerFinancialInputsAsync(model);
 
         if (!ModelState.IsValid)
         {
@@ -696,7 +730,7 @@ public partial class DealerController : BaseAdminController
         ModelState.Remove(nameof(DealerModel.CreditLimit));
 
         var directionId = GetDirectionIdByManualTransactionType(model.ManualTransactionTypeId);
-        ValidateManualTransactionInputs(model);
+        await ValidateManualTransactionInputsAsync(model);
 
         if (ModelState.IsValid)
         {
@@ -750,8 +784,8 @@ public partial class DealerController : BaseAdminController
 
         var store = await _storeService.GetStoreByIdAsync(model.StoreId);
         if (store is null)
-            ModelState.AddModelError(nameof(model.StoreId), "A valid store is required.");
-        ValidateDealerFinancialInputs(model);
+            ModelState.AddModelError(nameof(model.StoreId), await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.StoreRequired"));
+        await ValidateDealerFinancialInputsAsync(model);
 
         if (!ModelState.IsValid)
         {

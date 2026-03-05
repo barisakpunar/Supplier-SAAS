@@ -22,6 +22,10 @@
                 <i class="fas fa-square-plus"></i>
                 @T("Admin.Common.AddNew")
             </a>
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#customer-register-link-window">
+                <i class="fas fa-link"></i>
+                @T("Admin.Customers.Customers.RegistrationLink.GenerateButton")
+            </button>
             <div class="btn-group">
                 <button type="button" class="btn btn-success">
                     <i class="fas fa-download"></i>
@@ -381,6 +385,97 @@
         </div>
         </section>
 </form>
+
+<div id="customer-register-link-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="customer-register-link-window-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="customer-register-link-window-title">@T("Admin.Customers.Customers.RegistrationLink.Modal.Title")</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="form-horizontal">
+                <div class="modal-body">
+                    @if (Model.IsStoreOwner)
+                    {
+                        <input asp-for="RegistrationLinkStoreId" type="hidden" />
+                    }
+                    else
+                    {
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <label class="col-form-label">@T("Admin.Customers.Customers.RegistrationLink.Modal.Store")</label>
+                            </div>
+                            <div class="col-md-9">
+                                <nop-select asp-for="RegistrationLinkStoreId" asp-items="Model.AvailableStores" />
+                            </div>
+                        </div>
+                    }
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="col-form-label">@T("Admin.Customers.Customers.RegistrationLink.Modal.Url")</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input type="text" id="generated-registration-url" class="form-control" readonly />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="generate-registration-url" class="btn btn-primary">@T("Admin.Customers.Customers.RegistrationLink.Modal.Generate")</button>
+                    <button type="button" id="copy-registration-url" class="btn btn-default">@T("Admin.Customers.Customers.RegistrationLink.Modal.Copy")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function() {
+        $('#customer-register-link-window').on('shown.bs.modal', function() {
+            $('#generated-registration-url').val('');
+        });
+
+        $('#generate-registration-url').click(function() {
+            var postData = {
+                storeId: $('#@Html.IdFor(model => model.RegistrationLinkStoreId)').val()
+            };
+            addAntiForgeryToken(postData);
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: '@Url.Action("GenerateRegistrationLink", "Customer")',
+                data: postData,
+                success: function(data) {
+                    if (data.result) {
+                        $('#generated-registration-url').val(data.registrationUrl);
+                        return;
+                    }
+
+                    display_nop_error(data);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    display_nop_error({ errorThrown: errorThrown });
+                }
+            });
+        });
+
+        $('#copy-registration-url').click(function() {
+            var registrationUrlInput = document.getElementById('generated-registration-url');
+            if (!registrationUrlInput.value) {
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(registrationUrlInput.value);
+                return;
+            }
+
+            registrationUrlInput.focus();
+            registrationUrlInput.select();
+            document.execCommand('copy');
+        });
+    });
+</script>
 
 @*export selected (XML). We don't use GET approach because it's limited to 2K-4K chars and won't work for large number of entities*@
 <form asp-controller="Customer" asp-action="ExportXmlSelected" method="post" id="export-xml-selected-form">

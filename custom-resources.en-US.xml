@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Language Name="English">
+  <LocaleResource Name="Admin.Customers.Dealers">
+    <Value>Dealers</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.AddNew">
+    <Value>Add dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.BackToList">
+    <Value>Back to list</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Common.NotAvailable">
+    <Value>N/A</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Common.Open">
+    <Value>Open</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers">
+    <Value>Dealer customers</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers.Hint.Create">
+    <Value>Customer mapping is managed from customer edit screen. Customers in selected store are listed for reference.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers.Hint.Edit">
+    <Value>Customer mapping is managed from customer edit screen. Only mapped customers are shown.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.DealerCustomers.NoData">
+    <Value>No customers to display.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Edit">
+    <Value>Edit dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.EditName">
+    <Value>Edit dealer - {0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Errors.CannotManageOutsideStore">
+    <Value>Store owner cannot manage payment methods outside own store.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.Active">
+    <Value>Active</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.AvailableCredit">
+    <Value>Available credit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CreditLimit">
+    <Value>Credit limit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CreditLimit.Hint">
+    <Value>Used for open account validation (MVP).</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CurrentDebt">
+    <Value>Current debt</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.CustomerCount">
+    <Value>Customers</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.ManualTransactionAmount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.ManualTransactionNote">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.ManualTransactionType">
+    <Value>Transaction type</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.Name">
+    <Value>Name</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.OpenAccountEnabled">
+    <Value>Enable open account</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.PaymentMethods">
+    <Value>Allowed payment methods</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Fields.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Info">
+    <Value>Dealer information</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.List.NoDealers">
+    <Value>No dealers found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.List.SearchName">
+    <Value>Dealer name</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.ManualTransactions">
+    <Value>Manual transaction entry</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.ManualTransactions.AddButton">
+    <Value>Add transaction</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.ManualTransactions.Hint">
+    <Value>Use this section to add manual collection or manual debt adjustments.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.OpenAccount">
+    <Value>Open account</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.PaymentMethods.AllActive">
+    <Value>All active payment methods</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.PaymentMethods.Hint">
+    <Value>Leave empty to allow all active payment methods for this dealer.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.PaymentMethods.NoData">
+    <Value>No active payment methods found for selected store.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.StoreOwnerInfo">
+    <Value>You are editing your assigned dealer scope. Store is fixed to your current store.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions">
+    <Value>Dealer transactions</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.CreatedOnUtc">
+    <Value>Created (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Customer">
+    <Value>Customer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Direction">
+    <Value>Direction</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Note">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Order">
+    <Value>Order</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Type">
+    <Value>Type</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.DealerFallback">
+    <Value>Dealer #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Direction.Credit">
+    <Value>Credit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Direction.Debit">
+    <Value>Debit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Direction.Unknown">
+    <Value>Direction #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.CreatedFrom">
+    <Value>Created from</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.CreatedTo">
+    <Value>Created to</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Fields.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.NoData">
+    <Value>No transactions found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.OpenDealer">
+    <Value>Open dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Preview">
+    <Value>Shows latest {0} transaction(s). Full ledger actions will be added in the next iteration.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary">
+    <Value>Summary</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.NetBalance">
+    <Value>Net balance</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalCredit">
+    <Value>Total credit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Summary.TotalDebit">
+    <Value>Total debit</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
+    <Value>Manual credit adjustment</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualDebitAdjustment">
+    <Value>Manual debit adjustment</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.OpenAccountCollection">
+    <Value>Open account collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.OpenAccountOrder">
+    <Value>Open account order</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.Unknown">
+    <Value>Type #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.CreditLimitRange">
+    <Value>Credit limit must be between 0 and {0}.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.CreditLimitScale">
+    <Value>Credit limit can contain up to 4 decimal digits.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.ManualTransactionAmountRange">
+    <Value>Amount must be between 0.0001 and {0}.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.ManualTransactionAmountScale">
+    <Value>Amount can contain up to 4 decimal digits.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.ManualTransactionType">
+    <Value>A valid transaction type is required.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Validation.StoreRequired">
+    <Value>A valid store is required.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.StoreOwner.Panel">
+    <Value>Store Owner Panel</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Account">
+    <Value>Account</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Fields.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Fields.StoreId">
+    <Value>Store Id</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Fields.User">
+    <Value>User</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.StoreOwner.Panel.Info">
+    <Value>This panel is reserved for supplier/store-owner screens. New modules will be added here.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.Customers.Customers.Fields.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.Fields.Dealer.InvalidForStore">
+    <Value>Selected dealer is not available for this store.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.GenerateButton">
+    <Value>Generate registration link</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Title">
+    <Value>Generate customer registration link</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Url">
+    <Value>Registration URL</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Generate">
+    <Value>Generate</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Modal.Copy">
+    <Value>Copy</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.NoPermission">
+    <Value>You do not have permission to generate registration links.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.StoreRequired">
+    <Value>A valid store is required.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.StoreNotFound">
+    <Value>The selected store was not found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Customers.RegistrationLink.Error.UrlGeneration">
+    <Value>Registration URL could not be generated.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.StoreRequired">
+    <Value>A valid store is required.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.StoreSelectionRequired">
+    <Value>At least one store must be selected.</Value>
+  </LocaleResource>
+
+  <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText">
+    <Value>Description</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText.Hint">
+    <Value>Information shown on checkout for open account payment.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.PaymentMethodDescription">
+    <Value>Pay with open account (dealer credit)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.NoDealer">
+    <Value>Open account is not available for this customer.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.DealerInactive">
+    <Value>Open account is not available because dealer is inactive.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.NotEnabled">
+    <Value>Open account is disabled for this dealer.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Plugins.Payment.OpenAccount.Validation.CreditLimitExceeded">
+    <Value>Open account credit limit is exceeded. Available credit: {0}, order total: {1}.</Value>
+  </LocaleResource>
+</Language>

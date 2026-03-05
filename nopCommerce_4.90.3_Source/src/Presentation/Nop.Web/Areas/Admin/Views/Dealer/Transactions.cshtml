@@ -1,12 +1,12 @@
-﻿@using System.Globalization
+@using System.Globalization
 @model DealerTransactionListModel
 @{
-    ViewBag.PageTitle = "Dealer transactions";
+    ViewBag.PageTitle = T("Admin.Customers.Dealers.Transactions").Text;
     NopHtml.SetActiveMenuItemSystemName("DealerTransactions");
 }
 
 <div class="content-header clearfix">
-    <h1 class="float-left">Dealer transactions</h1>
+    <h1 class="float-left">@T("Admin.Customers.Dealers.Transactions")</h1>
 </div>
 
 <section class="content">
@@ -67,11 +67,11 @@
                                 <div class="text-center col-12">
                                     <button type="submit" name="search-transactions" class="btn btn-primary btn-search">
                                         <i class="fas fa-magnifying-glass"></i>
-                                        Search
+                                        @T("Admin.Common.Search")
                                     </button>
                                     <button type="submit" name="exportcsv-all" class="btn btn-success">
                                         <i class="fas fa-download"></i>
-                                        Export to CSV
+                                        @T("Admin.Common.ExportToCsv")
                                     </button>
                                 </div>
                             </div>
@@ -81,18 +81,18 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <h3 class="card-title">Summary</h3>
+                        <h3 class="card-title">@T("Admin.Customers.Dealers.Transactions.Summary")</h3>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <strong>Total debit:</strong> @Model.TotalDebit.ToString("0.####", CultureInfo.CurrentCulture)
+                                <strong>@T("Admin.Customers.Dealers.Transactions.Summary.TotalDebit"):</strong> @Model.TotalDebit.ToString("0.####", CultureInfo.CurrentCulture)
                             </div>
                             <div class="col-md-4">
-                                <strong>Total credit:</strong> @Model.TotalCredit.ToString("0.####", CultureInfo.CurrentCulture)
+                                <strong>@T("Admin.Customers.Dealers.Transactions.Summary.TotalCredit"):</strong> @Model.TotalCredit.ToString("0.####", CultureInfo.CurrentCulture)
                             </div>
                             <div class="col-md-4">
-                                <strong>Net balance:</strong> @Model.NetBalance.ToString("0.####", CultureInfo.CurrentCulture)
+                                <strong>@T("Admin.Customers.Dealers.Transactions.Summary.NetBalance"):</strong> @Model.NetBalance.ToString("0.####", CultureInfo.CurrentCulture)
                             </div>
                         </div>
                     </div>
@@ -104,15 +104,15 @@
                             <table class="table table-striped table-bordered table-hover mb-0">
                                 <thead>
                                     <tr>
-                                        <th style="width: 170px;">Created (UTC)</th>
-                                        <th style="width: 220px;">Dealer</th>
-                                        <th style="width: 160px;">Store</th>
-                                        <th style="width: 210px;">Type</th>
-                                        <th style="width: 90px;">Direction</th>
-                                        <th style="width: 120px;">Amount</th>
-                                        <th style="width: 90px;">Order</th>
-                                        <th style="width: 100px;">Customer</th>
-                                        <th>Note</th>
+                                        <th style="width: 170px;">@T("Admin.Customers.Dealers.Transactions.Columns.CreatedOnUtc")</th>
+                                        <th style="width: 220px;">@T("Admin.Customers.Dealers.Transactions.Columns.Dealer")</th>
+                                        <th style="width: 160px;">@T("Admin.Customers.Dealers.Transactions.Columns.Store")</th>
+                                        <th style="width: 210px;">@T("Admin.Customers.Dealers.Transactions.Columns.Type")</th>
+                                        <th style="width: 90px;">@T("Admin.Customers.Dealers.Transactions.Columns.Direction")</th>
+                                        <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.Amount")</th>
+                                        <th style="width: 90px;">@T("Admin.Customers.Dealers.Transactions.Columns.Order")</th>
+                                        <th style="width: 100px;">@T("Admin.Customers.Dealers.Transactions.Columns.Customer")</th>
+                                        <th>@T("Admin.Customers.Dealers.Transactions.Columns.Note")</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -125,7 +125,7 @@
                                                 <td>
                                                     @transaction.DealerName
                                                     <div>
-                                                        <a asp-action="Edit" asp-controller="Dealer" asp-route-id="@transaction.DealerId">Open dealer</a>
+                                                        <a asp-action="Edit" asp-controller="Dealer" asp-route-id="@transaction.DealerId">@T("Admin.Customers.Dealers.Transactions.OpenDealer")</a>
                                                     </div>
                                                 </td>
                                                 <td>@transaction.StoreName</td>
@@ -141,7 +141,7 @@
                                     else
                                     {
                                         <tr>
-                                            <td colspan="9" class="text-center">No transactions found.</td>
+                                            <td colspan="9" class="text-center">@T("Admin.Customers.Dealers.Transactions.NoData")</td>
                                         </tr>
                                     }
                                 </tbody>

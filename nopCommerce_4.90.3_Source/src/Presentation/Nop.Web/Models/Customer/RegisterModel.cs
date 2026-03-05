@@ -153,5 +153,5 @@ public partial record RegisterModel : BaseNopModel
 
     public IList<GdprConsentModel> GdprConsents { get; set; }
 
-    public int? InvitedStoreId { get; set; }
+    public string RegistrationInviteToken { get; set; }
 }
