@@ -75,13 +75,13 @@ Bu urunler checkout smoke test icin kullanilabilir.
 Fixture uygula:
 
 ```bash
-/tmp/tedarik-dealer-collections/scripts/dealer-finance-fixture/apply.sh
+/Users/baris/Documents/Tedarik-SAAS/scripts/dealer-finance-fixture/apply.sh
 ```
 
 Fixture dogrula:
 
 ```bash
-/tmp/tedarik-dealer-collections/scripts/dealer-finance-fixture/verify.sh
+/Users/baris/Documents/Tedarik-SAAS/scripts/dealer-finance-fixture/verify.sh
 ```
 
 Istege bagli env var'lar:
