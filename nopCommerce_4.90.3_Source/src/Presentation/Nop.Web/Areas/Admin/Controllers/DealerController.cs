@@ -103,6 +103,48 @@ public partial class DealerController : BaseAdminController
         return await _localizationService.GetResourceAsync(resourceKey);
     }
 
+    protected virtual async Task<string> GetDealerTransactionSourceTextAsync(DealerTransaction transaction, DealerCollection sourceCollection = null)
+    {
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        var sourceType = transaction.SourceType;
+        var sourceId = transaction.SourceId ?? sourceCollection?.Id ?? transaction.OrderId;
+
+        return sourceType switch
+        {
+            DealerTransactionSourceType.Order when !string.IsNullOrWhiteSpace(transaction.ReferenceNo)
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.OrderByReference"), transaction.ReferenceNo),
+            DealerTransactionSourceType.Order when sourceId.HasValue
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Order"), sourceId.Value),
+            DealerTransactionSourceType.Collection when sourceId.HasValue
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Collection"), sourceId.Value),
+            DealerTransactionSourceType.ManualAdjustment
+                => await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.ManualAdjustment"),
+            _ when sourceCollection is not null
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Collection"), sourceCollection.Id),
+            _ => string.Empty
+        };
+    }
+
+    protected virtual string GetDealerTransactionSourceUrl(DealerTransaction transaction, DealerCollection sourceCollection = null)
+    {
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        var sourceType = transaction.SourceType;
+        var sourceId = transaction.SourceId ?? sourceCollection?.Id ?? transaction.OrderId;
+
+        return sourceType switch
+        {
+            DealerTransactionSourceType.Order when sourceId.HasValue
+                => Url.Action("Edit", "Order", new { id = sourceId.Value }),
+            DealerTransactionSourceType.Collection when sourceId.HasValue
+                => Url.Action(nameof(CollectionDetails), "Dealer", new { id = sourceId.Value }),
+            _ when sourceCollection is not null
+                => Url.Action(nameof(CollectionDetails), "Dealer", new { id = sourceCollection.Id }),
+            _ => string.Empty
+        };
+    }
+
     protected virtual async Task<string> GetDealerCollectionMethodTextAsync(int collectionMethodId)
     {
         var resourceKey = $"Admin.Customers.DealerCollections.Method.{((DealerCollectionMethod)collectionMethodId)}";
@@ -816,10 +858,8 @@ public partial class DealerController : BaseAdminController
                 DebitAmount = debitAmount,
                 CreditAmount = creditAmount,
                 RunningBalance = searchModel.IsStatementMode ? runningBalance : null,
-                CollectionId = sourceCollection?.Id,
-                SourceText = sourceCollection is null
-                    ? string.Empty
-                    : string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Collection"), sourceCollection.Id),
+                SourceText = await GetDealerTransactionSourceTextAsync(transaction, sourceCollection),
+                SourceUrl = GetDealerTransactionSourceUrl(transaction, sourceCollection),
                 Note = transaction.Note,
                 CreatedOnUtc = transaction.CreatedOnUtc
             });
@@ -1043,6 +1083,8 @@ public partial class DealerController : BaseAdminController
         {
             DealerId = model.DealerId,
             CustomerId = model.CustomerId > 0 ? model.CustomerId : null,
+            SourceTypeId = (int)DealerTransactionSourceType.Collection,
+            ReferenceNo = string.IsNullOrWhiteSpace(model.ReferenceNo) ? null : model.ReferenceNo.Trim(),
             TransactionTypeId = (int)DealerTransactionType.OpenAccountCollection,
             DirectionId = (int)DealerTransactionDirection.Credit,
             Amount = model.Amount,
@@ -1070,6 +1112,8 @@ public partial class DealerController : BaseAdminController
         };
 
         await _dealerService.InsertDealerCollectionAsync(collection);
+        transaction.SourceId = collection.Id;
+        await _dealerService.UpdateDealerTransactionAsync(transaction);
 
         return RedirectToAction(nameof(Collections), new { SearchStoreId = model.StoreId, SearchDealerId = model.DealerId });
     }
@@ -1098,6 +1142,9 @@ public partial class DealerController : BaseAdminController
         {
             DealerId = collection.DealerId,
             CustomerId = collection.CustomerId,
+            SourceTypeId = (int)DealerTransactionSourceType.Collection,
+            SourceId = collection.Id,
+            ReferenceNo = collection.ReferenceNo,
             TransactionTypeId = (int)DealerTransactionType.OpenAccountCollection,
             DirectionId = (int)DealerTransactionDirection.Debit,
             Amount = collection.Amount,
@@ -1232,6 +1279,7 @@ public partial class DealerController : BaseAdminController
             await _dealerService.InsertDealerTransactionAsync(new DealerTransaction
             {
                 DealerId = dealer.Id,
+                SourceTypeId = (int)DealerTransactionSourceType.ManualAdjustment,
                 TransactionTypeId = model.ManualTransactionTypeId,
                 DirectionId = directionId,
                 Amount = model.ManualTransactionAmount,

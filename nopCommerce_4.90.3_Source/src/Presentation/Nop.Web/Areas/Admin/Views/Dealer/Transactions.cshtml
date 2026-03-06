@@ -155,9 +155,13 @@
                                                 <td>@transaction.StoreName</td>
                                                 <td>@transaction.TransactionType</td>
                                                 <td>
-                                                    @if (transaction.CollectionId.HasValue)
+                                                    @if (!string.IsNullOrWhiteSpace(transaction.SourceUrl))
                                                     {
-                                                        <a asp-action="CollectionDetails" asp-controller="Dealer" asp-route-id="@transaction.CollectionId.Value">@transaction.SourceText</a>
+                                                        <a href="@transaction.SourceUrl">@transaction.SourceText</a>
+                                                    }
+                                                    else if (!string.IsNullOrWhiteSpace(transaction.SourceText))
+                                                    {
+                                                        @transaction.SourceText
                                                     }
                                                     else
                                                     {

@@ -213,6 +213,15 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Collection">
     <Value>Tahsilat #{0}</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.ManualAdjustment">
+    <Value>Manuel düzeltme</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Order">
+    <Value>Sipariş #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.OrderByReference">
+    <Value>Sipariş #{0}</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
     <Value>Manuel alacak düzeltmesi</Value>
   </LocaleResource>

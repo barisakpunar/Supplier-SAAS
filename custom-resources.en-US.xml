@@ -213,6 +213,15 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Collection">
     <Value>Collection #{0}</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.ManualAdjustment">
+    <Value>Manual adjustment</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Order">
+    <Value>Order #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.OrderByReference">
+    <Value>Order #{0}</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
     <Value>Manual credit adjustment</Value>
   </LocaleResource>

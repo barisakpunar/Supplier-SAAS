@@ -159,6 +159,13 @@ public partial interface IDealerService
     Task InsertDealerCollectionAsync(DealerCollection dealerCollection);
 
     /// <summary>
+    /// Updates a dealer transaction
+    /// </summary>
+    /// <param name="dealerTransaction">Dealer transaction</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerTransactionAsync(DealerTransaction dealerTransaction);
+
+    /// <summary>
     /// Updates a dealer collection
     /// </summary>
     /// <param name="dealerCollection">Dealer collection</param>

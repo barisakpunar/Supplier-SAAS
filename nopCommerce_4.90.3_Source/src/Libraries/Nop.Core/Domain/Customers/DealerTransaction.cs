@@ -21,6 +21,21 @@ public partial class DealerTransaction : BaseEntity
     public int? CustomerId { get; set; }
 
     /// <summary>
+    /// Gets or sets the source type identifier
+    /// </summary>
+    public int SourceTypeId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the source identifier
+    /// </summary>
+    public int? SourceId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional reference number
+    /// </summary>
+    public string ReferenceNo { get; set; }
+
+    /// <summary>
     /// Gets or sets the transaction type identifier
     /// </summary>
     public int TransactionTypeId { get; set; }
@@ -44,4 +59,13 @@ public partial class DealerTransaction : BaseEntity
     /// Gets or sets the created date and time in UTC
     /// </summary>
     public DateTime CreatedOnUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the source type
+    /// </summary>
+    public DealerTransactionSourceType SourceType
+    {
+        get => (DealerTransactionSourceType)SourceTypeId;
+        set => SourceTypeId = (int)value;
+    }
 }
