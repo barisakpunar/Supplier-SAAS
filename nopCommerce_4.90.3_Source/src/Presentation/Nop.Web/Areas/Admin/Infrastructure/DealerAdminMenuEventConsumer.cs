@@ -52,15 +52,28 @@ public partial class DealerAdminMenuEventConsumer : IConsumer<AdminMenuCreatedEv
             });
         }
 
-        if (customersRoot.ContainsSystemName("DealerTransactions"))
+        if (!customersRoot.ContainsSystemName("DealerTransactions"))
+        {
+            customersRoot.InsertAfter("Dealers", new AdminMenuItem
+            {
+                Visible = true,
+                SystemName = "DealerTransactions",
+                Title = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions"),
+                Url = eventMessage.GetMenuItemUrl("Dealer", "Transactions"),
+                IconClass = "far fa-dot-circle",
+                PermissionNames = new List<string> { StandardPermission.Customers.CUSTOMERS_VIEW }
+            });
+        }
+
+        if (customersRoot.ContainsSystemName("DealerCollections"))
             return;
 
-        customersRoot.InsertAfter("Dealers", new AdminMenuItem
+        customersRoot.InsertAfter("DealerTransactions", new AdminMenuItem
         {
             Visible = true,
-            SystemName = "DealerTransactions",
-            Title = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions"),
-            Url = eventMessage.GetMenuItemUrl("Dealer", "Transactions"),
+            SystemName = "DealerCollections",
+            Title = await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections"),
+            Url = eventMessage.GetMenuItemUrl("Dealer", "Collections"),
             IconClass = "far fa-dot-circle",
             PermissionNames = new List<string> { StandardPermission.Customers.CUSTOMERS_VIEW }
         });

@@ -33,6 +33,10 @@ public partial record DealerTransactionListItemModel : BaseNopEntityModel
 
     public decimal? RunningBalance { get; set; }
 
+    public int? CollectionId { get; set; }
+
+    public string SourceText { get; set; }
+
     public string Note { get; set; }
 
     public DateTime CreatedOnUtc { get; set; }
