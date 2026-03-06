@@ -368,6 +368,12 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Dealer">
     <Value>Bayi</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DocumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Method">
     <Value>Yöntem</Value>
   </LocaleResource>
@@ -415,6 +421,15 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransactionDate">
     <Value>Bayi hareket tarihi (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DocumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.IssueDate">
+    <Value>Belge tarihi</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
     <Value>Not</Value>
@@ -487,6 +502,9 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DealerRequired">
     <Value>Geçerli bir bayi gereklidir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DueDateBeforeIssueDate">
+    <Value>Vade tarihi belge tarihinden önce olamaz.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.MethodRequired">
     <Value>Geçerli bir tahsilat yöntemi gereklidir.</Value>

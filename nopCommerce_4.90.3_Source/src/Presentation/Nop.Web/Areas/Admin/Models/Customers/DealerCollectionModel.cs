@@ -48,6 +48,15 @@ public partial record DealerCollectionModel : BaseNopEntityModel
     [NopResourceDisplayName("Admin.Customers.DealerCollections.Fields.ReferenceNo")]
     public string ReferenceNo { get; set; }
 
+    [NopResourceDisplayName("Admin.Customers.DealerCollections.Fields.DocumentNo")]
+    public string DocumentNo { get; set; }
+
+    [NopResourceDisplayName("Admin.Customers.DealerCollections.Fields.IssueDate")]
+    public DateTime? IssueDateUtc { get; set; }
+
+    [NopResourceDisplayName("Admin.Customers.DealerCollections.Fields.DueDate")]
+    public DateTime? DueDateUtc { get; set; }
+
     [NopResourceDisplayName("Admin.Customers.DealerCollections.Fields.Note")]
     public string Note { get; set; }
 

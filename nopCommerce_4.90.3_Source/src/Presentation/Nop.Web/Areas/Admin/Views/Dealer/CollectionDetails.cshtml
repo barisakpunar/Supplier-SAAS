@@ -59,6 +59,15 @@
                             <div class="col-md-6 mb-2">
                                 <strong>@T("Admin.Customers.DealerCollections.Fields.ReferenceNo"):</strong> @(string.IsNullOrWhiteSpace(Model.ReferenceNo) ? "-" : Model.ReferenceNo)
                             </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.DocumentNo"):</strong> @(string.IsNullOrWhiteSpace(Model.DocumentNo) ? "-" : Model.DocumentNo)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.IssueDate"):</strong> @(Model.IssueDateUtc.HasValue ? Model.IssueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.DueDate"):</strong> @(Model.DueDateUtc.HasValue ? Model.DueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")
+                            </div>
                             <div class="col-md-12 mb-2">
                                 <strong>@T("Admin.Customers.DealerCollections.Fields.Note"):</strong> @(string.IsNullOrWhiteSpace(Model.Note) ? "-" : Model.Note)
                             </div>

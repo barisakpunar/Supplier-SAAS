@@ -493,6 +493,8 @@ public partial class DealerController : BaseAdminController
                 Amount = collection.Amount,
                 CollectionDateUtc = collection.CollectionDateUtc,
                 ReferenceNo = collection.ReferenceNo,
+                DocumentNo = collection.DocumentNo,
+                DueDateUtc = collection.DueDateUtc,
                 Note = collection.Note
             });
         }
@@ -530,6 +532,9 @@ public partial class DealerController : BaseAdminController
             Amount = collection.Amount,
             CollectionDateUtc = collection.CollectionDateUtc,
             ReferenceNo = collection.ReferenceNo,
+            DocumentNo = collection.DocumentNo,
+            IssueDateUtc = collection.IssueDateUtc,
+            DueDateUtc = collection.DueDateUtc,
             Note = collection.Note,
             CreatedByCustomerName = GetCustomerDisplayText(createdByCustomer),
             CreatedOnUtc = collection.CreatedOnUtc,
@@ -700,6 +705,11 @@ public partial class DealerController : BaseAdminController
 
         if (decimal.Round(model.Amount, 4) != model.Amount)
             ModelState.AddModelError(nameof(model.Amount), await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.AmountScale"));
+
+        var issueDateUtc = NormalizeDateValue(model.IssueDateUtc);
+        var dueDateUtc = NormalizeDateValue(model.DueDateUtc);
+        if (issueDateUtc.HasValue && dueDateUtc.HasValue && dueDateUtc.Value < issueDateUtc.Value)
+            ModelState.AddModelError(nameof(model.DueDateUtc), await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Validation.DueDateBeforeIssueDate"));
     }
 
     protected virtual DateTime? NormalizeDateFilterFrom(DateTime? value)
@@ -717,6 +727,14 @@ public partial class DealerController : BaseAdminController
 
         var endOfDay = value.Value.Date.AddDays(1).AddTicks(-1);
         return DateTime.SpecifyKind(endOfDay, DateTimeKind.Utc);
+    }
+
+    protected virtual DateTime? NormalizeDateValue(DateTime? value)
+    {
+        if (!value.HasValue)
+            return null;
+
+        return DateTime.SpecifyKind(value.Value.Date, DateTimeKind.Utc);
     }
 
     protected virtual string EscapeCsv(string value)
@@ -1106,6 +1124,9 @@ public partial class DealerController : BaseAdminController
             Amount = model.Amount,
             CollectionDateUtc = model.CollectionDateUtc,
             ReferenceNo = string.IsNullOrWhiteSpace(model.ReferenceNo) ? null : model.ReferenceNo.Trim(),
+            DocumentNo = string.IsNullOrWhiteSpace(model.DocumentNo) ? null : model.DocumentNo.Trim(),
+            IssueDateUtc = NormalizeDateValue(model.IssueDateUtc),
+            DueDateUtc = NormalizeDateValue(model.DueDateUtc),
             Note = string.IsNullOrWhiteSpace(model.Note) ? null : model.Note.Trim(),
             CreatedByCustomerId = currentCustomer.Id,
             CreatedOnUtc = DateTime.UtcNow

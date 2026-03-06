@@ -368,6 +368,12 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Dealer">
     <Value>Dealer</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DocumentNo">
+    <Value>Document no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Method">
     <Value>Method</Value>
   </LocaleResource>
@@ -415,6 +421,15 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransactionDate">
     <Value>Dealer transaction date (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DocumentNo">
+    <Value>Document no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.IssueDate">
+    <Value>Issue date</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
     <Value>Note</Value>
@@ -487,6 +502,9 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DealerRequired">
     <Value>A valid dealer is required.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DueDateBeforeIssueDate">
+    <Value>Due date cannot be earlier than issue date.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.MethodRequired">
     <Value>A valid collection method is required.</Value>

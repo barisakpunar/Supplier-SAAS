@@ -31,6 +31,12 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
 
     public string ReferenceNo { get; set; }
 
+    public string DocumentNo { get; set; }
+
+    public DateTime? IssueDateUtc { get; set; }
+
+    public DateTime? DueDateUtc { get; set; }
+
     public string Note { get; set; }
 
     public string CreatedByCustomerName { get; set; }

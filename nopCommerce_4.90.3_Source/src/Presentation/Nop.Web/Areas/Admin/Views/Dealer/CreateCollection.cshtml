@@ -91,6 +91,30 @@
                         </div>
                         <div class="form-group row">
                             <div class="col-md-3">
+                                <nop-label asp-for="DocumentNo" />
+                            </div>
+                            <div class="col-md-9">
+                                <input asp-for="DocumentNo" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="IssueDateUtc" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="IssueDateUtc" asp-template="DateNullable" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="DueDateUtc" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="DueDateUtc" asp-template="DateNullable" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
                                 <nop-label asp-for="Note" />
                             </div>
                             <div class="col-md-9">

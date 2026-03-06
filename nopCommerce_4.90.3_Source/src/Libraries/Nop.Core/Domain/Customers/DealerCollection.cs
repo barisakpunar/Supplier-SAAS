@@ -51,6 +51,21 @@ public partial class DealerCollection : BaseEntity
     public string ReferenceNo { get; set; }
 
     /// <summary>
+    /// Gets or sets the optional document number
+    /// </summary>
+    public string DocumentNo { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional issue date in UTC
+    /// </summary>
+    public DateTime? IssueDateUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional due date in UTC
+    /// </summary>
+    public DateTime? DueDateUtc { get; set; }
+
+    /// <summary>
     /// Gets or sets the optional note
     /// </summary>
     public string Note { get; set; }
