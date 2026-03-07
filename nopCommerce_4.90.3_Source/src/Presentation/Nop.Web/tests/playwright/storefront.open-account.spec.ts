@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { loginAsBuyerA1 } from './helpers/auth';
+import { loginAsBuyerA1, loginAsStoreOwner } from './helpers/auth';
 const thankYouHeading = /(?:thank you|teşekkür)/i;
 
 async function waitUntilVisible(page: Page, selector: string, timeout = 15000): Promise<boolean> {
@@ -65,5 +65,12 @@ test.describe('Dealer finance storefront smoke', () => {
     expect(orderId).toBeTruthy();
     await page.goto(orderDetailsHref!);
     await expect(page.locator('body')).toContainText(/open account/i);
+
+    await page.goto('/logout');
+    await loginAsStoreOwner(page, '/Admin/Dealer/Transactions?SearchDealerId=2');
+    await expect(page).toHaveURL(/\/Admin\/Dealer\/Transactions/i);
+    await expect(page.locator('body')).toContainText(/open account order posted/i);
+    await expect(page.locator('body')).toContainText(orderId!);
+    await expect(page.locator('body')).toContainText(/148/);
   });
 });

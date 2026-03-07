@@ -1,7 +1,6 @@
 ﻿using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Orders;
-using Nop.Core.Domain.Payments;
 using Nop.Data;
 
 namespace Nop.Services.Customers;
@@ -56,6 +55,112 @@ public partial class DealerService : IDealerService
     #endregion
 
     #region Methods
+
+    /// <summary>
+    /// Ensures open-account order debit transactions exist for the requested dealer scope
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    protected virtual async Task EnsureOpenAccountOrderTransactionsAsync(int dealerId = 0, int storeId = 0)
+    {
+        var dealerQuery = _dealerInfoRepository.Table;
+
+        if (dealerId > 0)
+            dealerQuery = dealerQuery.Where(dealer => dealer.Id == dealerId);
+        else if (storeId > 0)
+            dealerQuery = dealerQuery.Where(dealer => dealer.StoreId == storeId);
+
+        var dealers = await dealerQuery
+            .Select(dealer => new
+            {
+                dealer.Id
+            })
+            .ToListAsync();
+
+        if (!dealers.Any())
+            return;
+
+        var dealerIds = dealers.Select(dealer => dealer.Id).ToList();
+
+        var mappings = await _dealerCustomerMappingRepository.Table
+            .Where(mapping => dealerIds.Contains(mapping.DealerId))
+            .Select(mapping => new
+            {
+                mapping.DealerId,
+                mapping.CustomerId
+            })
+            .ToListAsync();
+
+        if (!mappings.Any())
+            return;
+
+        var customerDealerMap = mappings
+            .GroupBy(mapping => mapping.CustomerId)
+            .ToDictionary(group => group.Key, group => group.First().DealerId);
+
+        var customerIds = customerDealerMap.Keys.ToList();
+
+        var openAccountOrders = await _orderRepository.Table
+            .Where(order => customerIds.Contains(order.CustomerId)
+                            && !order.Deleted
+                            && order.OrderStatusId != (int)OrderStatus.Cancelled
+                            && order.PaymentMethodSystemName == OpenAccountPaymentMethodSystemName)
+            .Select(order => new
+            {
+                order.Id,
+                order.CustomerId,
+                order.OrderTotal,
+                order.CustomOrderNumber,
+                order.CreatedOnUtc
+            })
+            .ToListAsync();
+
+        if (!openAccountOrders.Any())
+            return;
+
+        var existingTransactions = await _dealerTransactionRepository.Table
+            .Where(transaction => dealerIds.Contains(transaction.DealerId)
+                                  && transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountOrder
+                                  && transaction.OrderId.HasValue)
+            .Select(transaction => new
+            {
+                transaction.DealerId,
+                OrderId = transaction.OrderId.Value
+            })
+            .ToListAsync();
+
+        var existingTransactionKeys = existingTransactions
+            .Select(transaction => $"{transaction.DealerId}:{transaction.OrderId}")
+            .ToHashSet();
+
+        foreach (var order in openAccountOrders.OrderBy(order => order.CreatedOnUtc).ThenBy(order => order.Id))
+        {
+            if (!customerDealerMap.TryGetValue(order.CustomerId, out var mappedDealerId))
+                continue;
+
+            var key = $"{mappedDealerId}:{order.Id}";
+            if (existingTransactionKeys.Contains(key))
+                continue;
+
+            await InsertDealerTransactionAsync(new DealerTransaction
+            {
+                DealerId = mappedDealerId,
+                OrderId = order.Id,
+                CustomerId = order.CustomerId,
+                SourceTypeId = (int)DealerTransactionSourceType.Order,
+                SourceId = order.Id,
+                ReferenceNo = order.CustomOrderNumber,
+                TransactionTypeId = (int)DealerTransactionType.OpenAccountOrder,
+                DirectionId = (int)DealerTransactionDirection.Debit,
+                Amount = order.OrderTotal,
+                Note = $"Open account order posted. Order #{order.CustomOrderNumber}",
+                CreatedOnUtc = order.CreatedOnUtc
+            });
+
+            existingTransactionKeys.Add(key);
+        }
+    }
 
     /// <summary>
     /// Gets a dealer by identifier
@@ -267,6 +372,8 @@ public partial class DealerService : IDealerService
         if (dealerId <= 0)
             return 0;
 
+        await EnsureOpenAccountOrderTransactionsAsync(dealerId: dealerId);
+
         var openAccountTransactions = await _dealerTransactionRepository.Table
             .Where(transaction => transaction.DealerId == dealerId
                                   && (transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountOrder
@@ -295,8 +402,6 @@ public partial class DealerService : IDealerService
                             && !order.Deleted
                             && order.OrderStatusId != (int)OrderStatus.Cancelled
                             && order.PaymentMethodSystemName == OpenAccountPaymentMethodSystemName
-                            && (order.PaymentStatusId == (int)PaymentStatus.Pending
-                                || order.PaymentStatusId == (int)PaymentStatus.Authorized)
                             && !_dealerTransactionRepository.Table.Any(transaction =>
                                 transaction.DealerId == dealerId
                                 && transaction.OrderId == order.Id
@@ -346,6 +451,8 @@ public partial class DealerService : IDealerService
     {
         if (pageSize <= 0)
             return new List<DealerTransaction>();
+
+        await EnsureOpenAccountOrderTransactionsAsync(dealerId, storeId);
 
         var query = from transaction in _dealerTransactionRepository.Table
                     join dealer in _dealerInfoRepository.Table on transaction.DealerId equals dealer.Id
