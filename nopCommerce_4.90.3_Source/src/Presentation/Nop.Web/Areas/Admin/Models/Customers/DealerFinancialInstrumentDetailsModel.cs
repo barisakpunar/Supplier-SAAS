@@ -7,6 +7,11 @@ namespace Nop.Web.Areas.Admin.Models.Customers;
 /// </summary>
 public partial record DealerFinancialInstrumentDetailsModel : BaseNopEntityModel
 {
+    public DealerFinancialInstrumentDetailsModel()
+    {
+        AuditTrail = new List<DealerFinanceAuditLogItemModel>();
+    }
+
     public int StoreId { get; set; }
 
     public string StoreName { get; set; }
@@ -54,4 +59,6 @@ public partial record DealerFinancialInstrumentDetailsModel : BaseNopEntityModel
     public bool CanMarkReturned { get; set; }
 
     public bool CanMarkProtested { get; set; }
+
+    public IList<DealerFinanceAuditLogItemModel> AuditTrail { get; set; }
 }

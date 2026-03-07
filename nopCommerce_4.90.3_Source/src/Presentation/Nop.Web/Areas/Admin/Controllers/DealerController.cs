@@ -169,6 +169,18 @@ public partial class DealerController : BaseAdminController
         return await _localizationService.GetResourceAsync(resourceKey);
     }
 
+    protected virtual async Task<string> GetDealerFinanceAuditEntityTypeTextAsync(int entityTypeId)
+    {
+        var resourceKey = $"Admin.Customers.DealerFinanceAudit.EntityType.{((DealerFinanceAuditEntityType)entityTypeId)}";
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual async Task<string> GetDealerFinanceAuditActionTypeTextAsync(int actionTypeId)
+    {
+        var resourceKey = $"Admin.Customers.DealerFinanceAudit.ActionType.{((DealerFinanceAuditActionType)actionTypeId)}";
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
     protected virtual bool RequiresFinancialInstrument(int collectionMethodId)
     {
         return collectionMethodId == (int)DealerCollectionMethod.Check
@@ -182,6 +194,53 @@ public partial class DealerController : BaseAdminController
 
         return currentStatusId != (int)DealerFinancialInstrumentStatus.Cancelled
                && currentStatusId != (int)nextStatus;
+    }
+
+    protected virtual async Task<IList<DealerFinanceAuditLogItemModel>> PrepareDealerFinanceAuditLogItemsAsync(IList<DealerFinanceAuditLog> logs)
+    {
+        if (logs is null || !logs.Any())
+            return new List<DealerFinanceAuditLogItemModel>();
+
+        var customerIds = logs
+            .Where(item => item.PerformedByCustomerId.HasValue)
+            .Select(item => item.PerformedByCustomerId!.Value)
+            .Distinct()
+            .ToArray();
+
+        var customersById = customerIds.Any()
+            ? (await _customerService.GetCustomersByIdsAsync(customerIds)).ToDictionary(customer => customer.Id)
+            : new Dictionary<int, Customer>();
+
+        var result = new List<DealerFinanceAuditLogItemModel>();
+        foreach (var log in logs.OrderByDescending(item => item.PerformedOnUtc).ThenByDescending(item => item.Id))
+        {
+            customersById.TryGetValue(log.PerformedByCustomerId ?? 0, out var performedByCustomer);
+
+            var statusTransition = string.Empty;
+            if (log.StatusBeforeId.HasValue || log.StatusAfterId.HasValue)
+            {
+                var beforeText = log.StatusBeforeId.HasValue
+                    ? await GetDealerFinancialInstrumentStatusTextAsync(log.StatusBeforeId.Value)
+                    : "-";
+                var afterText = log.StatusAfterId.HasValue
+                    ? await GetDealerFinancialInstrumentStatusTextAsync(log.StatusAfterId.Value)
+                    : "-";
+                statusTransition = $"{beforeText} -> {afterText}";
+            }
+
+            result.Add(new DealerFinanceAuditLogItemModel
+            {
+                Id = log.Id,
+                EntityType = await GetDealerFinanceAuditEntityTypeTextAsync(log.EntityTypeId),
+                ActionType = await GetDealerFinanceAuditActionTypeTextAsync(log.ActionTypeId),
+                StatusTransition = statusTransition,
+                PerformedByCustomerName = GetCustomerDisplayText(performedByCustomer),
+                PerformedOnUtc = log.PerformedOnUtc,
+                Note = log.Note
+            });
+        }
+
+        return result;
     }
 
     protected virtual string GetCustomerDisplayText(Customer customer)
@@ -547,6 +606,10 @@ public partial class DealerController : BaseAdminController
         var cancelledTransaction = collection.CancelledDealerTransactionId.HasValue
             ? await _dealerService.GetDealerTransactionByIdAsync(collection.CancelledDealerTransactionId.Value)
             : null;
+        var auditTrail = await PrepareDealerFinanceAuditLogItemsAsync(await _dealerService.SearchDealerFinanceAuditLogsAsync(
+            dealerId: dealer.Id,
+            dealerCollectionId: collection.Id,
+            pageSize: int.MaxValue));
 
         return new DealerCollectionDetailsModel
         {
@@ -578,7 +641,8 @@ public partial class DealerController : BaseAdminController
             CancelledDealerTransactionCreatedOnUtc = cancelledTransaction?.CreatedOnUtc,
             CancelledByCustomerName = GetCustomerDisplayText(cancelledByCustomer),
             CancelledOnUtc = collection.CancelledOnUtc,
-            CanCancel = collection.CollectionStatusId == (int)DealerCollectionStatus.Posted
+            CanCancel = collection.CollectionStatusId == (int)DealerCollectionStatus.Posted,
+            AuditTrail = auditTrail
         };
     }
 
@@ -590,6 +654,10 @@ public partial class DealerController : BaseAdminController
         var store = await _storeService.GetStoreByIdAsync(dealer.StoreId);
         var mappedCustomer = instrument.CustomerId.HasValue ? await _customerService.GetCustomerByIdAsync(instrument.CustomerId.Value) : null;
         var createdByCustomer = await _customerService.GetCustomerByIdAsync(instrument.CreatedByCustomerId);
+        var auditTrail = await PrepareDealerFinanceAuditLogItemsAsync(await _dealerService.SearchDealerFinanceAuditLogsAsync(
+            dealerId: dealer.Id,
+            dealerFinancialInstrumentId: instrument.Id,
+            pageSize: int.MaxValue));
 
         return new DealerFinancialInstrumentDetailsModel
         {
@@ -617,7 +685,8 @@ public partial class DealerController : BaseAdminController
             UpdatedOnUtc = instrument.UpdatedOnUtc,
             CanMarkCollected = CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, DealerFinancialInstrumentStatus.Collected),
             CanMarkReturned = CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, DealerFinancialInstrumentStatus.Returned),
-            CanMarkProtested = CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, DealerFinancialInstrumentStatus.Protested)
+            CanMarkProtested = CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, DealerFinancialInstrumentStatus.Protested),
+            AuditTrail = auditTrail
         };
     }
 
@@ -1208,7 +1277,7 @@ public partial class DealerController : BaseAdminController
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
     public virtual async Task<IActionResult> UpdateFinancialInstrumentStatus(int id, int statusId)
     {
-        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var (currentCustomer, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
         var instrument = await _dealerService.GetDealerFinancialInstrumentByIdAsync(id);
         if (instrument is null)
             return RedirectToAction(nameof(FinancialInstruments));
@@ -1226,9 +1295,22 @@ public partial class DealerController : BaseAdminController
         if (!CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, (DealerFinancialInstrumentStatus)statusId))
             return RedirectToAction(nameof(FinancialInstrumentDetails), new { id = instrument.Id });
 
+        var previousStatusId = instrument.InstrumentStatusId;
         instrument.InstrumentStatusId = statusId;
         instrument.UpdatedOnUtc = DateTime.UtcNow;
         await _dealerService.UpdateDealerFinancialInstrumentAsync(instrument);
+        await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
+        {
+            DealerId = instrument.DealerId,
+            EntityTypeId = (int)DealerFinanceAuditEntityType.FinancialInstrument,
+            DealerCollectionId = instrument.DealerCollectionId,
+            DealerFinancialInstrumentId = instrument.Id,
+            ActionTypeId = (int)DealerFinanceAuditActionType.FinancialInstrumentStatusChanged,
+            StatusBeforeId = previousStatusId,
+            StatusAfterId = instrument.InstrumentStatusId,
+            PerformedByCustomerId = currentCustomer.Id,
+            PerformedOnUtc = DateTime.UtcNow
+        });
 
         return RedirectToAction(nameof(FinancialInstrumentDetails), new { id = instrument.Id });
     }
@@ -1373,6 +1455,17 @@ public partial class DealerController : BaseAdminController
         };
 
         await _dealerService.InsertDealerCollectionAsync(collection);
+        await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
+        {
+            DealerId = collection.DealerId,
+            EntityTypeId = (int)DealerFinanceAuditEntityType.Collection,
+            DealerCollectionId = collection.Id,
+            ActionTypeId = (int)DealerFinanceAuditActionType.CollectionCreated,
+            Note = collection.Note,
+            PerformedByCustomerId = currentCustomer.Id,
+            PerformedOnUtc = DateTime.UtcNow
+        });
+
         if (RequiresFinancialInstrument(collection.CollectionMethodId))
         {
             var financialInstrument = new DealerFinancialInstrument
@@ -1396,6 +1489,19 @@ public partial class DealerController : BaseAdminController
             await _dealerService.InsertDealerFinancialInstrumentAsync(financialInstrument);
             collection.DealerFinancialInstrumentId = financialInstrument.Id;
             await _dealerService.UpdateDealerCollectionAsync(collection);
+
+            await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
+            {
+                DealerId = collection.DealerId,
+                EntityTypeId = (int)DealerFinanceAuditEntityType.FinancialInstrument,
+                DealerCollectionId = collection.Id,
+                DealerFinancialInstrumentId = financialInstrument.Id,
+                ActionTypeId = (int)DealerFinanceAuditActionType.FinancialInstrumentCreated,
+                StatusAfterId = financialInstrument.InstrumentStatusId,
+                Note = financialInstrument.Note,
+                PerformedByCustomerId = currentCustomer.Id,
+                PerformedOnUtc = DateTime.UtcNow
+            });
         }
 
         transaction.SourceId = collection.Id;
@@ -1429,9 +1535,24 @@ public partial class DealerController : BaseAdminController
             var financialInstrument = await _dealerService.GetDealerFinancialInstrumentByIdAsync(collection.DealerFinancialInstrumentId.Value);
             if (financialInstrument is not null && financialInstrument.InstrumentStatusId != (int)DealerFinancialInstrumentStatus.Cancelled)
             {
+                var previousStatusId = financialInstrument.InstrumentStatusId;
                 financialInstrument.InstrumentStatusId = (int)DealerFinancialInstrumentStatus.Cancelled;
                 financialInstrument.UpdatedOnUtc = DateTime.UtcNow;
                 await _dealerService.UpdateDealerFinancialInstrumentAsync(financialInstrument);
+
+                await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
+                {
+                    DealerId = collection.DealerId,
+                    EntityTypeId = (int)DealerFinanceAuditEntityType.FinancialInstrument,
+                    DealerCollectionId = collection.Id,
+                    DealerFinancialInstrumentId = financialInstrument.Id,
+                    ActionTypeId = (int)DealerFinanceAuditActionType.FinancialInstrumentStatusChanged,
+                    StatusBeforeId = previousStatusId,
+                    StatusAfterId = financialInstrument.InstrumentStatusId,
+                    Note = $"Collection cancellation #{collection.Id}",
+                    PerformedByCustomerId = currentCustomer.Id,
+                    PerformedOnUtc = DateTime.UtcNow
+                });
             }
         }
 
@@ -1459,6 +1580,17 @@ public partial class DealerController : BaseAdminController
         collection.CancelledOnUtc = DateTime.UtcNow;
 
         await _dealerService.UpdateDealerCollectionAsync(collection);
+        await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
+        {
+            DealerId = collection.DealerId,
+            EntityTypeId = (int)DealerFinanceAuditEntityType.Collection,
+            DealerCollectionId = collection.Id,
+            DealerFinancialInstrumentId = collection.DealerFinancialInstrumentId,
+            ActionTypeId = (int)DealerFinanceAuditActionType.CollectionCancelled,
+            Note = string.IsNullOrWhiteSpace(collection.ReferenceNo) ? null : collection.ReferenceNo,
+            PerformedByCustomerId = currentCustomer.Id,
+            PerformedOnUtc = DateTime.UtcNow
+        });
 
         return RedirectToAction(nameof(CollectionDetails), new { id = collection.Id });
     }

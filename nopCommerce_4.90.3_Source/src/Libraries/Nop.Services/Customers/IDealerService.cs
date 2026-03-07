@@ -69,6 +69,20 @@ public partial interface IDealerService
     Task<DealerFinancialInstrument> GetDealerFinancialInstrumentByIdAsync(int dealerFinancialInstrumentId);
 
     /// <summary>
+    /// Searches dealer finance audit logs
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer finance audit logs
+    /// </returns>
+    Task<IList<DealerFinanceAuditLog>> SearchDealerFinanceAuditLogsAsync(int dealerId = 0, int dealerCollectionId = 0,
+        int dealerFinancialInstrumentId = 0, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Gets dealer transaction by identifier
     /// </summary>
     /// <param name="dealerTransactionId">Dealer transaction identifier</param>
@@ -204,6 +218,13 @@ public partial interface IDealerService
     /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task InsertDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument);
+
+    /// <summary>
+    /// Inserts a dealer finance audit log entry
+    /// </summary>
+    /// <param name="dealerFinanceAuditLog">Dealer finance audit log entry</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerFinanceAuditLogAsync(DealerFinanceAuditLog dealerFinanceAuditLog);
 
     /// <summary>
     /// Updates a dealer financial instrument

@@ -626,4 +626,46 @@
   <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkProtested">
     <Value>Mark as protested</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Timeline">
+    <Value>Audit timeline</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.NoData">
+    <Value>No audit records found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedOn">
+    <Value>Performed on</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.EntityType">
+    <Value>Entity</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.ActionType">
+    <Value>Action</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.StatusTransition">
+    <Value>Status transition</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedBy">
+    <Value>Performed by</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.Note">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.Collection">
+    <Value>Collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.FinancialInstrument">
+    <Value>Financial instrument</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCreated">
+    <Value>Collection created</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCancelled">
+    <Value>Collection cancelled</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentCreated">
+    <Value>Financial instrument created</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentStatusChanged">
+    <Value>Financial instrument status changed</Value>
+  </LocaleResource>
 </Language>

@@ -626,4 +626,46 @@
   <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkProtested">
     <Value>Protesto edildi olarak isaretle</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Timeline">
+    <Value>Denetim gecmisi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.NoData">
+    <Value>Denetim kaydi bulunamadi.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedOn">
+    <Value>Islem tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.EntityType">
+    <Value>Varlik</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.ActionType">
+    <Value>Aksiyon</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.StatusTransition">
+    <Value>Durum gecisi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedBy">
+    <Value>Islemi yapan</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.Note">
+    <Value>Not</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.Collection">
+    <Value>Tahsilat</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.FinancialInstrument">
+    <Value>Finansal belge</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCreated">
+    <Value>Tahsilat olusturuldu</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCancelled">
+    <Value>Tahsilat iptal edildi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentCreated">
+    <Value>Finansal belge olusturuldu</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentStatusChanged">
+    <Value>Finansal belge durumu degisti</Value>
+  </LocaleResource>
 </Language>

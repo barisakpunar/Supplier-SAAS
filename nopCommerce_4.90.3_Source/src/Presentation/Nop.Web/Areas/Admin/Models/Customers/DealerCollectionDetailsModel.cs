@@ -7,6 +7,11 @@ namespace Nop.Web.Areas.Admin.Models.Customers;
 /// </summary>
 public partial record DealerCollectionDetailsModel : BaseNopEntityModel
 {
+    public DealerCollectionDetailsModel()
+    {
+        AuditTrail = new List<DealerFinanceAuditLogItemModel>();
+    }
+
     public bool CanCancel { get; set; }
 
     public int DealerId { get; set; }
@@ -62,4 +67,6 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
     public string CancelledByCustomerName { get; set; }
 
     public DateTime? CancelledOnUtc { get; set; }
+
+    public IList<DealerFinanceAuditLogItemModel> AuditTrail { get; set; }
 }

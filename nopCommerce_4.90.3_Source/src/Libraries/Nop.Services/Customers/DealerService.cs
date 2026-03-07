@@ -18,6 +18,7 @@ public partial class DealerService : IDealerService
     protected readonly IRepository<DealerTransaction> _dealerTransactionRepository;
     protected readonly IRepository<DealerCollection> _dealerCollectionRepository;
     protected readonly IRepository<DealerFinancialInstrument> _dealerFinancialInstrumentRepository;
+    protected readonly IRepository<DealerFinanceAuditLog> _dealerFinanceAuditLogRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
@@ -33,6 +34,7 @@ public partial class DealerService : IDealerService
         IRepository<DealerTransaction> dealerTransactionRepository,
         IRepository<DealerCollection> dealerCollectionRepository,
         IRepository<DealerFinancialInstrument> dealerFinancialInstrumentRepository,
+        IRepository<DealerFinanceAuditLog> dealerFinanceAuditLogRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
         IRepository<Order> orderRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
@@ -42,6 +44,7 @@ public partial class DealerService : IDealerService
         _dealerTransactionRepository = dealerTransactionRepository;
         _dealerCollectionRepository = dealerCollectionRepository;
         _dealerFinancialInstrumentRepository = dealerFinancialInstrumentRepository;
+        _dealerFinanceAuditLogRepository = dealerFinanceAuditLogRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
         _orderRepository = orderRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
@@ -152,6 +155,41 @@ public partial class DealerService : IDealerService
             return null;
 
         return await _dealerFinancialInstrumentRepository.GetByIdAsync(dealerFinancialInstrumentId, cache => default);
+    }
+
+    /// <summary>
+    /// Searches dealer finance audit logs
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer finance audit logs
+    /// </returns>
+    public virtual async Task<IList<DealerFinanceAuditLog>> SearchDealerFinanceAuditLogsAsync(int dealerId = 0, int dealerCollectionId = 0,
+        int dealerFinancialInstrumentId = 0, int pageSize = int.MaxValue)
+    {
+        if (pageSize <= 0)
+            return new List<DealerFinanceAuditLog>();
+
+        var query = _dealerFinanceAuditLogRepository.Table;
+
+        if (dealerId > 0)
+            query = query.Where(item => item.DealerId == dealerId);
+
+        if (dealerCollectionId > 0)
+            query = query.Where(item => item.DealerCollectionId == dealerCollectionId);
+
+        if (dealerFinancialInstrumentId > 0)
+            query = query.Where(item => item.DealerFinancialInstrumentId == dealerFinancialInstrumentId);
+
+        return await query
+            .OrderByDescending(item => item.PerformedOnUtc)
+            .ThenByDescending(item => item.Id)
+            .Take(pageSize)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -531,6 +569,24 @@ public partial class DealerService : IDealerService
             dealerFinancialInstrument.CreatedOnUtc = DateTime.UtcNow;
 
         await _dealerFinancialInstrumentRepository.InsertAsync(dealerFinancialInstrument);
+    }
+
+    /// <summary>
+    /// Inserts a dealer finance audit log entry
+    /// </summary>
+    /// <param name="dealerFinanceAuditLog">Dealer finance audit log entry</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerFinanceAuditLogAsync(DealerFinanceAuditLog dealerFinanceAuditLog)
+    {
+        ArgumentNullException.ThrowIfNull(dealerFinanceAuditLog);
+
+        if (dealerFinanceAuditLog.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinanceAuditLog.DealerId));
+
+        if (dealerFinanceAuditLog.PerformedOnUtc == default)
+            dealerFinanceAuditLog.PerformedOnUtc = DateTime.UtcNow;
+
+        await _dealerFinanceAuditLogRepository.InsertAsync(dealerFinanceAuditLog);
     }
 
     /// <summary>
