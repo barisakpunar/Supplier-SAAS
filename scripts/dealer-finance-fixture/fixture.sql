@@ -90,6 +90,15 @@ WHERE "CustomerId" IN (
   AND "PaymentStatusId" IN (10, 20);
 
 -- Reset dealer finance state.
+DELETE FROM "DealerFinanceAuditLog";
+DELETE FROM "DealerTransactionAllocation";
+UPDATE "DealerCollection"
+SET "DealerFinancialInstrumentId" = NULL,
+    "DealerTransactionId" = NULL,
+    "CancelledDealerTransactionId" = NULL;
+UPDATE "DealerFinancialInstrument"
+SET "DealerCollectionId" = NULL;
+DELETE FROM "DealerFinancialInstrument";
 DELETE FROM "DealerCollection";
 DELETE FROM "DealerTransaction";
 
