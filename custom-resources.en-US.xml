@@ -509,4 +509,61 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.MethodRequired">
     <Value>A valid collection method is required.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.FinancialInstrument">
+    <Value>Financial instrument</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link">
+    <Value>Instrument #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments">
+    <Value>Dealer financial instruments</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Details">
+    <Value>Financial instrument details</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.AccountNo">
+    <Value>Account no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.BankName">
+    <Value>Bank name</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.BranchName">
+    <Value>Branch name</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Customer">
+    <Value>Customer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DrawerName">
+    <Value>Drawer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.InstrumentNo">
+    <Value>Instrument no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.IssueDate">
+    <Value>Issue date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection">
+    <Value>Linked collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Note">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Type">
+    <Value>Type</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Info">
+    <Value>Instrument information</Value>
+  </LocaleResource>
 </Language>

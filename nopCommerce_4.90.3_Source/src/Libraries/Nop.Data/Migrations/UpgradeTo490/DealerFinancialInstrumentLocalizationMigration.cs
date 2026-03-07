@@ -59,25 +59,61 @@ public class DealerFinancialInstrumentLocalizationMigration : ForwardOnlyMigrati
         UpsertResources("en-US", new Dictionary<string, string>
         {
             ["Admin.Customers.DealerFinancialInstruments"] = "Dealer financial instruments",
+            ["Admin.Customers.DealerFinancialInstruments.Details"] = "Financial instrument details",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.AccountNo"] = "Account no",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Amount"] = "Amount",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.BankName"] = "Bank name",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.BranchName"] = "Branch name",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Customer"] = "Customer",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Dealer"] = "Dealer",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.DrawerName"] = "Drawer",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.DueDate"] = "Due date",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.InstrumentNo"] = "Instrument no",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.IssueDate"] = "Issue date",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection"] = "Linked collection",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Note"] = "Note",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Status"] = "Status",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Type"] = "Type",
+            ["Admin.Customers.DealerFinancialInstruments.Info"] = "Instrument information",
             ["Admin.Customers.DealerFinancialInstruments.Type.Check"] = "Check",
             ["Admin.Customers.DealerFinancialInstruments.Type.PromissoryNote"] = "Promissory note",
             ["Admin.Customers.DealerFinancialInstruments.Status.Posted"] = "Posted",
             ["Admin.Customers.DealerFinancialInstruments.Status.Collected"] = "Collected",
             ["Admin.Customers.DealerFinancialInstruments.Status.Returned"] = "Returned",
             ["Admin.Customers.DealerFinancialInstruments.Status.Protested"] = "Protested",
-            ["Admin.Customers.DealerFinancialInstruments.Status.Cancelled"] = "Cancelled"
+            ["Admin.Customers.DealerFinancialInstruments.Status.Cancelled"] = "Cancelled",
+            ["Admin.Customers.DealerCollections.Fields.FinancialInstrument"] = "Financial instrument",
+            ["Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link"] = "Instrument #{0}"
         });
 
         UpsertResources("tr-TR", new Dictionary<string, string>
         {
             ["Admin.Customers.DealerFinancialInstruments"] = "Bayi finansal belgeleri",
+            ["Admin.Customers.DealerFinancialInstruments.Details"] = "Finansal belge detayı",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.AccountNo"] = "Hesap no",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Amount"] = "Tutar",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.BankName"] = "Banka",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.BranchName"] = "Şube",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Customer"] = "Müşteri",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Dealer"] = "Bayi",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.DrawerName"] = "Keşideci",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.DueDate"] = "Vade tarihi",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.InstrumentNo"] = "Belge no",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.IssueDate"] = "Belge tarihi",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection"] = "Bağlı tahsilat",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Note"] = "Not",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Status"] = "Durum",
+            ["Admin.Customers.DealerFinancialInstruments.Fields.Type"] = "Tür",
+            ["Admin.Customers.DealerFinancialInstruments.Info"] = "Belge bilgileri",
             ["Admin.Customers.DealerFinancialInstruments.Type.Check"] = "Cek",
             ["Admin.Customers.DealerFinancialInstruments.Type.PromissoryNote"] = "Senet",
             ["Admin.Customers.DealerFinancialInstruments.Status.Posted"] = "Kaydedildi",
             ["Admin.Customers.DealerFinancialInstruments.Status.Collected"] = "Tahsil edildi",
             ["Admin.Customers.DealerFinancialInstruments.Status.Returned"] = "Iade edildi",
             ["Admin.Customers.DealerFinancialInstruments.Status.Protested"] = "Protesto edildi",
-            ["Admin.Customers.DealerFinancialInstruments.Status.Cancelled"] = "Iptal edildi"
+            ["Admin.Customers.DealerFinancialInstruments.Status.Cancelled"] = "Iptal edildi",
+            ["Admin.Customers.DealerCollections.Fields.FinancialInstrument"] = "Finansal belge",
+            ["Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link"] = "Belge #{0}"
         });
     }
 }

@@ -1,0 +1,98 @@
+@using System.Globalization
+@model DealerFinancialInstrumentDetailsModel
+@{
+    ViewBag.PageTitle = T("Admin.Customers.DealerFinancialInstruments.Details").Text;
+    NopHtml.SetActiveMenuItemSystemName("DealerCollections");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">@T("Admin.Customers.DealerFinancialInstruments.Details")</h1>
+    <div class="float-right">
+        @if (Model.DealerCollectionId.HasValue)
+        {
+            <a asp-action="CollectionDetails" asp-controller="Dealer" asp-route-id="@Model.DealerCollectionId.Value" class="btn btn-default">
+                <i class="fas fa-arrow-left"></i>
+                @T("Admin.Customers.Dealers.BackToList")
+            </a>
+        }
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerFinancialInstruments.Info")</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Dealer"):</strong> @Model.DealerName
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Customer"):</strong> @(string.IsNullOrWhiteSpace(Model.CustomerName) ? "-" : Model.CustomerName)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Type"):</strong> @Model.InstrumentType
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Status"):</strong> @Model.InstrumentStatus
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Amount"):</strong> @Model.Amount.ToString("0.####", CultureInfo.CurrentCulture)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.InstrumentNo"):</strong> @(string.IsNullOrWhiteSpace(Model.InstrumentNo) ? "-" : Model.InstrumentNo)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.IssueDate"):</strong> @(Model.IssueDateUtc.HasValue ? Model.IssueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.DueDate"):</strong> @(Model.DueDateUtc.HasValue ? Model.DueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.BankName"):</strong> @(string.IsNullOrWhiteSpace(Model.BankName) ? "-" : Model.BankName)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.BranchName"):</strong> @(string.IsNullOrWhiteSpace(Model.BranchName) ? "-" : Model.BranchName)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.AccountNo"):</strong> @(string.IsNullOrWhiteSpace(Model.AccountNo) ? "-" : Model.AccountNo)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.DrawerName"):</strong> @(string.IsNullOrWhiteSpace(Model.DrawerName) ? "-" : Model.DrawerName)
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Note"):</strong> @(string.IsNullOrWhiteSpace(Model.Note) ? "-" : Model.Note)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerCollections.Audit")</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.CreatedBy"):</strong> @(string.IsNullOrWhiteSpace(Model.CreatedByCustomerName) ? "-" : Model.CreatedByCustomerName)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.CreatedOnUtc"):</strong> @Model.CreatedOnUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.UpdatedOnUtc"):</strong> @(Model.UpdatedOnUtc.HasValue ? Model.UpdatedOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection"):</strong> @(Model.DealerCollectionId?.ToString() ?? "-")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

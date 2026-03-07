@@ -49,6 +49,12 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
 
     public DateTime? DealerTransactionCreatedOnUtc { get; set; }
 
+    public int? DealerFinancialInstrumentId { get; set; }
+
+    public string DealerFinancialInstrumentType { get; set; }
+
+    public string DealerFinancialInstrumentStatus { get; set; }
+
     public int? CancelledDealerTransactionId { get; set; }
 
     public DateTime? CancelledDealerTransactionCreatedOnUtc { get; set; }

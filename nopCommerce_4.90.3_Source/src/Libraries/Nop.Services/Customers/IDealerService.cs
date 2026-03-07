@@ -176,6 +176,13 @@ public partial interface IDealerService
     Task InsertDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument);
 
     /// <summary>
+    /// Updates a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument);
+
+    /// <summary>
     /// Updates a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>

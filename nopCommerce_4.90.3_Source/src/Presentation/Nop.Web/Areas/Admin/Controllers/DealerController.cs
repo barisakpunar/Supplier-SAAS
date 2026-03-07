@@ -157,6 +157,24 @@ public partial class DealerController : BaseAdminController
         return await _localizationService.GetResourceAsync(resourceKey);
     }
 
+    protected virtual async Task<string> GetDealerFinancialInstrumentTypeTextAsync(int instrumentTypeId)
+    {
+        var resourceKey = $"Admin.Customers.DealerFinancialInstruments.Type.{((DealerFinancialInstrumentType)instrumentTypeId)}";
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual async Task<string> GetDealerFinancialInstrumentStatusTextAsync(int instrumentStatusId)
+    {
+        var resourceKey = $"Admin.Customers.DealerFinancialInstruments.Status.{((DealerFinancialInstrumentStatus)instrumentStatusId)}";
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual bool RequiresFinancialInstrument(int collectionMethodId)
+    {
+        return collectionMethodId == (int)DealerCollectionMethod.Check
+               || collectionMethodId == (int)DealerCollectionMethod.PromissoryNote;
+    }
+
     protected virtual string GetCustomerDisplayText(Customer customer)
     {
         if (customer is null)
@@ -514,6 +532,9 @@ public partial class DealerController : BaseAdminController
         var originalTransaction = collection.DealerTransactionId.HasValue
             ? await _dealerService.GetDealerTransactionByIdAsync(collection.DealerTransactionId.Value)
             : null;
+        var financialInstrument = collection.DealerFinancialInstrumentId.HasValue
+            ? await _dealerService.GetDealerFinancialInstrumentByIdAsync(collection.DealerFinancialInstrumentId.Value)
+            : null;
         var cancelledTransaction = collection.CancelledDealerTransactionId.HasValue
             ? await _dealerService.GetDealerTransactionByIdAsync(collection.CancelledDealerTransactionId.Value)
             : null;
@@ -541,11 +562,47 @@ public partial class DealerController : BaseAdminController
             UpdatedOnUtc = collection.UpdatedOnUtc,
             DealerTransactionId = collection.DealerTransactionId,
             DealerTransactionCreatedOnUtc = originalTransaction?.CreatedOnUtc,
+            DealerFinancialInstrumentId = collection.DealerFinancialInstrumentId,
+            DealerFinancialInstrumentType = financialInstrument is null ? string.Empty : await GetDealerFinancialInstrumentTypeTextAsync(financialInstrument.InstrumentTypeId),
+            DealerFinancialInstrumentStatus = financialInstrument is null ? string.Empty : await GetDealerFinancialInstrumentStatusTextAsync(financialInstrument.InstrumentStatusId),
             CancelledDealerTransactionId = collection.CancelledDealerTransactionId,
             CancelledDealerTransactionCreatedOnUtc = cancelledTransaction?.CreatedOnUtc,
             CancelledByCustomerName = GetCustomerDisplayText(cancelledByCustomer),
             CancelledOnUtc = collection.CancelledOnUtc,
             CanCancel = collection.CollectionStatusId == (int)DealerCollectionStatus.Posted
+        };
+    }
+
+    protected virtual async Task<DealerFinancialInstrumentDetailsModel> PrepareDealerFinancialInstrumentDetailsModelAsync(DealerFinancialInstrument instrument, DealerInfo dealer)
+    {
+        ArgumentNullException.ThrowIfNull(instrument);
+        ArgumentNullException.ThrowIfNull(dealer);
+
+        var mappedCustomer = instrument.CustomerId.HasValue ? await _customerService.GetCustomerByIdAsync(instrument.CustomerId.Value) : null;
+        var createdByCustomer = await _customerService.GetCustomerByIdAsync(instrument.CreatedByCustomerId);
+
+        return new DealerFinancialInstrumentDetailsModel
+        {
+            Id = instrument.Id,
+            DealerId = dealer.Id,
+            DealerName = dealer.Name,
+            DealerCollectionId = instrument.DealerCollectionId,
+            CustomerId = instrument.CustomerId,
+            CustomerName = GetCustomerDisplayText(mappedCustomer),
+            InstrumentType = await GetDealerFinancialInstrumentTypeTextAsync(instrument.InstrumentTypeId),
+            InstrumentStatus = await GetDealerFinancialInstrumentStatusTextAsync(instrument.InstrumentStatusId),
+            Amount = instrument.Amount,
+            InstrumentNo = instrument.InstrumentNo,
+            IssueDateUtc = instrument.IssueDateUtc,
+            DueDateUtc = instrument.DueDateUtc,
+            BankName = instrument.BankName,
+            BranchName = instrument.BranchName,
+            AccountNo = instrument.AccountNo,
+            DrawerName = instrument.DrawerName,
+            Note = instrument.Note,
+            CreatedByCustomerName = GetCustomerDisplayText(createdByCustomer),
+            CreatedOnUtc = instrument.CreatedOnUtc,
+            UpdatedOnUtc = instrument.UpdatedOnUtc
         };
     }
 
@@ -993,6 +1050,25 @@ public partial class DealerController : BaseAdminController
         return View(model);
     }
 
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> FinancialInstrumentDetails(int id)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var instrument = await _dealerService.GetDealerFinancialInstrumentByIdAsync(id);
+        if (instrument is null)
+            return RedirectToAction(nameof(Collections));
+
+        var dealer = await _dealerService.GetDealerByIdAsync(instrument.DealerId);
+        if (dealer is null)
+            return RedirectToAction(nameof(Collections));
+
+        if (isStoreOwner && managedStoreId > 0 && dealer.StoreId != managedStoreId)
+            return AccessDeniedView();
+
+        var model = await PrepareDealerFinancialInstrumentDetailsModelAsync(instrument, dealer);
+        return View(model);
+    }
+
     [HttpPost, ActionName("Transactions")]
     [FormValueRequired("search-transactions")]
     [ValidateAntiForgeryToken]
@@ -1133,6 +1209,31 @@ public partial class DealerController : BaseAdminController
         };
 
         await _dealerService.InsertDealerCollectionAsync(collection);
+        if (RequiresFinancialInstrument(collection.CollectionMethodId))
+        {
+            var financialInstrument = new DealerFinancialInstrument
+            {
+                DealerId = collection.DealerId,
+                DealerCollectionId = collection.Id,
+                CustomerId = collection.CustomerId,
+                InstrumentTypeId = collection.CollectionMethodId == (int)DealerCollectionMethod.Check
+                    ? (int)DealerFinancialInstrumentType.Check
+                    : (int)DealerFinancialInstrumentType.PromissoryNote,
+                InstrumentStatusId = (int)DealerFinancialInstrumentStatus.Posted,
+                Amount = collection.Amount,
+                InstrumentNo = collection.DocumentNo,
+                IssueDateUtc = collection.IssueDateUtc,
+                DueDateUtc = collection.DueDateUtc,
+                Note = collection.Note,
+                CreatedByCustomerId = currentCustomer.Id,
+                CreatedOnUtc = DateTime.UtcNow
+            };
+
+            await _dealerService.InsertDealerFinancialInstrumentAsync(financialInstrument);
+            collection.DealerFinancialInstrumentId = financialInstrument.Id;
+            await _dealerService.UpdateDealerCollectionAsync(collection);
+        }
+
         transaction.SourceId = collection.Id;
         await _dealerService.UpdateDealerTransactionAsync(transaction);
 
@@ -1158,6 +1259,17 @@ public partial class DealerController : BaseAdminController
 
         if (collection.CollectionStatusId == (int)DealerCollectionStatus.Cancelled)
             return RedirectToAction(nameof(CollectionDetails), new { id = collection.Id });
+
+        if (collection.DealerFinancialInstrumentId.HasValue)
+        {
+            var financialInstrument = await _dealerService.GetDealerFinancialInstrumentByIdAsync(collection.DealerFinancialInstrumentId.Value);
+            if (financialInstrument is not null && financialInstrument.InstrumentStatusId != (int)DealerFinancialInstrumentStatus.Cancelled)
+            {
+                financialInstrument.InstrumentStatusId = (int)DealerFinancialInstrumentStatus.Cancelled;
+                financialInstrument.UpdatedOnUtc = DateTime.UtcNow;
+                await _dealerService.UpdateDealerFinancialInstrumentAsync(financialInstrument);
+            }
+        }
 
         var reversalTransaction = new DealerTransaction
         {

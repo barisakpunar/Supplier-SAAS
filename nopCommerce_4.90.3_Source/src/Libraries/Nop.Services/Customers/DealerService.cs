@@ -457,6 +457,27 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Updates a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpdateDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument)
+    {
+        ArgumentNullException.ThrowIfNull(dealerFinancialInstrument);
+
+        if (dealerFinancialInstrument.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.DealerId));
+
+        if (dealerFinancialInstrument.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.Amount));
+
+        if (dealerFinancialInstrument.CreatedByCustomerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.CreatedByCustomerId));
+
+        await _dealerFinancialInstrumentRepository.UpdateAsync(dealerFinancialInstrument);
+    }
+
+    /// <summary>
     /// Updates a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>

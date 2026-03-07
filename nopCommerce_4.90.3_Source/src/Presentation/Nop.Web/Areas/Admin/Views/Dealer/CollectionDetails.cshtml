@@ -96,6 +96,20 @@
                             <div class="col-md-6 mb-2">
                                 <strong>@T("Admin.Customers.DealerCollections.Fields.DealerTransactionDate"):</strong> @(Model.DealerTransactionCreatedOnUtc.HasValue ? Model.DealerTransactionCreatedOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
                             </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.FinancialInstrument"):</strong>
+                                @if (Model.DealerFinancialInstrumentId.HasValue)
+                                {
+                                    <a asp-action="FinancialInstrumentDetails" asp-controller="Dealer" asp-route-id="@Model.DealerFinancialInstrumentId.Value">
+                                        @string.Format(T("Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link").Text, Model.DealerFinancialInstrumentId.Value)
+                                    </a>
+                                    <span class="d-block text-muted">@Model.DealerFinancialInstrumentType - @Model.DealerFinancialInstrumentStatus</span>
+                                }
+                                else
+                                {
+                                    @:-
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
