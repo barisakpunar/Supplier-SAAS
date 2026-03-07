@@ -12,3 +12,7 @@ export async function loginAsStoreOwner(page: Page): Promise<void> {
   await login(page, 'owner-a@test.local', 'Test123!', '/admin');
   await expect(page).toHaveURL(/\/admin/i);
 }
+
+export async function loginAsBuyerA1(page: Page, returnUrl = '/'): Promise<void> {
+  await login(page, 'buyer-a1@example.com', 'Test123!', returnUrl);
+}
