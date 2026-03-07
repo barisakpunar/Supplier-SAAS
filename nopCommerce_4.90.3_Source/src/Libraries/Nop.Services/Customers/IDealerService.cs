@@ -59,6 +59,16 @@ public partial interface IDealerService
     Task<DealerCollection> GetDealerCollectionByIdAsync(int dealerCollectionId);
 
     /// <summary>
+    /// Gets dealer financial instrument by identifier
+    /// </summary>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer financial instrument
+    /// </returns>
+    Task<DealerFinancialInstrument> GetDealerFinancialInstrumentByIdAsync(int dealerFinancialInstrumentId);
+
+    /// <summary>
     /// Gets dealer transaction by identifier
     /// </summary>
     /// <param name="dealerTransactionId">Dealer transaction identifier</param>
@@ -157,6 +167,13 @@ public partial interface IDealerService
     /// <param name="dealerCollection">Dealer collection</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task InsertDealerCollectionAsync(DealerCollection dealerCollection);
+
+    /// <summary>
+    /// Inserts a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument);
 
     /// <summary>
     /// Updates a dealer transaction

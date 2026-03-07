@@ -22,6 +22,7 @@ public partial class DealerCollectionBuilder : NopEntityBuilder<DealerCollection
             .WithColumn(nameof(DealerCollection.DealerId)).AsInt32().NotNullable().ForeignKey<DealerInfo>(onDelete: Rule.Cascade)
             .WithColumn(nameof(DealerCollection.CustomerId)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None)
             .WithColumn(nameof(DealerCollection.DealerTransactionId)).AsInt32().Nullable().ForeignKey<DealerTransaction>(onDelete: Rule.None)
+            .WithColumn(nameof(DealerCollection.DealerFinancialInstrumentId)).AsInt32().Nullable().ForeignKey<DealerFinancialInstrument>(onDelete: Rule.None)
             .WithColumn(nameof(DealerCollection.CancelledDealerTransactionId)).AsInt32().Nullable().ForeignKey<DealerTransaction>(onDelete: Rule.None)
             .WithColumn(nameof(DealerCollection.CollectionMethodId)).AsInt32().NotNullable().Indexed()
             .WithColumn(nameof(DealerCollection.CollectionStatusId)).AsInt32().NotNullable().Indexed()

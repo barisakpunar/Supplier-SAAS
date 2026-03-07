@@ -17,6 +17,7 @@ public partial class DealerService : IDealerService
     protected readonly IRepository<DealerFinancialProfile> _dealerFinancialProfileRepository;
     protected readonly IRepository<DealerTransaction> _dealerTransactionRepository;
     protected readonly IRepository<DealerCollection> _dealerCollectionRepository;
+    protected readonly IRepository<DealerFinancialInstrument> _dealerFinancialInstrumentRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
@@ -31,6 +32,7 @@ public partial class DealerService : IDealerService
         IRepository<DealerFinancialProfile> dealerFinancialProfileRepository,
         IRepository<DealerTransaction> dealerTransactionRepository,
         IRepository<DealerCollection> dealerCollectionRepository,
+        IRepository<DealerFinancialInstrument> dealerFinancialInstrumentRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
         IRepository<Order> orderRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
@@ -39,6 +41,7 @@ public partial class DealerService : IDealerService
         _dealerFinancialProfileRepository = dealerFinancialProfileRepository;
         _dealerTransactionRepository = dealerTransactionRepository;
         _dealerCollectionRepository = dealerCollectionRepository;
+        _dealerFinancialInstrumentRepository = dealerFinancialInstrumentRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
         _orderRepository = orderRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
@@ -133,6 +136,22 @@ public partial class DealerService : IDealerService
             return null;
 
         return await _dealerCollectionRepository.GetByIdAsync(dealerCollectionId, cache => default);
+    }
+
+    /// <summary>
+    /// Gets dealer financial instrument by identifier
+    /// </summary>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer financial instrument
+    /// </returns>
+    public virtual async Task<DealerFinancialInstrument> GetDealerFinancialInstrumentByIdAsync(int dealerFinancialInstrumentId)
+    {
+        if (dealerFinancialInstrumentId <= 0)
+            return null;
+
+        return await _dealerFinancialInstrumentRepository.GetByIdAsync(dealerFinancialInstrumentId, cache => default);
     }
 
     /// <summary>
@@ -411,6 +430,30 @@ public partial class DealerService : IDealerService
             dealerCollection.CollectionDateUtc = DateTime.UtcNow;
 
         await _dealerCollectionRepository.InsertAsync(dealerCollection);
+    }
+
+    /// <summary>
+    /// Inserts a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument)
+    {
+        ArgumentNullException.ThrowIfNull(dealerFinancialInstrument);
+
+        if (dealerFinancialInstrument.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.DealerId));
+
+        if (dealerFinancialInstrument.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.Amount));
+
+        if (dealerFinancialInstrument.CreatedByCustomerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.CreatedByCustomerId));
+
+        if (dealerFinancialInstrument.CreatedOnUtc == default)
+            dealerFinancialInstrument.CreatedOnUtc = DateTime.UtcNow;
+
+        await _dealerFinancialInstrumentRepository.InsertAsync(dealerFinancialInstrument);
     }
 
     /// <summary>

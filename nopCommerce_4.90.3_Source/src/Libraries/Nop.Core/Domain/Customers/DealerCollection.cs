@@ -21,6 +21,11 @@ public partial class DealerCollection : BaseEntity
     public int? DealerTransactionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the related dealer financial instrument identifier
+    /// </summary>
+    public int? DealerFinancialInstrumentId { get; set; }
+
+    /// <summary>
     /// Gets or sets the cancellation dealer transaction identifier
     /// </summary>
     public int? CancelledDealerTransactionId { get; set; }
