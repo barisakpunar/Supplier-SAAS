@@ -226,7 +226,7 @@ public static class DiscountExtensions
     static DiscountExtensions()
     {
         _discountService = new DiscountService(null, null,
-            null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null);
     }
 
     public static decimal GetDiscountAmount(this Discount discount, decimal amount)

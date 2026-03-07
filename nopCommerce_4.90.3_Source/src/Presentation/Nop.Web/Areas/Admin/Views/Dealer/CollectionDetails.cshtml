@@ -59,6 +59,15 @@
                             <div class="col-md-6 mb-2">
                                 <strong>@T("Admin.Customers.DealerCollections.Fields.ReferenceNo"):</strong> @(string.IsNullOrWhiteSpace(Model.ReferenceNo) ? "-" : Model.ReferenceNo)
                             </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.DocumentNo"):</strong> @(string.IsNullOrWhiteSpace(Model.DocumentNo) ? "-" : Model.DocumentNo)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.IssueDate"):</strong> @(Model.IssueDateUtc.HasValue ? Model.IssueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.DueDate"):</strong> @(Model.DueDateUtc.HasValue ? Model.DueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")
+                            </div>
                             <div class="col-md-12 mb-2">
                                 <strong>@T("Admin.Customers.DealerCollections.Fields.Note"):</strong> @(string.IsNullOrWhiteSpace(Model.Note) ? "-" : Model.Note)
                             </div>
@@ -86,6 +95,20 @@
                             </div>
                             <div class="col-md-6 mb-2">
                                 <strong>@T("Admin.Customers.DealerCollections.Fields.DealerTransactionDate"):</strong> @(Model.DealerTransactionCreatedOnUtc.HasValue ? Model.DealerTransactionCreatedOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Fields.FinancialInstrument"):</strong>
+                                @if (Model.DealerFinancialInstrumentId.HasValue)
+                                {
+                                    <a asp-action="FinancialInstrumentDetails" asp-controller="Dealer" asp-route-id="@Model.DealerFinancialInstrumentId.Value">
+                                        @string.Format(T("Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link").Text, Model.DealerFinancialInstrumentId.Value)
+                                    </a>
+                                    <span class="d-block text-muted">@Model.DealerFinancialInstrumentType - @Model.DealerFinancialInstrumentStatus</span>
+                                }
+                                else
+                                {
+                                    @:-
+                                }
                             </div>
                         </div>
                     </div>
@@ -115,6 +138,119 @@
                         </div>
                     </div>
                 }
+
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerCollections.Allocations")</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Allocations.AllocatedAmount"):</strong> @Model.AllocatedAmount.ToString("0.####", CultureInfo.CurrentCulture)
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerCollections.Allocations.UnallocatedAmount"):</strong> @Model.UnallocatedAmount.ToString("0.####", CultureInfo.CurrentCulture)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>@T("Admin.Customers.DealerCollections.Allocations.Columns.DebitSource")</th>
+                                        <th>@T("Admin.Customers.DealerCollections.Allocations.Columns.Amount")</th>
+                                        <th>@T("Admin.Customers.DealerCollections.Allocations.Columns.CreatedOn")</th>
+                                        <th>@T("Admin.Customers.DealerCollections.Allocations.Columns.Status")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Allocations.Any())
+                                    {
+                                        foreach (var item in Model.Allocations)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (!string.IsNullOrWhiteSpace(item.DebitSourceUrl))
+                                                    {
+                                                        <a href="@item.DebitSourceUrl">@item.DebitSourceText</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        @item.DebitSourceText
+                                                    }
+                                                </td>
+                                                <td>@item.Amount.ToString("0.####", CultureInfo.CurrentCulture)</td>
+                                                <td>@item.CreatedOnUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</td>
+                                                <td>
+                                                    @if (item.IsCancelled)
+                                                    {
+                                                        @T("Admin.Customers.DealerCollections.Allocations.Status.Cancelled")
+                                                        <div class="text-muted">@(item.CancelledOnUtc?.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) ?? "-")</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        @T("Admin.Customers.DealerCollections.Allocations.Status.Active")
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center">@T("Admin.Customers.DealerCollections.Allocations.NoData")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerFinanceAudit.Timeline")</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>@T("Admin.Customers.DealerFinanceAudit.Columns.PerformedOn")</th>
+                                        <th>@T("Admin.Customers.DealerFinanceAudit.Columns.EntityType")</th>
+                                        <th>@T("Admin.Customers.DealerFinanceAudit.Columns.ActionType")</th>
+                                        <th>@T("Admin.Customers.DealerFinanceAudit.Columns.StatusTransition")</th>
+                                        <th>@T("Admin.Customers.DealerFinanceAudit.Columns.PerformedBy")</th>
+                                        <th>@T("Admin.Customers.DealerFinanceAudit.Columns.Note")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.AuditTrail.Any())
+                                    {
+                                        foreach (var item in Model.AuditTrail)
+                                        {
+                                            <tr>
+                                                <td>@item.PerformedOnUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</td>
+                                                <td>@item.EntityType</td>
+                                                <td>@item.ActionType</td>
+                                                <td>@(string.IsNullOrWhiteSpace(item.StatusTransition) ? "-" : item.StatusTransition)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(item.PerformedByCustomerName) ? "-" : item.PerformedByCustomerName)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(item.Note) ? "-" : item.Note)</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="6" class="text-center">@T("Admin.Customers.DealerFinanceAudit.NoData")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

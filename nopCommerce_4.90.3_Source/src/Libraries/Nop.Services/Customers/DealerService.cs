@@ -16,7 +16,10 @@ public partial class DealerService : IDealerService
     protected readonly IRepository<DealerInfo> _dealerInfoRepository;
     protected readonly IRepository<DealerFinancialProfile> _dealerFinancialProfileRepository;
     protected readonly IRepository<DealerTransaction> _dealerTransactionRepository;
+    protected readonly IRepository<DealerTransactionAllocation> _dealerTransactionAllocationRepository;
     protected readonly IRepository<DealerCollection> _dealerCollectionRepository;
+    protected readonly IRepository<DealerFinancialInstrument> _dealerFinancialInstrumentRepository;
+    protected readonly IRepository<DealerFinanceAuditLog> _dealerFinanceAuditLogRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
@@ -30,7 +33,10 @@ public partial class DealerService : IDealerService
     public DealerService(IRepository<DealerInfo> dealerInfoRepository,
         IRepository<DealerFinancialProfile> dealerFinancialProfileRepository,
         IRepository<DealerTransaction> dealerTransactionRepository,
+        IRepository<DealerTransactionAllocation> dealerTransactionAllocationRepository,
         IRepository<DealerCollection> dealerCollectionRepository,
+        IRepository<DealerFinancialInstrument> dealerFinancialInstrumentRepository,
+        IRepository<DealerFinanceAuditLog> dealerFinanceAuditLogRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
         IRepository<Order> orderRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
@@ -38,7 +44,10 @@ public partial class DealerService : IDealerService
         _dealerInfoRepository = dealerInfoRepository;
         _dealerFinancialProfileRepository = dealerFinancialProfileRepository;
         _dealerTransactionRepository = dealerTransactionRepository;
+        _dealerTransactionAllocationRepository = dealerTransactionAllocationRepository;
         _dealerCollectionRepository = dealerCollectionRepository;
+        _dealerFinancialInstrumentRepository = dealerFinancialInstrumentRepository;
+        _dealerFinanceAuditLogRepository = dealerFinanceAuditLogRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
         _orderRepository = orderRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
@@ -133,6 +142,100 @@ public partial class DealerService : IDealerService
             return null;
 
         return await _dealerCollectionRepository.GetByIdAsync(dealerCollectionId, cache => default);
+    }
+
+    /// <summary>
+    /// Gets dealer financial instrument by identifier
+    /// </summary>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer financial instrument
+    /// </returns>
+    public virtual async Task<DealerFinancialInstrument> GetDealerFinancialInstrumentByIdAsync(int dealerFinancialInstrumentId)
+    {
+        if (dealerFinancialInstrumentId <= 0)
+            return null;
+
+        return await _dealerFinancialInstrumentRepository.GetByIdAsync(dealerFinancialInstrumentId, cache => default);
+    }
+
+    /// <summary>
+    /// Searches dealer finance audit logs
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer finance audit logs
+    /// </returns>
+    public virtual async Task<IList<DealerFinanceAuditLog>> SearchDealerFinanceAuditLogsAsync(int dealerId = 0, int dealerCollectionId = 0,
+        int dealerFinancialInstrumentId = 0, int pageSize = int.MaxValue)
+    {
+        if (pageSize <= 0)
+            return new List<DealerFinanceAuditLog>();
+
+        var query = _dealerFinanceAuditLogRepository.Table;
+
+        if (dealerId > 0)
+            query = query.Where(item => item.DealerId == dealerId);
+
+        if (dealerCollectionId > 0)
+            query = query.Where(item => item.DealerCollectionId == dealerCollectionId);
+
+        if (dealerFinancialInstrumentId > 0)
+            query = query.Where(item => item.DealerFinancialInstrumentId == dealerFinancialInstrumentId);
+
+        return await query
+            .OrderByDescending(item => item.PerformedOnUtc)
+            .ThenByDescending(item => item.Id)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Searches dealer transaction allocations
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="creditDealerTransactionId">Credit transaction identifier</param>
+    /// <param name="debitDealerTransactionId">Debit transaction identifier</param>
+    /// <param name="activeOnly">Active records only</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer transaction allocations
+    /// </returns>
+    public virtual async Task<IList<DealerTransactionAllocation>> SearchDealerTransactionAllocationsAsync(int dealerId = 0, int dealerCollectionId = 0,
+        int creditDealerTransactionId = 0, int debitDealerTransactionId = 0, bool activeOnly = false, int pageSize = int.MaxValue)
+    {
+        if (pageSize <= 0)
+            return new List<DealerTransactionAllocation>();
+
+        var query = _dealerTransactionAllocationRepository.Table;
+
+        if (dealerId > 0)
+            query = query.Where(item => item.DealerId == dealerId);
+
+        if (dealerCollectionId > 0)
+            query = query.Where(item => item.DealerCollectionId == dealerCollectionId);
+
+        if (creditDealerTransactionId > 0)
+            query = query.Where(item => item.CreditDealerTransactionId == creditDealerTransactionId);
+
+        if (debitDealerTransactionId > 0)
+            query = query.Where(item => item.DebitDealerTransactionId == debitDealerTransactionId);
+
+        if (activeOnly)
+            query = query.Where(item => !item.CancelledOnUtc.HasValue);
+
+        return await query
+            .OrderBy(item => item.CreatedOnUtc)
+            .ThenBy(item => item.Id)
+            .Take(pageSize)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -366,6 +469,83 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Searches dealer financial instruments
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <param name="instrumentTypeId">Instrument type identifier</param>
+    /// <param name="instrumentStatusId">Instrument status identifier</param>
+    /// <param name="dueFromUtc">Due date from (UTC)</param>
+    /// <param name="dueToUtc">Due date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    public virtual async Task<IList<DealerFinancialInstrument>> SearchDealerFinancialInstrumentsAsync(int dealerId = 0, int storeId = 0,
+        int customerId = 0, int instrumentTypeId = 0, int instrumentStatusId = 0, DateTime? dueFromUtc = null,
+        DateTime? dueToUtc = null, int pageSize = int.MaxValue)
+    {
+        if (pageSize <= 0)
+            return new List<DealerFinancialInstrument>();
+
+        var query = from instrument in _dealerFinancialInstrumentRepository.Table
+                    join dealer in _dealerInfoRepository.Table on instrument.DealerId equals dealer.Id
+                    select new
+                    {
+                        Instrument = instrument,
+                        dealer.StoreId
+                    };
+
+        if (dealerId > 0)
+            query = query.Where(item => item.Instrument.DealerId == dealerId);
+
+        if (storeId > 0)
+            query = query.Where(item => item.StoreId == storeId);
+
+        if (customerId > 0)
+            query = query.Where(item => item.Instrument.CustomerId == customerId);
+
+        if (instrumentTypeId > 0)
+            query = query.Where(item => item.Instrument.InstrumentTypeId == instrumentTypeId);
+
+        if (instrumentStatusId > 0)
+            query = query.Where(item => item.Instrument.InstrumentStatusId == instrumentStatusId);
+
+        if (dueFromUtc.HasValue)
+            query = query.Where(item => item.Instrument.DueDateUtc.HasValue && item.Instrument.DueDateUtc.Value >= dueFromUtc.Value);
+
+        if (dueToUtc.HasValue)
+            query = query.Where(item => item.Instrument.DueDateUtc.HasValue && item.Instrument.DueDateUtc.Value <= dueToUtc.Value);
+
+        return await query
+            .OrderByDescending(item => item.Instrument.DueDateUtc.HasValue)
+            .ThenBy(item => item.Instrument.DueDateUtc)
+            .ThenByDescending(item => item.Instrument.Id)
+            .Select(item => item.Instrument)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Gets dealer financial instruments by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    public virtual async Task<IList<DealerFinancialInstrument>> GetDealerFinancialInstrumentsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue)
+    {
+        if (dealerId <= 0 || pageSize <= 0)
+            return new List<DealerFinancialInstrument>();
+
+        return await SearchDealerFinancialInstrumentsAsync(dealerId: dealerId, pageSize: pageSize);
+    }
+
+    /// <summary>
     /// Inserts a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>
@@ -414,6 +594,147 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Inserts a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument)
+    {
+        ArgumentNullException.ThrowIfNull(dealerFinancialInstrument);
+
+        if (dealerFinancialInstrument.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.DealerId));
+
+        if (dealerFinancialInstrument.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.Amount));
+
+        if (dealerFinancialInstrument.CreatedByCustomerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.CreatedByCustomerId));
+
+        if (dealerFinancialInstrument.CreatedOnUtc == default)
+            dealerFinancialInstrument.CreatedOnUtc = DateTime.UtcNow;
+
+        await _dealerFinancialInstrumentRepository.InsertAsync(dealerFinancialInstrument);
+    }
+
+    /// <summary>
+    /// Inserts a dealer finance audit log entry
+    /// </summary>
+    /// <param name="dealerFinanceAuditLog">Dealer finance audit log entry</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerFinanceAuditLogAsync(DealerFinanceAuditLog dealerFinanceAuditLog)
+    {
+        ArgumentNullException.ThrowIfNull(dealerFinanceAuditLog);
+
+        if (dealerFinanceAuditLog.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinanceAuditLog.DealerId));
+
+        if (dealerFinanceAuditLog.PerformedOnUtc == default)
+            dealerFinanceAuditLog.PerformedOnUtc = DateTime.UtcNow;
+
+        await _dealerFinanceAuditLogRepository.InsertAsync(dealerFinanceAuditLog);
+    }
+
+    /// <summary>
+    /// Inserts a dealer transaction allocation
+    /// </summary>
+    /// <param name="dealerTransactionAllocation">Dealer transaction allocation</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerTransactionAllocationAsync(DealerTransactionAllocation dealerTransactionAllocation)
+    {
+        ArgumentNullException.ThrowIfNull(dealerTransactionAllocation);
+
+        if (dealerTransactionAllocation.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.DealerId));
+
+        if (dealerTransactionAllocation.CreditDealerTransactionId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.CreditDealerTransactionId));
+
+        if (dealerTransactionAllocation.DebitDealerTransactionId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.DebitDealerTransactionId));
+
+        if (dealerTransactionAllocation.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.Amount));
+
+        if (dealerTransactionAllocation.CreatedByCustomerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.CreatedByCustomerId));
+
+        if (dealerTransactionAllocation.CreatedOnUtc == default)
+            dealerTransactionAllocation.CreatedOnUtc = DateTime.UtcNow;
+
+        await _dealerTransactionAllocationRepository.InsertAsync(dealerTransactionAllocation);
+    }
+
+    /// <summary>
+    /// Updates a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpdateDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument)
+    {
+        ArgumentNullException.ThrowIfNull(dealerFinancialInstrument);
+
+        if (dealerFinancialInstrument.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.DealerId));
+
+        if (dealerFinancialInstrument.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.Amount));
+
+        if (dealerFinancialInstrument.CreatedByCustomerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerFinancialInstrument.CreatedByCustomerId));
+
+        await _dealerFinancialInstrumentRepository.UpdateAsync(dealerFinancialInstrument);
+    }
+
+    /// <summary>
+    /// Updates a dealer transaction allocation
+    /// </summary>
+    /// <param name="dealerTransactionAllocation">Dealer transaction allocation</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpdateDealerTransactionAllocationAsync(DealerTransactionAllocation dealerTransactionAllocation)
+    {
+        ArgumentNullException.ThrowIfNull(dealerTransactionAllocation);
+
+        if (dealerTransactionAllocation.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.DealerId));
+
+        if (dealerTransactionAllocation.CreditDealerTransactionId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.CreditDealerTransactionId));
+
+        if (dealerTransactionAllocation.DebitDealerTransactionId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.DebitDealerTransactionId));
+
+        if (dealerTransactionAllocation.Amount <= decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.Amount));
+
+        if (dealerTransactionAllocation.CreatedByCustomerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransactionAllocation.CreatedByCustomerId));
+
+        await _dealerTransactionAllocationRepository.UpdateAsync(dealerTransactionAllocation);
+    }
+
+    /// <summary>
+    /// Updates a dealer transaction
+    /// </summary>
+    /// <param name="dealerTransaction">Dealer transaction</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpdateDealerTransactionAsync(DealerTransaction dealerTransaction)
+    {
+        ArgumentNullException.ThrowIfNull(dealerTransaction);
+
+        if (dealerTransaction.DealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransaction.DealerId));
+
+        if (dealerTransaction.Amount < decimal.Zero)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransaction.Amount));
+
+        if (dealerTransaction.CreatedOnUtc == default)
+            throw new ArgumentOutOfRangeException(nameof(dealerTransaction.CreatedOnUtc));
+
+        await _dealerTransactionRepository.UpdateAsync(dealerTransaction);
+    }
+
+    /// <summary>
     /// Updates a dealer collection
     /// </summary>
     /// <param name="dealerCollection">Dealer collection</param>
@@ -430,6 +751,110 @@ public partial class DealerService : IDealerService
 
         dealerCollection.UpdatedOnUtc = DateTime.UtcNow;
         await _dealerCollectionRepository.UpdateAsync(dealerCollection);
+    }
+
+    /// <summary>
+    /// Creates automatic allocations for a credit transaction
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="creditDealerTransactionId">Credit transaction identifier</param>
+    /// <param name="creditAmount">Credit amount</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="createdByCustomerId">Created by customer identifier</param>
+    /// <param name="createdOnUtc">Created date in UTC</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains created allocations
+    /// </returns>
+    public virtual async Task<IList<DealerTransactionAllocation>> CreateAutomaticAllocationsAsync(int dealerId, int creditDealerTransactionId,
+        decimal creditAmount, int? dealerCollectionId, int createdByCustomerId, DateTime createdOnUtc)
+    {
+        if (dealerId <= 0 || creditDealerTransactionId <= 0 || creditAmount <= decimal.Zero || createdByCustomerId <= 0)
+            return new List<DealerTransactionAllocation>();
+
+        var debitTransactions = await _dealerTransactionRepository.Table
+            .Where(transaction => transaction.DealerId == dealerId
+                                  && transaction.DirectionId == (int)DealerTransactionDirection.Debit
+                                  && (transaction.TransactionTypeId == (int)DealerTransactionType.OpenAccountOrder
+                                      || transaction.TransactionTypeId == (int)DealerTransactionType.ManualDebitAdjustment))
+            .OrderBy(transaction => transaction.CreatedOnUtc)
+            .ThenBy(transaction => transaction.Id)
+            .ToListAsync();
+
+        if (!debitTransactions.Any())
+            return new List<DealerTransactionAllocation>();
+
+        var debitTransactionIds = debitTransactions.Select(transaction => transaction.Id).ToArray();
+        var activeAllocations = await _dealerTransactionAllocationRepository.Table
+            .Where(item => item.DealerId == dealerId
+                           && !item.CancelledOnUtc.HasValue
+                           && debitTransactionIds.Contains(item.DebitDealerTransactionId))
+            .GroupBy(item => item.DebitDealerTransactionId)
+            .Select(group => new
+            {
+                DebitDealerTransactionId = group.Key,
+                Amount = group.Sum(item => item.Amount)
+            })
+            .ToListAsync();
+
+        var allocatedByDebitTransactionId = activeAllocations.ToDictionary(item => item.DebitDealerTransactionId, item => item.Amount);
+        var remainingCredit = creditAmount;
+        var result = new List<DealerTransactionAllocation>();
+
+        foreach (var debitTransaction in debitTransactions)
+        {
+            if (remainingCredit <= decimal.Zero)
+                break;
+
+            var allocatedAmount = allocatedByDebitTransactionId.TryGetValue(debitTransaction.Id, out var existingAllocatedAmount)
+                ? existingAllocatedAmount
+                : decimal.Zero;
+            var remainingDebit = debitTransaction.Amount - allocatedAmount;
+            if (remainingDebit <= decimal.Zero)
+                continue;
+
+            var amountToAllocate = Math.Min(remainingCredit, remainingDebit);
+            if (amountToAllocate <= decimal.Zero)
+                continue;
+
+            var allocation = new DealerTransactionAllocation
+            {
+                DealerId = dealerId,
+                DealerCollectionId = dealerCollectionId,
+                CreditDealerTransactionId = creditDealerTransactionId,
+                DebitDealerTransactionId = debitTransaction.Id,
+                Amount = amountToAllocate,
+                CreatedByCustomerId = createdByCustomerId,
+                CreatedOnUtc = createdOnUtc
+            };
+
+            await InsertDealerTransactionAllocationAsync(allocation);
+            result.Add(allocation);
+            remainingCredit -= amountToAllocate;
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Cancels allocations by collection identifier
+    /// </summary>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="cancelledByCustomerId">Cancelled by customer identifier</param>
+    /// <param name="cancelledOnUtc">Cancelled date in UTC</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task CancelDealerTransactionAllocationsByCollectionAsync(int dealerCollectionId, int cancelledByCustomerId, DateTime cancelledOnUtc)
+    {
+        if (dealerCollectionId <= 0 || cancelledByCustomerId <= 0)
+            return;
+
+        var allocations = await SearchDealerTransactionAllocationsAsync(dealerCollectionId: dealerCollectionId, activeOnly: true, pageSize: int.MaxValue);
+        foreach (var allocation in allocations)
+        {
+            allocation.CancelledByCustomerId = cancelledByCustomerId;
+            allocation.CancelledOnUtc = cancelledOnUtc == default ? DateTime.UtcNow : cancelledOnUtc;
+            await UpdateDealerTransactionAllocationAsync(allocation);
+        }
     }
 
     /// <summary>

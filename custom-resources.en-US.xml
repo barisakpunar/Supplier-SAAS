@@ -213,6 +213,15 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Collection">
     <Value>Collection #{0}</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.ManualAdjustment">
+    <Value>Manual adjustment</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Order">
+    <Value>Order #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.OrderByReference">
+    <Value>Order #{0}</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
     <Value>Manual credit adjustment</Value>
   </LocaleResource>
@@ -359,6 +368,12 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Dealer">
     <Value>Dealer</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DocumentNo">
+    <Value>Document no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Method">
     <Value>Method</Value>
   </LocaleResource>
@@ -406,6 +421,15 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransactionDate">
     <Value>Dealer transaction date (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DocumentNo">
+    <Value>Document no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.IssueDate">
+    <Value>Issue date</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
     <Value>Note</Value>
@@ -479,7 +503,217 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DealerRequired">
     <Value>A valid dealer is required.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DueDateBeforeIssueDate">
+    <Value>Due date cannot be earlier than issue date.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.MethodRequired">
     <Value>A valid collection method is required.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.FinancialInstrument">
+    <Value>Financial instrument</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link">
+    <Value>Instrument #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments">
+    <Value>Dealer financial instruments</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Details">
+    <Value>Financial instrument details</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.AccountNo">
+    <Value>Account no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.BankName">
+    <Value>Bank name</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.BranchName">
+    <Value>Branch name</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Customer">
+    <Value>Customer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DrawerName">
+    <Value>Drawer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.InstrumentNo">
+    <Value>Instrument no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.IssueDate">
+    <Value>Issue date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection">
+    <Value>Linked collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Note">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Type">
+    <Value>Type</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Info">
+    <Value>Instrument information</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateFrom">
+    <Value>Due date from</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateTo">
+    <Value>Due date to</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Customer">
+    <Value>Customer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Type">
+    <Value>Type</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.InstrumentNo">
+    <Value>Instrument no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.IssueDate">
+    <Value>Issue date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.LinkedCollection">
+    <Value>Linked collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.NoData">
+    <Value>No financial instruments found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.BackToList">
+    <Value>Back to instruments</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.LinkedCollection.Open">
+    <Value>Open linked collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions">
+    <Value>Actions</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkCollected">
+    <Value>Mark as collected</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkReturned">
+    <Value>Mark as returned</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkProtested">
+    <Value>Mark as protested</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Timeline">
+    <Value>Audit timeline</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.NoData">
+    <Value>No audit records found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedOn">
+    <Value>Performed on</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.EntityType">
+    <Value>Entity</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.ActionType">
+    <Value>Action</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.StatusTransition">
+    <Value>Status transition</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedBy">
+    <Value>Performed by</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.Note">
+    <Value>Note</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.Collection">
+    <Value>Collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.FinancialInstrument">
+    <Value>Financial instrument</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCreated">
+    <Value>Collection created</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCancelled">
+    <Value>Collection cancelled</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentCreated">
+    <Value>Financial instrument created</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentStatusChanged">
+    <Value>Financial instrument status changed</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.ReferenceNo">
+    <Value>Reference no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DocumentNo">
+    <Value>Document no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Instrument">
+    <Value>Instrument</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations">
+    <Value>Allocations</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.AllocatedAmount">
+    <Value>Allocated amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.UnallocatedAmount">
+    <Value>Unallocated amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.DebitSource">
+    <Value>Debit source</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.CreatedOn">
+    <Value>Created on</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Active">
+    <Value>Active</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Cancelled">
+    <Value>Cancelled</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.NoData">
+    <Value>No allocations found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCreated">
+    <Value>Collection allocation created</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCancelled">
+    <Value>Collection allocation cancelled</Value>
   </LocaleResource>
 </Language>

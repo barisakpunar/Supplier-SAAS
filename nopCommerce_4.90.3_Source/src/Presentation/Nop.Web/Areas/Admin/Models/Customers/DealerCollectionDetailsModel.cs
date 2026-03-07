@@ -7,6 +7,12 @@ namespace Nop.Web.Areas.Admin.Models.Customers;
 /// </summary>
 public partial record DealerCollectionDetailsModel : BaseNopEntityModel
 {
+    public DealerCollectionDetailsModel()
+    {
+        AuditTrail = new List<DealerFinanceAuditLogItemModel>();
+        Allocations = new List<DealerTransactionAllocationItemModel>();
+    }
+
     public bool CanCancel { get; set; }
 
     public int DealerId { get; set; }
@@ -31,6 +37,12 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
 
     public string ReferenceNo { get; set; }
 
+    public string DocumentNo { get; set; }
+
+    public DateTime? IssueDateUtc { get; set; }
+
+    public DateTime? DueDateUtc { get; set; }
+
     public string Note { get; set; }
 
     public string CreatedByCustomerName { get; set; }
@@ -43,6 +55,12 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
 
     public DateTime? DealerTransactionCreatedOnUtc { get; set; }
 
+    public int? DealerFinancialInstrumentId { get; set; }
+
+    public string DealerFinancialInstrumentType { get; set; }
+
+    public string DealerFinancialInstrumentStatus { get; set; }
+
     public int? CancelledDealerTransactionId { get; set; }
 
     public DateTime? CancelledDealerTransactionCreatedOnUtc { get; set; }
@@ -50,4 +68,12 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
     public string CancelledByCustomerName { get; set; }
 
     public DateTime? CancelledOnUtc { get; set; }
+
+    public IList<DealerFinanceAuditLogItemModel> AuditTrail { get; set; }
+
+    public IList<DealerTransactionAllocationItemModel> Allocations { get; set; }
+
+    public decimal AllocatedAmount { get; set; }
+
+    public decimal UnallocatedAmount { get; set; }
 }

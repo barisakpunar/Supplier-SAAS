@@ -213,6 +213,15 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Collection">
     <Value>Tahsilat #{0}</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.ManualAdjustment">
+    <Value>Manuel düzeltme</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.Order">
+    <Value>Sipariş #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Source.OrderByReference">
+    <Value>Sipariş #{0}</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment">
     <Value>Manuel alacak düzeltmesi</Value>
   </LocaleResource>
@@ -359,6 +368,12 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Dealer">
     <Value>Bayi</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DocumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Columns.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Columns.Method">
     <Value>Yöntem</Value>
   </LocaleResource>
@@ -406,6 +421,15 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DealerTransactionDate">
     <Value>Bayi hareket tarihi (UTC)</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DocumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.IssueDate">
+    <Value>Belge tarihi</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Fields.Note">
     <Value>Not</Value>
@@ -479,7 +503,217 @@
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DealerRequired">
     <Value>Geçerli bir bayi gereklidir.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Validation.DueDateBeforeIssueDate">
+    <Value>Vade tarihi belge tarihinden önce olamaz.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.DealerCollections.Validation.MethodRequired">
     <Value>Geçerli bir tahsilat yöntemi gereklidir.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.FinancialInstrument">
+    <Value>Finansal belge</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link">
+    <Value>Belge #{0}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments">
+    <Value>Bayi finansal belgeleri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Details">
+    <Value>Finansal belge detayı</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.AccountNo">
+    <Value>Hesap no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.BankName">
+    <Value>Banka</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.BranchName">
+    <Value>Şube</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Customer">
+    <Value>Müşteri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DrawerName">
+    <Value>Keşideci</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.InstrumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.IssueDate">
+    <Value>Belge tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection">
+    <Value>Bağlı tahsilat</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Note">
+    <Value>Not</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Status">
+    <Value>Durum</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Type">
+    <Value>Tür</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Info">
+    <Value>Belge bilgileri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Store">
+    <Value>Magaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateFrom">
+    <Value>Vade tarihi baslangic</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateTo">
+    <Value>Vade tarihi bitis</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Store">
+    <Value>Magaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Customer">
+    <Value>Musteri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Type">
+    <Value>Tur</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Status">
+    <Value>Durum</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.InstrumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.IssueDate">
+    <Value>Belge tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.LinkedCollection">
+    <Value>Bagli tahsilat</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.NoData">
+    <Value>Finansal belge bulunamadi.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.BackToList">
+    <Value>Belgelere don</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.LinkedCollection.Open">
+    <Value>Bagli tahsilati ac</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions">
+    <Value>Aksiyonlar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkCollected">
+    <Value>Tahsil edildi olarak isaretle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkReturned">
+    <Value>Iade edildi olarak isaretle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkProtested">
+    <Value>Protesto edildi olarak isaretle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Timeline">
+    <Value>Denetim gecmisi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.NoData">
+    <Value>Denetim kaydi bulunamadi.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedOn">
+    <Value>Islem tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.EntityType">
+    <Value>Varlik</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.ActionType">
+    <Value>Aksiyon</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.StatusTransition">
+    <Value>Durum gecisi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.PerformedBy">
+    <Value>Islemi yapan</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.Columns.Note">
+    <Value>Not</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.Collection">
+    <Value>Tahsilat</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.EntityType.FinancialInstrument">
+    <Value>Finansal belge</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCreated">
+    <Value>Tahsilat olusturuldu</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionCancelled">
+    <Value>Tahsilat iptal edildi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentCreated">
+    <Value>Finansal belge olusturuldu</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentStatusChanged">
+    <Value>Finansal belge durumu degisti</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.ReferenceNo">
+    <Value>Referans no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DocumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Instrument">
+    <Value>Belge</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations">
+    <Value>Eslestirmeler</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.AllocatedAmount">
+    <Value>Eslesen tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.UnallocatedAmount">
+    <Value>Eslesmeyen tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.DebitSource">
+    <Value>Borc kaynagi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.CreatedOn">
+    <Value>Olusturma tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Status">
+    <Value>Durum</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Active">
+    <Value>Aktif</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Cancelled">
+    <Value>Iptal edildi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.NoData">
+    <Value>Eslestirme bulunamadi.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCreated">
+    <Value>Tahsilat eslestirmesi olusturuldu</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCancelled">
+    <Value>Tahsilat eslestirmesi iptal edildi</Value>
   </LocaleResource>
 </Language>

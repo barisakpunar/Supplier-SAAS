@@ -59,6 +59,46 @@ public partial interface IDealerService
     Task<DealerCollection> GetDealerCollectionByIdAsync(int dealerCollectionId);
 
     /// <summary>
+    /// Gets dealer financial instrument by identifier
+    /// </summary>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer financial instrument
+    /// </returns>
+    Task<DealerFinancialInstrument> GetDealerFinancialInstrumentByIdAsync(int dealerFinancialInstrumentId);
+
+    /// <summary>
+    /// Searches dealer finance audit logs
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="dealerFinancialInstrumentId">Dealer financial instrument identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer finance audit logs
+    /// </returns>
+    Task<IList<DealerFinanceAuditLog>> SearchDealerFinanceAuditLogsAsync(int dealerId = 0, int dealerCollectionId = 0,
+        int dealerFinancialInstrumentId = 0, int pageSize = int.MaxValue);
+
+    /// <summary>
+    /// Searches dealer transaction allocations
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="creditDealerTransactionId">Credit transaction identifier</param>
+    /// <param name="debitDealerTransactionId">Debit transaction identifier</param>
+    /// <param name="activeOnly">Active records only</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer transaction allocations
+    /// </returns>
+    Task<IList<DealerTransactionAllocation>> SearchDealerTransactionAllocationsAsync(int dealerId = 0, int dealerCollectionId = 0,
+        int creditDealerTransactionId = 0, int debitDealerTransactionId = 0, bool activeOnly = false, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Gets dealer transaction by identifier
     /// </summary>
     /// <param name="dealerTransactionId">Dealer transaction identifier</param>
@@ -134,6 +174,25 @@ public partial interface IDealerService
         DateTime? collectionToUtc = null, int pageSize = int.MaxValue);
 
     /// <summary>
+    /// Searches dealer financial instruments
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <param name="instrumentTypeId">Instrument type identifier</param>
+    /// <param name="instrumentStatusId">Instrument status identifier</param>
+    /// <param name="dueFromUtc">Due date from (UTC)</param>
+    /// <param name="dueToUtc">Due date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    Task<IList<DealerFinancialInstrument>> SearchDealerFinancialInstrumentsAsync(int dealerId = 0, int storeId = 0,
+        int customerId = 0, int instrumentTypeId = 0, int instrumentStatusId = 0, DateTime? dueFromUtc = null,
+        DateTime? dueToUtc = null, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Gets dealer collections by dealer identifier
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -143,6 +202,17 @@ public partial interface IDealerService
     /// The task result contains dealer collections
     /// </returns>
     Task<IList<DealerCollection>> GetDealerCollectionsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue);
+
+    /// <summary>
+    /// Gets dealer financial instruments by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    Task<IList<DealerFinancialInstrument>> GetDealerFinancialInstrumentsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue);
 
     /// <summary>
     /// Inserts a dealer transaction
@@ -159,11 +229,78 @@ public partial interface IDealerService
     Task InsertDealerCollectionAsync(DealerCollection dealerCollection);
 
     /// <summary>
+    /// Inserts a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument);
+
+    /// <summary>
+    /// Inserts a dealer finance audit log entry
+    /// </summary>
+    /// <param name="dealerFinanceAuditLog">Dealer finance audit log entry</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerFinanceAuditLogAsync(DealerFinanceAuditLog dealerFinanceAuditLog);
+
+    /// <summary>
+    /// Inserts a dealer transaction allocation
+    /// </summary>
+    /// <param name="dealerTransactionAllocation">Dealer transaction allocation</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerTransactionAllocationAsync(DealerTransactionAllocation dealerTransactionAllocation);
+
+    /// <summary>
+    /// Updates a dealer financial instrument
+    /// </summary>
+    /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument);
+
+    /// <summary>
+    /// Updates a dealer transaction allocation
+    /// </summary>
+    /// <param name="dealerTransactionAllocation">Dealer transaction allocation</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerTransactionAllocationAsync(DealerTransactionAllocation dealerTransactionAllocation);
+
+    /// <summary>
+    /// Updates a dealer transaction
+    /// </summary>
+    /// <param name="dealerTransaction">Dealer transaction</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerTransactionAsync(DealerTransaction dealerTransaction);
+
+    /// <summary>
     /// Updates a dealer collection
     /// </summary>
     /// <param name="dealerCollection">Dealer collection</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task UpdateDealerCollectionAsync(DealerCollection dealerCollection);
+
+    /// <summary>
+    /// Creates automatic allocations for a credit transaction
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="creditDealerTransactionId">Credit transaction identifier</param>
+    /// <param name="creditAmount">Credit amount</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="createdByCustomerId">Created by customer identifier</param>
+    /// <param name="createdOnUtc">Created date in UTC</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains created allocations
+    /// </returns>
+    Task<IList<DealerTransactionAllocation>> CreateAutomaticAllocationsAsync(int dealerId, int creditDealerTransactionId,
+        decimal creditAmount, int? dealerCollectionId, int createdByCustomerId, DateTime createdOnUtc);
+
+    /// <summary>
+    /// Cancels allocations by collection identifier
+    /// </summary>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="cancelledByCustomerId">Cancelled by customer identifier</param>
+    /// <param name="cancelledOnUtc">Cancelled date in UTC</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task CancelDealerTransactionAllocationsByCollectionAsync(int dealerCollectionId, int cancelledByCustomerId, DateTime cancelledOnUtc);
 
     /// <summary>
     /// Indicates whether a dealer transaction exists for the order and transaction type

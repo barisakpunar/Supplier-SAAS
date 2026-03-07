@@ -56,6 +56,7 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
         protected readonly bool _ignoreFilter;
         protected readonly ICategoryService _categoryService;
         protected readonly ICustomerService _customerService;
+        protected readonly IDealerService _dealerService;
         protected readonly IDiscountService _discountService;
         protected readonly IManufacturerService _manufacturerService;
         protected readonly IOrderService _orderService;
@@ -145,6 +146,7 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
         public ValidateStoreOwnerFilter(bool ignoreFilter,
             ICategoryService categoryService,
             ICustomerService customerService,
+            IDealerService dealerService,
             IDiscountService discountService,
             IManufacturerService manufacturerService,
             IOrderService orderService,
@@ -158,6 +160,7 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
             _ignoreFilter = ignoreFilter;
             _categoryService = categoryService;
             _customerService = customerService;
+            _dealerService = dealerService;
             _discountService = discountService;
             _manufacturerService = manufacturerService;
             _orderService = orderService;
@@ -360,6 +363,39 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
                    && await _storeMappingService.AuthorizeAsync(product, managedStoreId);
         }
 
+        private async Task<bool> HasDealerAccessAsync(int dealerId, int managedStoreId)
+        {
+            if (dealerId <= 0)
+                return false;
+
+            var dealer = await _dealerService.GetDealerByIdAsync(dealerId);
+            return dealer != null && dealer.StoreId == managedStoreId;
+        }
+
+        private async Task<bool> HasDealerCollectionAccessAsync(int dealerCollectionId, int managedStoreId)
+        {
+            if (dealerCollectionId <= 0)
+                return false;
+
+            var collection = await _dealerService.GetDealerCollectionByIdAsync(dealerCollectionId);
+            if (collection is null)
+                return false;
+
+            return await HasDealerAccessAsync(collection.DealerId, managedStoreId);
+        }
+
+        private async Task<bool> HasDealerFinancialInstrumentAccessAsync(int dealerFinancialInstrumentId, int managedStoreId)
+        {
+            if (dealerFinancialInstrumentId <= 0)
+                return false;
+
+            var instrument = await _dealerService.GetDealerFinancialInstrumentByIdAsync(dealerFinancialInstrumentId);
+            if (instrument is null)
+                return false;
+
+            return await HasDealerAccessAsync(instrument.DealerId, managedStoreId);
+        }
+
         private async Task<bool> HasStoreOwnerEntityAccessAsync(ActionExecutingContext context, int managedStoreId)
         {
             var controller = GetRouteValue(context.ActionDescriptor, "controller");
@@ -471,6 +507,48 @@ public sealed class ValidateStoreOwnerAttribute : TypeFilterAttribute
 
                     var discountStoreIds = await _storeMappingService.GetStoresIdsWithAccessAsync(discount);
                     return discountStoreIds.Length == 1 && discountStoreIds[0] == managedStoreId;
+
+                case "Dealer":
+                    var collectionId = TryGetEntityId(context, "dealerCollectionId");
+                    if (collectionId > 0)
+                        return await HasDealerCollectionAccessAsync(collectionId, managedStoreId);
+
+                    if (action.Equals("CollectionDetails", StringComparison.InvariantCultureIgnoreCase)
+                        || action.Equals("CancelCollection", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        collectionId = TryGetEntityId(context, "id");
+                        return collectionId <= 0 || await HasDealerCollectionAccessAsync(collectionId, managedStoreId);
+                    }
+
+                    var instrumentId = TryGetEntityId(context, "dealerFinancialInstrumentId");
+                    if (instrumentId > 0)
+                        return await HasDealerFinancialInstrumentAccessAsync(instrumentId, managedStoreId);
+
+                    if (action.Equals("FinancialInstrumentDetails", StringComparison.InvariantCultureIgnoreCase)
+                        || action.Equals("UpdateFinancialInstrumentStatus", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        instrumentId = TryGetEntityId(context, "id");
+                        return instrumentId <= 0 || await HasDealerFinancialInstrumentAccessAsync(instrumentId, managedStoreId);
+                    }
+
+                    var dealerId = TryGetEntityId(context, "dealerId");
+                    if (dealerId > 0)
+                        return await HasDealerAccessAsync(dealerId, managedStoreId);
+
+                    if (action.Equals("Edit", StringComparison.InvariantCultureIgnoreCase)
+                        || action.Equals("Delete", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        dealerId = TryGetEntityId(context, "id");
+                        return dealerId <= 0 || await HasDealerAccessAsync(dealerId, managedStoreId);
+                    }
+
+                    if (action.Equals("CreateCollection", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        dealerId = TryGetEntityId(context, "dealerId", "DealerId");
+                        return dealerId <= 0 || await HasDealerAccessAsync(dealerId, managedStoreId);
+                    }
+
+                    return true;
 
                 default:
                     return true;

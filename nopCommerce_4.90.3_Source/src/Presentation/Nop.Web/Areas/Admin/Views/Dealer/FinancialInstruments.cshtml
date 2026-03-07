@@ -1,0 +1,166 @@
+@using System.Globalization
+@model DealerFinancialInstrumentListModel
+@{
+    ViewBag.PageTitle = T("Admin.Customers.DealerFinancialInstruments").Text;
+    NopHtml.SetActiveMenuItemSystemName("DealerFinancialInstruments");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">@T("Admin.Customers.DealerFinancialInstruments")</h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <form asp-action="FinancialInstruments" asp-controller="Dealer" method="get">
+                            <div class="row">
+                                @if (!Model.IsStoreOwner)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="SearchStoreId" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-select asp-for="SearchStoreId" asp-items="Model.AvailableStores" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchDealerId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchDealerId" asp-items="Model.AvailableDealers" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchInstrumentTypeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchInstrumentTypeId" asp-items="Model.AvailableInstrumentTypes" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchInstrumentStatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchInstrumentStatusId" asp-items="Model.AvailableInstrumentStatuses" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchDueDateFromUtc" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchDueDateFromUtc" asp-template="DateNullable" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchDueDateToUtc" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchDueDateToUtc" asp-template="DateNullable" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="submit" class="btn btn-primary btn-search">
+                                        <i class="fas fa-magnifying-glass"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.Dealer")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.Store")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.Customer")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.Type")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.Status")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.Amount")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.InstrumentNo")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.IssueDate")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.DueDate")</th>
+                                        <th>@T("Admin.Customers.DealerFinancialInstruments.Columns.LinkedCollection")</th>
+                                        <th style="width: 100px;">@T("Admin.Common.View")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Instruments.Any())
+                                    {
+                                        foreach (var item in Model.Instruments)
+                                        {
+                                            <tr>
+                                                <td>@item.DealerName</td>
+                                                <td>@item.StoreName</td>
+                                                <td>@(string.IsNullOrWhiteSpace(item.CustomerName) ? "-" : item.CustomerName)</td>
+                                                <td>@item.InstrumentType</td>
+                                                <td>@item.InstrumentStatus</td>
+                                                <td>@item.Amount.ToString("0.####", CultureInfo.CurrentCulture)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(item.InstrumentNo) ? "-" : item.InstrumentNo)</td>
+                                                <td>@(item.IssueDateUtc.HasValue ? item.IssueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")</td>
+                                                <td>@(item.DueDateUtc.HasValue ? item.DueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")</td>
+                                                <td>
+                                                    @if (item.DealerCollectionId.HasValue)
+                                                    {
+                                                        <a asp-action="CollectionDetails" asp-controller="Dealer" asp-route-id="@item.DealerCollectionId.Value">
+                                                            @string.Format(T("Admin.Customers.DealerCollections.Fields.CollectionLink").Text, item.DealerCollectionId.Value)
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        @("-")
+                                                    }
+                                                </td>
+                                                <td class="text-center">
+                                                    <a asp-action="FinancialInstrumentDetails" asp-route-id="@item.Id" class="btn btn-default btn-sm">@T("Admin.Common.View")</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="11" class="text-center">@T("Admin.Customers.DealerFinancialInstruments.NoData")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -116,6 +116,8 @@
                                         <th>@T("Admin.Customers.DealerCollections.Columns.Method")</th>
                                         <th>@T("Admin.Customers.DealerCollections.Columns.Status")</th>
                                         <th>@T("Admin.Customers.DealerCollections.Columns.Amount")</th>
+                                        <th>@T("Admin.Customers.DealerCollections.Columns.DocumentNo")</th>
+                                        <th>@T("Admin.Customers.DealerCollections.Columns.DueDate")</th>
                                         <th>@T("Admin.Customers.DealerCollections.Columns.ReferenceNo")</th>
                                         <th>@T("Admin.Customers.DealerCollections.Columns.Note")</th>
                                         <th style="width: 100px;">@T("Admin.Common.View")</th>
@@ -139,6 +141,8 @@
                                                 <td>@item.CollectionMethod</td>
                                                 <td>@item.CollectionStatus</td>
                                                 <td>@item.Amount.ToString("0.####", CultureInfo.CurrentCulture)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(item.DocumentNo) ? "-" : item.DocumentNo)</td>
+                                                <td>@(item.DueDateUtc.HasValue ? item.DueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")</td>
                                                 <td>@(string.IsNullOrWhiteSpace(item.ReferenceNo) ? "-" : item.ReferenceNo)</td>
                                                 <td>@(string.IsNullOrWhiteSpace(item.Note) ? "-" : item.Note)</td>
                                                 <td class="text-center">
@@ -150,7 +154,7 @@
                                     else
                                     {
                                         <tr>
-                                            <td colspan="10" class="text-center">@T("Admin.Customers.DealerCollections.NoData")</td>
+                                            <td colspan="12" class="text-center">@T("Admin.Customers.DealerCollections.NoData")</td>
                                         </tr>
                                     }
                                 </tbody>

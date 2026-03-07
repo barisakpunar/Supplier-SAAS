@@ -21,6 +21,11 @@ public partial class DealerCollection : BaseEntity
     public int? DealerTransactionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the related dealer financial instrument identifier
+    /// </summary>
+    public int? DealerFinancialInstrumentId { get; set; }
+
+    /// <summary>
     /// Gets or sets the cancellation dealer transaction identifier
     /// </summary>
     public int? CancelledDealerTransactionId { get; set; }
@@ -49,6 +54,21 @@ public partial class DealerCollection : BaseEntity
     /// Gets or sets the optional reference number
     /// </summary>
     public string ReferenceNo { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional document number
+    /// </summary>
+    public string DocumentNo { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional issue date in UTC
+    /// </summary>
+    public DateTime? IssueDateUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional due date in UTC
+    /// </summary>
+    public DateTime? DueDateUtc { get; set; }
 
     /// <summary>
     /// Gets or sets the optional note
