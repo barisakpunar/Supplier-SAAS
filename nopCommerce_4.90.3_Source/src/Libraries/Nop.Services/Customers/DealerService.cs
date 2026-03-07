@@ -385,6 +385,83 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Searches dealer financial instruments
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <param name="instrumentTypeId">Instrument type identifier</param>
+    /// <param name="instrumentStatusId">Instrument status identifier</param>
+    /// <param name="dueFromUtc">Due date from (UTC)</param>
+    /// <param name="dueToUtc">Due date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    public virtual async Task<IList<DealerFinancialInstrument>> SearchDealerFinancialInstrumentsAsync(int dealerId = 0, int storeId = 0,
+        int customerId = 0, int instrumentTypeId = 0, int instrumentStatusId = 0, DateTime? dueFromUtc = null,
+        DateTime? dueToUtc = null, int pageSize = int.MaxValue)
+    {
+        if (pageSize <= 0)
+            return new List<DealerFinancialInstrument>();
+
+        var query = from instrument in _dealerFinancialInstrumentRepository.Table
+                    join dealer in _dealerInfoRepository.Table on instrument.DealerId equals dealer.Id
+                    select new
+                    {
+                        Instrument = instrument,
+                        dealer.StoreId
+                    };
+
+        if (dealerId > 0)
+            query = query.Where(item => item.Instrument.DealerId == dealerId);
+
+        if (storeId > 0)
+            query = query.Where(item => item.StoreId == storeId);
+
+        if (customerId > 0)
+            query = query.Where(item => item.Instrument.CustomerId == customerId);
+
+        if (instrumentTypeId > 0)
+            query = query.Where(item => item.Instrument.InstrumentTypeId == instrumentTypeId);
+
+        if (instrumentStatusId > 0)
+            query = query.Where(item => item.Instrument.InstrumentStatusId == instrumentStatusId);
+
+        if (dueFromUtc.HasValue)
+            query = query.Where(item => item.Instrument.DueDateUtc.HasValue && item.Instrument.DueDateUtc.Value >= dueFromUtc.Value);
+
+        if (dueToUtc.HasValue)
+            query = query.Where(item => item.Instrument.DueDateUtc.HasValue && item.Instrument.DueDateUtc.Value <= dueToUtc.Value);
+
+        return await query
+            .OrderByDescending(item => item.Instrument.DueDateUtc.HasValue)
+            .ThenBy(item => item.Instrument.DueDateUtc)
+            .ThenByDescending(item => item.Instrument.Id)
+            .Select(item => item.Instrument)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Gets dealer financial instruments by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    public virtual async Task<IList<DealerFinancialInstrument>> GetDealerFinancialInstrumentsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue)
+    {
+        if (dealerId <= 0 || pageSize <= 0)
+            return new List<DealerFinancialInstrument>();
+
+        return await SearchDealerFinancialInstrumentsAsync(dealerId: dealerId, pageSize: pageSize);
+    }
+
+    /// <summary>
     /// Inserts a dealer transaction
     /// </summary>
     /// <param name="dealerTransaction">Dealer transaction</param>

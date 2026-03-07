@@ -2,17 +2,21 @@
 @model DealerFinancialInstrumentDetailsModel
 @{
     ViewBag.PageTitle = T("Admin.Customers.DealerFinancialInstruments.Details").Text;
-    NopHtml.SetActiveMenuItemSystemName("DealerCollections");
+    NopHtml.SetActiveMenuItemSystemName("DealerFinancialInstruments");
 }
 
 <div class="content-header clearfix">
     <h1 class="float-left">@T("Admin.Customers.DealerFinancialInstruments.Details")</h1>
     <div class="float-right">
+        <a asp-action="FinancialInstruments" asp-controller="Dealer" class="btn btn-default">
+            <i class="fas fa-arrow-left"></i>
+            @T("Admin.Customers.DealerFinancialInstruments.BackToList")
+        </a>
         @if (Model.DealerCollectionId.HasValue)
         {
             <a asp-action="CollectionDetails" asp-controller="Dealer" asp-route-id="@Model.DealerCollectionId.Value" class="btn btn-default">
-                <i class="fas fa-arrow-left"></i>
-                @T("Admin.Customers.Dealers.BackToList")
+                <i class="fas fa-link"></i>
+                @T("Admin.Customers.DealerFinancialInstruments.LinkedCollection.Open")
             </a>
         }
     </div>
@@ -28,6 +32,9 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Store"):</strong> @Model.StoreName
+                            </div>
                             <div class="col-md-6 mb-2">
                                 <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.Dealer"):</strong> @Model.DealerName
                             </div>
@@ -73,6 +80,43 @@
 
                 <div class="card card-default">
                     <div class="card-header">
+                        <h3 class="card-title">@T("Admin.Customers.DealerFinancialInstruments.Actions")</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="btn-group">
+                            @if (Model.CanMarkCollected)
+                            {
+                                <form asp-action="UpdateFinancialInstrumentStatus" asp-controller="Dealer" method="post" class="mr-2">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="statusId" value="@((int)Nop.Core.Domain.Customers.DealerFinancialInstrumentStatus.Collected)" />
+                                    <nop-antiforgery-token />
+                                    <button type="submit" class="btn btn-success">@T("Admin.Customers.DealerFinancialInstruments.Actions.MarkCollected")</button>
+                                </form>
+                            }
+                            @if (Model.CanMarkReturned)
+                            {
+                                <form asp-action="UpdateFinancialInstrumentStatus" asp-controller="Dealer" method="post" class="mr-2">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="statusId" value="@((int)Nop.Core.Domain.Customers.DealerFinancialInstrumentStatus.Returned)" />
+                                    <nop-antiforgery-token />
+                                    <button type="submit" class="btn btn-warning">@T("Admin.Customers.DealerFinancialInstruments.Actions.MarkReturned")</button>
+                                </form>
+                            }
+                            @if (Model.CanMarkProtested)
+                            {
+                                <form asp-action="UpdateFinancialInstrumentStatus" asp-controller="Dealer" method="post">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="statusId" value="@((int)Nop.Core.Domain.Customers.DealerFinancialInstrumentStatus.Protested)" />
+                                    <nop-antiforgery-token />
+                                    <button type="submit" class="btn btn-danger">@T("Admin.Customers.DealerFinancialInstruments.Actions.MarkProtested")</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-header">
                         <h3 class="card-title">@T("Admin.Customers.DealerCollections.Audit")</h3>
                     </div>
                     <div class="card-body">
@@ -87,7 +131,15 @@
                                 <strong>@T("Admin.Customers.DealerCollections.Fields.UpdatedOnUtc"):</strong> @(Model.UpdatedOnUtc.HasValue ? Model.UpdatedOnUtc.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-")
                             </div>
                             <div class="col-md-6 mb-2">
-                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection"):</strong> @(Model.DealerCollectionId?.ToString() ?? "-")
+                                <strong>@T("Admin.Customers.DealerFinancialInstruments.Fields.LinkedCollection"):</strong>
+                                @if (Model.DealerCollectionId.HasValue)
+                                {
+                                    <a asp-action="CollectionDetails" asp-controller="Dealer" asp-route-id="@Model.DealerCollectionId.Value">@string.Format(T("Admin.Customers.DealerCollections.Fields.CollectionLink").Text, Model.DealerCollectionId.Value)</a>
+                                }
+                                else
+                                {
+                                    @("-")
+                                }
                             </div>
                         </div>
                     </div>

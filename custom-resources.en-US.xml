@@ -566,4 +566,64 @@
   <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Info">
     <Value>Instrument information</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateFrom">
+    <Value>Due date from</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateTo">
+    <Value>Due date to</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Dealer">
+    <Value>Dealer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Store">
+    <Value>Store</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Customer">
+    <Value>Customer</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Type">
+    <Value>Type</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.InstrumentNo">
+    <Value>Instrument no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.IssueDate">
+    <Value>Issue date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.LinkedCollection">
+    <Value>Linked collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.NoData">
+    <Value>No financial instruments found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.BackToList">
+    <Value>Back to instruments</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.LinkedCollection.Open">
+    <Value>Open linked collection</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions">
+    <Value>Actions</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkCollected">
+    <Value>Mark as collected</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkReturned">
+    <Value>Mark as returned</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkProtested">
+    <Value>Mark as protested</Value>
+  </LocaleResource>
 </Language>

@@ -566,4 +566,64 @@
   <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Info">
     <Value>Belge bilgileri</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.Store">
+    <Value>Magaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateFrom">
+    <Value>Vade tarihi baslangic</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Fields.DueDateTo">
+    <Value>Vade tarihi bitis</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Dealer">
+    <Value>Bayi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Store">
+    <Value>Magaza</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Customer">
+    <Value>Musteri</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Type">
+    <Value>Tur</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Status">
+    <Value>Durum</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.InstrumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.IssueDate">
+    <Value>Belge tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Columns.LinkedCollection">
+    <Value>Bagli tahsilat</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.NoData">
+    <Value>Finansal belge bulunamadi.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.BackToList">
+    <Value>Belgelere don</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.LinkedCollection.Open">
+    <Value>Bagli tahsilati ac</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions">
+    <Value>Aksiyonlar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkCollected">
+    <Value>Tahsil edildi olarak isaretle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkReturned">
+    <Value>Iade edildi olarak isaretle</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinancialInstruments.Actions.MarkProtested">
+    <Value>Protesto edildi olarak isaretle</Value>
+  </LocaleResource>
 </Language>

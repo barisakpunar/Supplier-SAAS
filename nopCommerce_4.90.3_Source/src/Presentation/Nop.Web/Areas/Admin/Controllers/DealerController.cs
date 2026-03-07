@@ -175,6 +175,15 @@ public partial class DealerController : BaseAdminController
                || collectionMethodId == (int)DealerCollectionMethod.PromissoryNote;
     }
 
+    protected virtual bool CanSetFinancialInstrumentStatus(int currentStatusId, DealerFinancialInstrumentStatus nextStatus)
+    {
+        if (!Enum.IsDefined(typeof(DealerFinancialInstrumentStatus), currentStatusId))
+            return false;
+
+        return currentStatusId != (int)DealerFinancialInstrumentStatus.Cancelled
+               && currentStatusId != (int)nextStatus;
+    }
+
     protected virtual string GetCustomerDisplayText(Customer customer)
     {
         if (customer is null)
@@ -578,12 +587,15 @@ public partial class DealerController : BaseAdminController
         ArgumentNullException.ThrowIfNull(instrument);
         ArgumentNullException.ThrowIfNull(dealer);
 
+        var store = await _storeService.GetStoreByIdAsync(dealer.StoreId);
         var mappedCustomer = instrument.CustomerId.HasValue ? await _customerService.GetCustomerByIdAsync(instrument.CustomerId.Value) : null;
         var createdByCustomer = await _customerService.GetCustomerByIdAsync(instrument.CreatedByCustomerId);
 
         return new DealerFinancialInstrumentDetailsModel
         {
             Id = instrument.Id,
+            StoreId = dealer.StoreId,
+            StoreName = store?.Name ?? "-",
             DealerId = dealer.Id,
             DealerName = dealer.Name,
             DealerCollectionId = instrument.DealerCollectionId,
@@ -602,8 +614,123 @@ public partial class DealerController : BaseAdminController
             Note = instrument.Note,
             CreatedByCustomerName = GetCustomerDisplayText(createdByCustomer),
             CreatedOnUtc = instrument.CreatedOnUtc,
-            UpdatedOnUtc = instrument.UpdatedOnUtc
+            UpdatedOnUtc = instrument.UpdatedOnUtc,
+            CanMarkCollected = CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, DealerFinancialInstrumentStatus.Collected),
+            CanMarkReturned = CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, DealerFinancialInstrumentStatus.Returned),
+            CanMarkProtested = CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, DealerFinancialInstrumentStatus.Protested)
         };
+    }
+
+    protected virtual async Task<DealerFinancialInstrumentListModel> PrepareDealerFinancialInstrumentListModelAsync(DealerFinancialInstrumentListModel searchModel, int pageSize)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        searchModel ??= new DealerFinancialInstrumentListModel();
+        searchModel.IsStoreOwner = isStoreOwner;
+
+        var stores = await _storeService.GetAllStoresAsync();
+        if (!isStoreOwner)
+        {
+            searchModel.AvailableStores = new List<SelectListItem>
+            {
+                new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+            };
+
+            foreach (var store in stores)
+                searchModel.AvailableStores.Add(new SelectListItem { Text = store.Name, Value = store.Id.ToString() });
+        }
+        else
+        {
+            searchModel.SearchStoreId = managedStoreId;
+            searchModel.AvailableStores = [];
+        }
+
+        var effectiveStoreId = isStoreOwner ? managedStoreId : searchModel.SearchStoreId;
+        var dealers = await _dealerService.SearchDealersAsync(storeId: effectiveStoreId, pageSize: int.MaxValue);
+        searchModel.AvailableDealers = new List<SelectListItem>
+        {
+            new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+        };
+
+        foreach (var dealer in dealers.OrderBy(item => item.Name).ThenBy(item => item.Id))
+        {
+            searchModel.AvailableDealers.Add(new SelectListItem
+            {
+                Value = dealer.Id.ToString(),
+                Text = $"{dealer.Name} (#{dealer.Id})"
+            });
+        }
+
+        searchModel.AvailableInstrumentTypes = new List<SelectListItem>
+        {
+            new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+        };
+        foreach (var type in Enum.GetValues<DealerFinancialInstrumentType>())
+        {
+            searchModel.AvailableInstrumentTypes.Add(new SelectListItem
+            {
+                Value = ((int)type).ToString(),
+                Text = await GetDealerFinancialInstrumentTypeTextAsync((int)type)
+            });
+        }
+
+        searchModel.AvailableInstrumentStatuses = new List<SelectListItem>
+        {
+            new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+        };
+        foreach (var status in Enum.GetValues<DealerFinancialInstrumentStatus>())
+        {
+            searchModel.AvailableInstrumentStatuses.Add(new SelectListItem
+            {
+                Value = ((int)status).ToString(),
+                Text = await GetDealerFinancialInstrumentStatusTextAsync((int)status)
+            });
+        }
+
+        var dueFromUtc = NormalizeDateFilterFrom(searchModel.SearchDueDateFromUtc);
+        var dueToUtc = NormalizeDateFilterTo(searchModel.SearchDueDateToUtc);
+        var instruments = await _dealerService.SearchDealerFinancialInstrumentsAsync(
+            dealerId: searchModel.SearchDealerId,
+            storeId: effectiveStoreId,
+            instrumentTypeId: searchModel.SearchInstrumentTypeId,
+            instrumentStatusId: searchModel.SearchInstrumentStatusId,
+            dueFromUtc: dueFromUtc,
+            dueToUtc: dueToUtc,
+            pageSize: pageSize);
+
+        var storesById = stores.ToDictionary(store => store.Id);
+        var dealersById = dealers.ToDictionary(dealer => dealer.Id);
+        var customerIds = instruments.Where(item => item.CustomerId.HasValue).Select(item => item.CustomerId!.Value).Distinct().ToArray();
+        var customersById = customerIds.Any()
+            ? (await _customerService.GetCustomersByIdsAsync(customerIds)).ToDictionary(customer => customer.Id)
+            : new Dictionary<int, Customer>();
+
+        var unavailableText = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Common.NotAvailable");
+        searchModel.Instruments = new List<DealerFinancialInstrumentListItemModel>();
+        foreach (var instrument in instruments)
+        {
+            dealersById.TryGetValue(instrument.DealerId, out var dealer);
+            customersById.TryGetValue(instrument.CustomerId ?? 0, out var customer);
+
+            searchModel.Instruments.Add(new DealerFinancialInstrumentListItemModel
+            {
+                Id = instrument.Id,
+                DealerId = instrument.DealerId,
+                DealerName = dealer?.Name ?? string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.DealerFallback"), instrument.DealerId),
+                StoreId = dealer?.StoreId ?? 0,
+                StoreName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : unavailableText,
+                CustomerId = instrument.CustomerId,
+                CustomerName = GetCustomerDisplayText(customer),
+                InstrumentType = await GetDealerFinancialInstrumentTypeTextAsync(instrument.InstrumentTypeId),
+                InstrumentStatus = await GetDealerFinancialInstrumentStatusTextAsync(instrument.InstrumentStatusId),
+                Amount = instrument.Amount,
+                InstrumentNo = instrument.InstrumentNo,
+                IssueDateUtc = instrument.IssueDateUtc,
+                DueDateUtc = instrument.DueDateUtc,
+                DealerCollectionId = instrument.DealerCollectionId
+            });
+        }
+
+        return searchModel;
     }
 
     protected virtual async Task SaveDealerMappingsAsync(DealerInfo dealer, DealerModel model)
@@ -1032,6 +1159,13 @@ public partial class DealerController : BaseAdminController
     }
 
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> FinancialInstruments(DealerFinancialInstrumentListModel searchModel)
+    {
+        var model = await PrepareDealerFinancialInstrumentListModelAsync(searchModel, 1000);
+        return View(model);
+    }
+
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
     public virtual async Task<IActionResult> CollectionDetails(int id)
     {
         var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
@@ -1056,17 +1190,47 @@ public partial class DealerController : BaseAdminController
         var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
         var instrument = await _dealerService.GetDealerFinancialInstrumentByIdAsync(id);
         if (instrument is null)
-            return RedirectToAction(nameof(Collections));
+            return RedirectToAction(nameof(FinancialInstruments));
 
         var dealer = await _dealerService.GetDealerByIdAsync(instrument.DealerId);
         if (dealer is null)
-            return RedirectToAction(nameof(Collections));
+            return RedirectToAction(nameof(FinancialInstruments));
 
         if (isStoreOwner && managedStoreId > 0 && dealer.StoreId != managedStoreId)
             return AccessDeniedView();
 
         var model = await PrepareDealerFinancialInstrumentDetailsModelAsync(instrument, dealer);
         return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    public virtual async Task<IActionResult> UpdateFinancialInstrumentStatus(int id, int statusId)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var instrument = await _dealerService.GetDealerFinancialInstrumentByIdAsync(id);
+        if (instrument is null)
+            return RedirectToAction(nameof(FinancialInstruments));
+
+        var dealer = await _dealerService.GetDealerByIdAsync(instrument.DealerId);
+        if (dealer is null)
+            return RedirectToAction(nameof(FinancialInstruments));
+
+        if (isStoreOwner && managedStoreId > 0 && dealer.StoreId != managedStoreId)
+            return AccessDeniedView();
+
+        if (!Enum.IsDefined(typeof(DealerFinancialInstrumentStatus), statusId))
+            return RedirectToAction(nameof(FinancialInstrumentDetails), new { id = instrument.Id });
+
+        if (!CanSetFinancialInstrumentStatus(instrument.InstrumentStatusId, (DealerFinancialInstrumentStatus)statusId))
+            return RedirectToAction(nameof(FinancialInstrumentDetails), new { id = instrument.Id });
+
+        instrument.InstrumentStatusId = statusId;
+        instrument.UpdatedOnUtc = DateTime.UtcNow;
+        await _dealerService.UpdateDealerFinancialInstrumentAsync(instrument);
+
+        return RedirectToAction(nameof(FinancialInstrumentDetails), new { id = instrument.Id });
     }
 
     [HttpPost, ActionName("Transactions")]

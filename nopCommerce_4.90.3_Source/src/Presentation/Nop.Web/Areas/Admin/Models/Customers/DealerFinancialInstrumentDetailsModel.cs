@@ -7,6 +7,10 @@ namespace Nop.Web.Areas.Admin.Models.Customers;
 /// </summary>
 public partial record DealerFinancialInstrumentDetailsModel : BaseNopEntityModel
 {
+    public int StoreId { get; set; }
+
+    public string StoreName { get; set; }
+
     public int DealerId { get; set; }
 
     public string DealerName { get; set; }
@@ -44,4 +48,10 @@ public partial record DealerFinancialInstrumentDetailsModel : BaseNopEntityModel
     public DateTime CreatedOnUtc { get; set; }
 
     public DateTime? UpdatedOnUtc { get; set; }
+
+    public bool CanMarkCollected { get; set; }
+
+    public bool CanMarkReturned { get; set; }
+
+    public bool CanMarkProtested { get; set; }
 }

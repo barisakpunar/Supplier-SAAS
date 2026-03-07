@@ -144,6 +144,25 @@ public partial interface IDealerService
         DateTime? collectionToUtc = null, int pageSize = int.MaxValue);
 
     /// <summary>
+    /// Searches dealer financial instruments
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="customerId">Customer identifier</param>
+    /// <param name="instrumentTypeId">Instrument type identifier</param>
+    /// <param name="instrumentStatusId">Instrument status identifier</param>
+    /// <param name="dueFromUtc">Due date from (UTC)</param>
+    /// <param name="dueToUtc">Due date to (UTC)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    Task<IList<DealerFinancialInstrument>> SearchDealerFinancialInstrumentsAsync(int dealerId = 0, int storeId = 0,
+        int customerId = 0, int instrumentTypeId = 0, int instrumentStatusId = 0, DateTime? dueFromUtc = null,
+        DateTime? dueToUtc = null, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Gets dealer collections by dealer identifier
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -153,6 +172,17 @@ public partial interface IDealerService
     /// The task result contains dealer collections
     /// </returns>
     Task<IList<DealerCollection>> GetDealerCollectionsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue);
+
+    /// <summary>
+    /// Gets dealer financial instruments by dealer identifier
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer financial instruments
+    /// </returns>
+    Task<IList<DealerFinancialInstrument>> GetDealerFinancialInstrumentsByDealerIdAsync(int dealerId, int pageSize = int.MaxValue);
 
     /// <summary>
     /// Inserts a dealer transaction

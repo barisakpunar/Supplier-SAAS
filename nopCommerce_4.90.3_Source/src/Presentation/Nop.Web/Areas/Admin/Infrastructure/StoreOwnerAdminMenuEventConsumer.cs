@@ -38,6 +38,7 @@ public partial class StoreOwnerAdminMenuEventConsumer : IConsumer<AdminMenuCreat
         "Dealers",
         "DealerTransactions",
         "DealerCollections",
+        "DealerFinancialInstruments",
         "Promotions",
         "Discounts"
     };
