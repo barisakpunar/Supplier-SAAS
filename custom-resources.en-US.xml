@@ -680,4 +680,40 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Instrument">
     <Value>Instrument</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations">
+    <Value>Allocations</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.AllocatedAmount">
+    <Value>Allocated amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.UnallocatedAmount">
+    <Value>Unallocated amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.DebitSource">
+    <Value>Debit source</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Amount">
+    <Value>Amount</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.CreatedOn">
+    <Value>Created on</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Status">
+    <Value>Status</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Active">
+    <Value>Active</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Cancelled">
+    <Value>Cancelled</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.NoData">
+    <Value>No allocations found.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCreated">
+    <Value>Collection allocation created</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCancelled">
+    <Value>Collection allocation cancelled</Value>
+  </LocaleResource>
 </Language>

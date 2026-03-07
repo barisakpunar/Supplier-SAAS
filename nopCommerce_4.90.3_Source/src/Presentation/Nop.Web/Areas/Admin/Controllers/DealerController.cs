@@ -181,6 +181,38 @@ public partial class DealerController : BaseAdminController
         return await _localizationService.GetResourceAsync(resourceKey);
     }
 
+    protected virtual async Task<IList<DealerTransactionAllocationItemModel>> PrepareDealerTransactionAllocationItemsAsync(IList<DealerTransactionAllocation> allocations)
+    {
+        if (allocations is null || !allocations.Any())
+            return new List<DealerTransactionAllocationItemModel>();
+
+        var debitTransactionIds = allocations.Select(item => item.DebitDealerTransactionId).Distinct().ToArray();
+        var debitTransactions = await Task.WhenAll(debitTransactionIds.Select(transactionId => _dealerService.GetDealerTransactionByIdAsync(transactionId)));
+        var debitTransactionsById = debitTransactions
+            .Where(transaction => transaction is not null)
+            .ToDictionary(transaction => transaction.Id, transaction => transaction);
+
+        var result = new List<DealerTransactionAllocationItemModel>();
+        foreach (var allocation in allocations.OrderBy(item => item.CreatedOnUtc).ThenBy(item => item.Id))
+        {
+            debitTransactionsById.TryGetValue(allocation.DebitDealerTransactionId, out var debitTransaction);
+
+            result.Add(new DealerTransactionAllocationItemModel
+            {
+                Id = allocation.Id,
+                DebitDealerTransactionId = allocation.DebitDealerTransactionId,
+                DebitSourceText = debitTransaction is null ? $"#{allocation.DebitDealerTransactionId}" : await GetDealerTransactionSourceTextAsync(debitTransaction),
+                DebitSourceUrl = debitTransaction is null ? string.Empty : GetDealerTransactionSourceUrl(debitTransaction),
+                Amount = allocation.Amount,
+                CreatedOnUtc = allocation.CreatedOnUtc,
+                IsCancelled = allocation.CancelledOnUtc.HasValue,
+                CancelledOnUtc = allocation.CancelledOnUtc
+            });
+        }
+
+        return result;
+    }
+
     protected virtual bool RequiresFinancialInstrument(int collectionMethodId)
     {
         return collectionMethodId == (int)DealerCollectionMethod.Check
@@ -606,6 +638,11 @@ public partial class DealerController : BaseAdminController
         var cancelledTransaction = collection.CancelledDealerTransactionId.HasValue
             ? await _dealerService.GetDealerTransactionByIdAsync(collection.CancelledDealerTransactionId.Value)
             : null;
+        var allocations = await _dealerService.SearchDealerTransactionAllocationsAsync(
+            dealerId: dealer.Id,
+            dealerCollectionId: collection.Id,
+            pageSize: int.MaxValue);
+        var allocationItems = await PrepareDealerTransactionAllocationItemsAsync(allocations);
         var auditTrail = await PrepareDealerFinanceAuditLogItemsAsync(await _dealerService.SearchDealerFinanceAuditLogsAsync(
             dealerId: dealer.Id,
             dealerCollectionId: collection.Id,
@@ -642,7 +679,10 @@ public partial class DealerController : BaseAdminController
             CancelledByCustomerName = GetCustomerDisplayText(cancelledByCustomer),
             CancelledOnUtc = collection.CancelledOnUtc,
             CanCancel = collection.CollectionStatusId == (int)DealerCollectionStatus.Posted,
-            AuditTrail = auditTrail
+            AuditTrail = auditTrail,
+            Allocations = allocationItems,
+            AllocatedAmount = allocations.Where(item => !item.CancelledOnUtc.HasValue).Sum(item => item.Amount),
+            UnallocatedAmount = collection.Amount - allocations.Where(item => !item.CancelledOnUtc.HasValue).Sum(item => item.Amount)
         };
     }
 
@@ -1502,6 +1542,28 @@ public partial class DealerController : BaseAdminController
             PerformedOnUtc = DateTime.UtcNow
         });
 
+        var createdAllocations = await _dealerService.CreateAutomaticAllocationsAsync(
+            dealerId: collection.DealerId,
+            creditDealerTransactionId: transaction.Id,
+            creditAmount: collection.Amount,
+            dealerCollectionId: collection.Id,
+            createdByCustomerId: currentCustomer.Id,
+            createdOnUtc: DateTime.UtcNow);
+
+        foreach (var allocation in createdAllocations)
+        {
+            await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
+            {
+                DealerId = collection.DealerId,
+                EntityTypeId = (int)DealerFinanceAuditEntityType.Collection,
+                DealerCollectionId = collection.Id,
+                ActionTypeId = (int)DealerFinanceAuditActionType.CollectionAllocationCreated,
+                Note = $"Debit transaction #{allocation.DebitDealerTransactionId} / {allocation.Amount:0.####}",
+                PerformedByCustomerId = currentCustomer.Id,
+                PerformedOnUtc = DateTime.UtcNow
+            });
+        }
+
         if (RequiresFinancialInstrument(collection.CollectionMethodId))
         {
             var financialInstrument = new DealerFinancialInstrument
@@ -1616,6 +1678,25 @@ public partial class DealerController : BaseAdminController
         collection.CancelledOnUtc = DateTime.UtcNow;
 
         await _dealerService.UpdateDealerCollectionAsync(collection);
+        var activeAllocations = await _dealerService.SearchDealerTransactionAllocationsAsync(
+            dealerId: collection.DealerId,
+            dealerCollectionId: collection.Id,
+            activeOnly: true,
+            pageSize: int.MaxValue);
+        await _dealerService.CancelDealerTransactionAllocationsByCollectionAsync(collection.Id, currentCustomer.Id, DateTime.UtcNow);
+        foreach (var allocation in activeAllocations)
+        {
+            await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
+            {
+                DealerId = collection.DealerId,
+                EntityTypeId = (int)DealerFinanceAuditEntityType.Collection,
+                DealerCollectionId = collection.Id,
+                ActionTypeId = (int)DealerFinanceAuditActionType.CollectionAllocationCancelled,
+                Note = $"Debit transaction #{allocation.DebitDealerTransactionId} / {allocation.Amount:0.####}",
+                PerformedByCustomerId = currentCustomer.Id,
+                PerformedOnUtc = DateTime.UtcNow
+            });
+        }
         await _dealerService.InsertDealerFinanceAuditLogAsync(new DealerFinanceAuditLog
         {
             DealerId = collection.DealerId,

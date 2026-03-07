@@ -680,4 +680,40 @@
   <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Instrument">
     <Value>Belge</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations">
+    <Value>Eslestirmeler</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.AllocatedAmount">
+    <Value>Eslesen tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.UnallocatedAmount">
+    <Value>Eslesmeyen tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.DebitSource">
+    <Value>Borc kaynagi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Amount">
+    <Value>Tutar</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.CreatedOn">
+    <Value>Olusturma tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Columns.Status">
+    <Value>Durum</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Active">
+    <Value>Aktif</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.Status.Cancelled">
+    <Value>Iptal edildi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerCollections.Allocations.NoData">
+    <Value>Eslestirme bulunamadi.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCreated">
+    <Value>Tahsilat eslestirmesi olusturuldu</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.CollectionAllocationCancelled">
+    <Value>Tahsilat eslestirmesi iptal edildi</Value>
+  </LocaleResource>
 </Language>

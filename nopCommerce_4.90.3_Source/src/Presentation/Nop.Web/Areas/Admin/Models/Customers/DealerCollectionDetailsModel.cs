@@ -10,6 +10,7 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
     public DealerCollectionDetailsModel()
     {
         AuditTrail = new List<DealerFinanceAuditLogItemModel>();
+        Allocations = new List<DealerTransactionAllocationItemModel>();
     }
 
     public bool CanCancel { get; set; }
@@ -69,4 +70,10 @@ public partial record DealerCollectionDetailsModel : BaseNopEntityModel
     public DateTime? CancelledOnUtc { get; set; }
 
     public IList<DealerFinanceAuditLogItemModel> AuditTrail { get; set; }
+
+    public IList<DealerTransactionAllocationItemModel> Allocations { get; set; }
+
+    public decimal AllocatedAmount { get; set; }
+
+    public decimal UnallocatedAmount { get; set; }
 }

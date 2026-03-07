@@ -83,6 +83,22 @@ public partial interface IDealerService
         int dealerFinancialInstrumentId = 0, int pageSize = int.MaxValue);
 
     /// <summary>
+    /// Searches dealer transaction allocations
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="creditDealerTransactionId">Credit transaction identifier</param>
+    /// <param name="debitDealerTransactionId">Debit transaction identifier</param>
+    /// <param name="activeOnly">Active records only</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer transaction allocations
+    /// </returns>
+    Task<IList<DealerTransactionAllocation>> SearchDealerTransactionAllocationsAsync(int dealerId = 0, int dealerCollectionId = 0,
+        int creditDealerTransactionId = 0, int debitDealerTransactionId = 0, bool activeOnly = false, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Gets dealer transaction by identifier
     /// </summary>
     /// <param name="dealerTransactionId">Dealer transaction identifier</param>
@@ -227,11 +243,25 @@ public partial interface IDealerService
     Task InsertDealerFinanceAuditLogAsync(DealerFinanceAuditLog dealerFinanceAuditLog);
 
     /// <summary>
+    /// Inserts a dealer transaction allocation
+    /// </summary>
+    /// <param name="dealerTransactionAllocation">Dealer transaction allocation</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerTransactionAllocationAsync(DealerTransactionAllocation dealerTransactionAllocation);
+
+    /// <summary>
     /// Updates a dealer financial instrument
     /// </summary>
     /// <param name="dealerFinancialInstrument">Dealer financial instrument</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task UpdateDealerFinancialInstrumentAsync(DealerFinancialInstrument dealerFinancialInstrument);
+
+    /// <summary>
+    /// Updates a dealer transaction allocation
+    /// </summary>
+    /// <param name="dealerTransactionAllocation">Dealer transaction allocation</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerTransactionAllocationAsync(DealerTransactionAllocation dealerTransactionAllocation);
 
     /// <summary>
     /// Updates a dealer transaction
@@ -246,6 +276,31 @@ public partial interface IDealerService
     /// <param name="dealerCollection">Dealer collection</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task UpdateDealerCollectionAsync(DealerCollection dealerCollection);
+
+    /// <summary>
+    /// Creates automatic allocations for a credit transaction
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="creditDealerTransactionId">Credit transaction identifier</param>
+    /// <param name="creditAmount">Credit amount</param>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="createdByCustomerId">Created by customer identifier</param>
+    /// <param name="createdOnUtc">Created date in UTC</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains created allocations
+    /// </returns>
+    Task<IList<DealerTransactionAllocation>> CreateAutomaticAllocationsAsync(int dealerId, int creditDealerTransactionId,
+        decimal creditAmount, int? dealerCollectionId, int createdByCustomerId, DateTime createdOnUtc);
+
+    /// <summary>
+    /// Cancels allocations by collection identifier
+    /// </summary>
+    /// <param name="dealerCollectionId">Dealer collection identifier</param>
+    /// <param name="cancelledByCustomerId">Cancelled by customer identifier</param>
+    /// <param name="cancelledOnUtc">Cancelled date in UTC</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task CancelDealerTransactionAllocationsByCollectionAsync(int dealerCollectionId, int cancelledByCustomerId, DateTime cancelledOnUtc);
 
     /// <summary>
     /// Indicates whether a dealer transaction exists for the order and transaction type

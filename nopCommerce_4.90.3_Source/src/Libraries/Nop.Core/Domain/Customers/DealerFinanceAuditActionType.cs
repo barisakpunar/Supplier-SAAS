@@ -23,5 +23,15 @@ public enum DealerFinanceAuditActionType
     /// <summary>
     /// Financial instrument status changed
     /// </summary>
-    FinancialInstrumentStatusChanged = 40
+    FinancialInstrumentStatusChanged = 40,
+
+    /// <summary>
+    /// Collection allocation created
+    /// </summary>
+    CollectionAllocationCreated = 50,
+
+    /// <summary>
+    /// Collection allocation cancelled
+    /// </summary>
+    CollectionAllocationCancelled = 60
 }
