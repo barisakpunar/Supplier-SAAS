@@ -1060,6 +1060,7 @@ public partial class DealerController : BaseAdminController
             createdToUtc: createdToUtc,
             pageSize: pageSize);
         var collectionsByTransactionId = new Dictionary<int, DealerCollection>();
+        var instrumentsById = new Dictionary<int, DealerFinancialInstrument>();
         if (transactions.Any())
         {
             var collections = await _dealerService.SearchDealerCollectionsAsync(
@@ -1075,10 +1076,24 @@ public partial class DealerController : BaseAdminController
                 if (collection.CancelledDealerTransactionId.HasValue && !collectionsByTransactionId.ContainsKey(collection.CancelledDealerTransactionId.Value))
                     collectionsByTransactionId[collection.CancelledDealerTransactionId.Value] = collection;
             }
+
+            var instruments = await _dealerService.SearchDealerFinancialInstrumentsAsync(
+                dealerId: searchModel.SearchDealerId,
+                storeId: effectiveStoreId,
+                pageSize: int.MaxValue);
+            instrumentsById = instruments.ToDictionary(instrument => instrument.Id);
         }
 
         var dealerById = filteredDealers.ToDictionary(dealer => dealer.Id);
         var storesById = stores.ToDictionary(store => store.Id);
+        var customerIds = transactions
+            .Where(transaction => transaction.CustomerId.HasValue)
+            .Select(transaction => transaction.CustomerId!.Value)
+            .Distinct()
+            .ToArray();
+        var customersById = customerIds.Any()
+            ? (await _customerService.GetCustomersByIdsAsync(customerIds)).ToDictionary(customer => customer.Id)
+            : new Dictionary<int, Customer>();
 
         var unavailableText = await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Common.NotAvailable");
         searchModel.Transactions = new List<DealerTransactionListItemModel>();
@@ -1106,6 +1121,10 @@ public partial class DealerController : BaseAdminController
         {
             dealerById.TryGetValue(transaction.DealerId, out var dealer);
             collectionsByTransactionId.TryGetValue(transaction.Id, out var sourceCollection);
+            customersById.TryGetValue(transaction.CustomerId ?? 0, out var customer);
+            var linkedInstrument = sourceCollection?.DealerFinancialInstrumentId is int instrumentId && instrumentsById.TryGetValue(instrumentId, out var instrument)
+                ? instrument
+                : null;
             var storeName = dealer is not null && storesById.TryGetValue(dealer.StoreId, out var store) ? store.Name : unavailableText;
             var isDebit = transaction.DirectionId == (int)DealerTransactionDirection.Debit;
             var debitAmount = isDebit ? transaction.Amount : decimal.Zero;
@@ -1123,6 +1142,7 @@ public partial class DealerController : BaseAdminController
                 StoreName = storeName,
                 OrderId = transaction.OrderId,
                 CustomerId = transaction.CustomerId,
+                CustomerName = GetCustomerDisplayText(customer),
                 TransactionType = await GetDealerTransactionTypeTextAsync(transaction.TransactionTypeId),
                 Direction = await GetDealerTransactionDirectionTextAsync(transaction.DirectionId),
                 Amount = transaction.Amount,
@@ -1131,6 +1151,17 @@ public partial class DealerController : BaseAdminController
                 RunningBalance = searchModel.IsStatementMode ? runningBalance : null,
                 SourceText = await GetDealerTransactionSourceTextAsync(transaction, sourceCollection),
                 SourceUrl = GetDealerTransactionSourceUrl(transaction, sourceCollection),
+                ReferenceNo = sourceCollection?.ReferenceNo ?? transaction.ReferenceNo,
+                DocumentNo = sourceCollection?.DocumentNo,
+                DueDateUtc = sourceCollection?.DueDateUtc,
+                FinancialInstrumentText = linkedInstrument is null
+                    ? string.Empty
+                    : (!string.IsNullOrWhiteSpace(linkedInstrument.InstrumentNo)
+                        ? linkedInstrument.InstrumentNo
+                        : string.Format(await _localizationService.GetResourceAsync("Admin.Customers.DealerCollections.Fields.FinancialInstrument.Link"), linkedInstrument.Id)),
+                FinancialInstrumentUrl = linkedInstrument is null
+                    ? string.Empty
+                    : Url.Action(nameof(FinancialInstrumentDetails), "Dealer", new { id = linkedInstrument.Id }),
                 Note = transaction.Note,
                 CreatedOnUtc = transaction.CreatedOnUtc
             });
@@ -1344,7 +1375,7 @@ public partial class DealerController : BaseAdminController
         }
 
         var builder = new StringBuilder();
-        builder.AppendLine("Id,CreatedOnUtc,DealerId,DealerName,StoreName,Type,Source,Direction,DebitAmount,CreditAmount,RunningBalance,OrderId,CustomerId,Note");
+        builder.AppendLine("Id,CreatedOnUtc,DealerId,DealerName,StoreName,Type,Source,ReferenceNo,DocumentNo,DueDate,Instrument,Direction,DebitAmount,CreditAmount,RunningBalance,OrderId,CustomerId,CustomerName,Note");
 
         foreach (var item in model.Transactions)
         {
@@ -1355,12 +1386,17 @@ public partial class DealerController : BaseAdminController
             builder.Append(EscapeCsv(item.StoreName)).Append(',');
             builder.Append(EscapeCsv(item.TransactionType)).Append(',');
             builder.Append(EscapeCsv(item.SourceText)).Append(',');
+            builder.Append(EscapeCsv(item.ReferenceNo)).Append(',');
+            builder.Append(EscapeCsv(item.DocumentNo)).Append(',');
+            builder.Append(item.DueDateUtc?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty).Append(',');
+            builder.Append(EscapeCsv(item.FinancialInstrumentText)).Append(',');
             builder.Append(EscapeCsv(item.Direction)).Append(',');
             builder.Append(item.DebitAmount.ToString("0.####", CultureInfo.InvariantCulture)).Append(',');
             builder.Append(item.CreditAmount.ToString("0.####", CultureInfo.InvariantCulture)).Append(',');
             builder.Append(item.RunningBalance?.ToString("0.####", CultureInfo.InvariantCulture) ?? string.Empty).Append(',');
             builder.Append(item.OrderId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty).Append(',');
             builder.Append(item.CustomerId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty).Append(',');
+            builder.Append(EscapeCsv(item.CustomerName)).Append(',');
             builder.Append(EscapeCsv(item.Note));
             builder.AppendLine();
         }

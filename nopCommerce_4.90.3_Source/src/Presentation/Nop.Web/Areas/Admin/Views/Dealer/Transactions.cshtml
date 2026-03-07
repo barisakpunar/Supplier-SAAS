@@ -131,11 +131,15 @@
                                         <th style="width: 160px;">@T("Admin.Customers.Dealers.Transactions.Columns.Store")</th>
                                         <th style="width: 210px;">@T("Admin.Customers.Dealers.Transactions.Columns.Type")</th>
                                         <th style="width: 130px;">@T("Admin.Customers.Dealers.Transactions.Columns.Source")</th>
+                                        <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.ReferenceNo")</th>
+                                        <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.DocumentNo")</th>
+                                        <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.DueDate")</th>
+                                        <th style="width: 150px;">@T("Admin.Customers.Dealers.Transactions.Columns.Instrument")</th>
                                         <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.Debit")</th>
                                         <th style="width: 120px;">@T("Admin.Customers.Dealers.Transactions.Columns.Credit")</th>
                                         <th style="width: 140px;">@T("Admin.Customers.Dealers.Transactions.Columns.RunningBalance")</th>
                                         <th style="width: 90px;">@T("Admin.Customers.Dealers.Transactions.Columns.Order")</th>
-                                        <th style="width: 100px;">@T("Admin.Customers.Dealers.Transactions.Columns.Customer")</th>
+                                        <th style="width: 180px;">@T("Admin.Customers.Dealers.Transactions.Columns.Customer")</th>
                                         <th>@T("Admin.Customers.Dealers.Transactions.Columns.Note")</th>
                                     </tr>
                                 </thead>
@@ -168,11 +172,28 @@
                                                         @:-
                                                     }
                                                 </td>
+                                                <td>@(string.IsNullOrWhiteSpace(transaction.ReferenceNo) ? "-" : transaction.ReferenceNo)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(transaction.DocumentNo) ? "-" : transaction.DocumentNo)</td>
+                                                <td>@(transaction.DueDateUtc.HasValue ? transaction.DueDateUtc.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "-")</td>
+                                                <td>
+                                                    @if (!string.IsNullOrWhiteSpace(transaction.FinancialInstrumentUrl))
+                                                    {
+                                                        <a href="@transaction.FinancialInstrumentUrl">@transaction.FinancialInstrumentText</a>
+                                                    }
+                                                    else if (!string.IsNullOrWhiteSpace(transaction.FinancialInstrumentText))
+                                                    {
+                                                        @transaction.FinancialInstrumentText
+                                                    }
+                                                    else
+                                                    {
+                                                        @:-
+                                                    }
+                                                </td>
                                                 <td>@(transaction.DebitAmount > 0 ? transaction.DebitAmount.ToString("0.####", CultureInfo.CurrentCulture) : "-")</td>
                                                 <td>@(transaction.CreditAmount > 0 ? transaction.CreditAmount.ToString("0.####", CultureInfo.CurrentCulture) : "-")</td>
                                                 <td>@(transaction.RunningBalance.HasValue ? transaction.RunningBalance.Value.ToString("0.####", CultureInfo.CurrentCulture) : "-")</td>
                                                 <td>@(transaction.OrderId?.ToString() ?? "-")</td>
-                                                <td>@(transaction.CustomerId?.ToString() ?? "-")</td>
+                                                <td>@(string.IsNullOrWhiteSpace(transaction.CustomerName) ? (transaction.CustomerId?.ToString() ?? "-") : transaction.CustomerName)</td>
                                                 <td>@(string.IsNullOrWhiteSpace(transaction.Note) ? "-" : transaction.Note)</td>
                                             </tr>
                                         }
@@ -180,7 +201,7 @@
                                     else
                                     {
                                         <tr>
-                                            <td colspan="11" class="text-center">@T("Admin.Customers.Dealers.Transactions.NoData")</td>
+                                            <td colspan="15" class="text-center">@T("Admin.Customers.Dealers.Transactions.NoData")</td>
                                         </tr>
                                     }
                                 </tbody>

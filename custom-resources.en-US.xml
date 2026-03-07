@@ -668,4 +668,16 @@
   <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentStatusChanged">
     <Value>Financial instrument status changed</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.ReferenceNo">
+    <Value>Reference no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DocumentNo">
+    <Value>Document no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DueDate">
+    <Value>Due date</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Instrument">
+    <Value>Instrument</Value>
+  </LocaleResource>
 </Language>

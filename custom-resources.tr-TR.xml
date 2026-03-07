@@ -668,4 +668,16 @@
   <LocaleResource Name="Admin.Customers.DealerFinanceAudit.ActionType.FinancialInstrumentStatusChanged">
     <Value>Finansal belge durumu degisti</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.ReferenceNo">
+    <Value>Referans no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DocumentNo">
+    <Value>Belge no</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.DueDate">
+    <Value>Vade tarihi</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Customers.Dealers.Transactions.Columns.Instrument">
+    <Value>Belge</Value>
+  </LocaleResource>
 </Language>

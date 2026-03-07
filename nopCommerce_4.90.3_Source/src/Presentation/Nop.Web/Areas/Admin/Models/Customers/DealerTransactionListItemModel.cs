@@ -21,6 +21,8 @@ public partial record DealerTransactionListItemModel : BaseNopEntityModel
 
     public int? CustomerId { get; set; }
 
+    public string CustomerName { get; set; }
+
     public string TransactionType { get; set; }
 
     public string Direction { get; set; }
@@ -36,6 +38,16 @@ public partial record DealerTransactionListItemModel : BaseNopEntityModel
     public string SourceText { get; set; }
 
     public string SourceUrl { get; set; }
+
+    public string ReferenceNo { get; set; }
+
+    public string DocumentNo { get; set; }
+
+    public DateTime? DueDateUtc { get; set; }
+
+    public string FinancialInstrumentText { get; set; }
+
+    public string FinancialInstrumentUrl { get; set; }
 
     public string Note { get; set; }
 
