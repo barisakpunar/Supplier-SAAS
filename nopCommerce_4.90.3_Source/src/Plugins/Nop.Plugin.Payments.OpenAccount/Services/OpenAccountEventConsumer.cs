@@ -9,8 +9,7 @@ namespace Nop.Plugin.Payments.OpenAccount.Services;
 /// Handles open account dealer transaction postings
 /// </summary>
 public class OpenAccountEventConsumer :
-    IConsumer<OrderPlacedEvent>,
-    IConsumer<OrderPaidEvent>
+    IConsumer<OrderPlacedEvent>
 {
     #region Fields
 
@@ -66,27 +65,6 @@ public class OpenAccountEventConsumer :
         });
     }
 
-    protected virtual async Task InsertOrderPaidCreditTransactionAsync(Order order, int dealerId)
-    {
-        if (await _dealerService.DealerTransactionExistsAsync(dealerId, order.Id, (int)DealerTransactionType.OpenAccountCollection))
-            return;
-
-        await _dealerService.InsertDealerTransactionAsync(new DealerTransaction
-        {
-            DealerId = dealerId,
-            OrderId = order.Id,
-            CustomerId = order.CustomerId,
-            SourceTypeId = (int)DealerTransactionSourceType.Order,
-            SourceId = order.Id,
-            ReferenceNo = order.CustomOrderNumber,
-            TransactionTypeId = (int)DealerTransactionType.OpenAccountCollection,
-            DirectionId = (int)DealerTransactionDirection.Credit,
-            Amount = order.OrderTotal,
-            Note = $"Open account collection posted. Order #{order.CustomOrderNumber}",
-            CreatedOnUtc = DateTime.UtcNow
-        });
-    }
-
     #endregion
 
     #region Methods
@@ -107,24 +85,6 @@ public class OpenAccountEventConsumer :
             return;
 
         await InsertOrderDebitTransactionAsync(order, dealerId);
-    }
-
-    /// <summary>
-    /// Handles order paid event
-    /// </summary>
-    /// <param name="eventMessage">Event message</param>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    public async Task HandleEventAsync(OrderPaidEvent eventMessage)
-    {
-        var order = eventMessage?.Order;
-        if (!IsOpenAccountOrder(order) || order.OrderTotal <= 0)
-            return;
-
-        var dealerId = await GetDealerIdAsync(order);
-        if (dealerId <= 0)
-            return;
-
-        await InsertOrderPaidCreditTransactionAsync(order, dealerId);
     }
 
     #endregion

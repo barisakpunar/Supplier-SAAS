@@ -80,14 +80,13 @@ WHERE "KeyGroup" = 'Customer'
 
 -- Neutralize previous open-account history for target buyers so debt starts from zero.
 UPDATE "Order"
-SET "PaymentStatusId" = 30,
-    "OrderStatusId" = CASE WHEN "OrderStatusId" < 20 THEN 20 ELSE "OrderStatusId" END,
-    "PaidDateUtc" = COALESCE("PaidDateUtc", NOW())
+SET "Deleted" = TRUE,
+    "OrderStatusId" = 40,
+    "PaymentStatusId" = CASE WHEN "PaymentStatusId" = 0 THEN 10 ELSE "PaymentStatusId" END
 WHERE "CustomerId" IN (
     SELECT "Id" FROM "Customer" WHERE "Email" IN ('buyer-a1@example.com', 'buyer-b1@example.com')
 )
-  AND "PaymentMethodSystemName" = 'Payments.OpenAccount'
-  AND "PaymentStatusId" IN (10, 20);
+  AND "PaymentMethodSystemName" = 'Payments.OpenAccount';
 
 -- Reset dealer finance state.
 DELETE FROM "DealerFinanceAuditLog";

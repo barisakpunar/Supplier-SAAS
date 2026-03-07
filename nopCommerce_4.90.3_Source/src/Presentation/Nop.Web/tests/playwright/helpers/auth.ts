@@ -8,8 +8,8 @@ export async function login(page: Page, email: string, password: string, returnU
   await page.waitForLoadState('networkidle');
 }
 
-export async function loginAsStoreOwner(page: Page): Promise<void> {
-  await login(page, 'owner-a@test.local', 'Test123!', '/admin');
+export async function loginAsStoreOwner(page: Page, returnUrl = '/admin'): Promise<void> {
+  await login(page, 'owner-a@test.local', 'Test123!', returnUrl);
   await expect(page).toHaveURL(/\/admin/i);
 }
 
