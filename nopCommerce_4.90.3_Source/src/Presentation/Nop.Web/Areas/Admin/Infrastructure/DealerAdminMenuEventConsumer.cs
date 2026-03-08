@@ -78,10 +78,23 @@ public partial class DealerAdminMenuEventConsumer : IConsumer<AdminMenuCreatedEv
             });
         }
 
+        if (!customersRoot.ContainsSystemName("DealerSegments"))
+        {
+            customersRoot.InsertAfter("DealerCollections", new AdminMenuItem
+            {
+                Visible = true,
+                SystemName = "DealerSegments",
+                Title = await _localizationService.GetResourceAsync("Admin.Customers.DealerSegments"),
+                Url = eventMessage.GetMenuItemUrl("Dealer", "Segments"),
+                IconClass = "far fa-dot-circle",
+                PermissionNames = new List<string> { StandardPermission.Customers.CUSTOMERS_VIEW }
+            });
+        }
+
         if (customersRoot.ContainsSystemName("DealerFinancialInstruments"))
             return;
 
-        customersRoot.InsertAfter("DealerCollections", new AdminMenuItem
+        customersRoot.InsertAfter("DealerSegments", new AdminMenuItem
         {
             Visible = true,
             SystemName = "DealerFinancialInstruments",

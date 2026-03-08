@@ -350,6 +350,19 @@ public partial class DealerController : BaseAdminController
         model.AvailableCustomers = availableCustomers;
         model.SelectedCustomerIds = model.SelectedCustomerIds ?? [];
 
+        var availableSegments = await _dealerService.SearchDealerSegmentsAsync(storeId: model.StoreId, active: true, pageSize: int.MaxValue);
+        model.AvailableSegments = availableSegments
+            .OrderBy(segment => segment.DisplayOrder)
+            .ThenBy(segment => segment.Name)
+            .ThenBy(segment => segment.Id)
+            .Select(segment => new SelectListItem
+            {
+                Value = segment.Id.ToString(),
+                Text = $"{segment.Name} ({segment.Code})"
+            })
+            .ToList();
+        model.SelectedSegmentIds = model.SelectedSegmentIds ?? [];
+
         var paymentMethods = await _paymentPluginManager.LoadAllPluginsAsync(storeId: model.StoreId);
         var availablePaymentMethods = paymentMethods
             .OrderBy(method => method.PluginDescriptor.FriendlyName)
@@ -870,6 +883,13 @@ public partial class DealerController : BaseAdminController
         foreach (var customerId in selectedCustomerIds.Except(existingCustomerIds).ToList())
             await _dealerService.MapCustomerToDealerAsync(dealer.Id, customerId);
 
+        var selectedSegmentIds = (model.SelectedSegmentIds ?? [])
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        await _dealerService.SetDealerSegmentsAsync(dealer.Id, selectedSegmentIds);
+
         var (_, isStoreOwner, managedStoreId, managedDealerId) = await GetAccessContextAsync();
         if (isStoreOwner && (managedStoreId <= 0 || dealer.StoreId != managedStoreId))
             throw new InvalidOperationException(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Errors.CannotManageOutsideStore"));
@@ -952,6 +972,27 @@ public partial class DealerController : BaseAdminController
             .ToList();
     }
 
+    protected virtual void NormalizeSelectedSegmentsFromRequest(DealerModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        model.SelectedSegmentIds = [];
+
+        if (!Request.HasFormContentType || !Request.Form.ContainsKey(nameof(DealerModel.SelectedSegmentIds)))
+            return;
+
+        var postedValues = Request.Form[nameof(DealerModel.SelectedSegmentIds)];
+        if (postedValues.Count == 0)
+            return;
+
+        model.SelectedSegmentIds = postedValues
+            .SelectMany(item => (item ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Select(item => int.TryParse(item, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+    }
+
     protected virtual async Task ValidateDealerFinancialInputsAsync(DealerModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
@@ -963,6 +1004,109 @@ public partial class DealerController : BaseAdminController
         if (decimal.Round(model.CreditLimit, 4) != model.CreditLimit)
             ModelState.AddModelError(nameof(model.CreditLimit),
                 await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Validation.CreditLimitScale"));
+    }
+
+    protected virtual async Task PrepareDealerSegmentModelAsync(DealerSegmentModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        model.IsStoreOwner = isStoreOwner;
+
+        var stores = await _storeService.GetAllStoresAsync();
+        if (isStoreOwner && managedStoreId > 0)
+            model.StoreId = managedStoreId;
+
+        if (!isStoreOwner)
+        {
+            model.AvailableStores = stores
+                .Select(store => new SelectListItem { Text = store.Name, Value = store.Id.ToString() })
+                .ToList();
+        }
+        else
+        {
+            model.StoreName = stores.FirstOrDefault(store => store.Id == model.StoreId)?.Name ?? "-";
+            model.AvailableStores = [];
+        }
+
+        if (model.StoreId <= 0)
+            model.StoreId = stores.FirstOrDefault()?.Id ?? 0;
+    }
+
+    protected virtual async Task ValidateDealerSegmentModelAsync(DealerSegmentModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        if (model.StoreId <= 0 || await _storeService.GetStoreByIdAsync(model.StoreId) is null)
+            ModelState.AddModelError(nameof(model.StoreId), await _localizationService.GetResourceAsync("Admin.Customers.DealerSegments.Validation.StoreRequired"));
+
+        if (string.IsNullOrWhiteSpace(model.Name))
+            ModelState.AddModelError(nameof(model.Name), await _localizationService.GetResourceAsync("Admin.Customers.DealerSegments.Validation.NameRequired"));
+
+        if (string.IsNullOrWhiteSpace(model.Code))
+            ModelState.AddModelError(nameof(model.Code), await _localizationService.GetResourceAsync("Admin.Customers.DealerSegments.Validation.CodeRequired"));
+
+        var normalizedCode = model.Code?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(normalizedCode))
+        {
+            var existingSegments = await _dealerService.SearchDealerSegmentsAsync(storeId: model.StoreId, pageSize: int.MaxValue);
+            if (existingSegments.Any(segment =>
+                    segment.Id != model.Id &&
+                    segment.Code.Equals(normalizedCode, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                ModelState.AddModelError(nameof(model.Code), await _localizationService.GetResourceAsync("Admin.Customers.DealerSegments.Validation.CodeUnique"));
+            }
+        }
+    }
+
+    protected virtual async Task<DealerSegmentListModel> PrepareDealerSegmentListModelAsync(DealerSegmentListModel searchModel)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        searchModel ??= new DealerSegmentListModel();
+        searchModel.IsStoreOwner = isStoreOwner;
+
+        var stores = await _storeService.GetAllStoresAsync();
+        if (!isStoreOwner)
+        {
+            searchModel.AvailableStores = new List<SelectListItem>
+            {
+                new() { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = "0" }
+            };
+
+            foreach (var store in stores)
+                searchModel.AvailableStores.Add(new SelectListItem { Text = store.Name, Value = store.Id.ToString() });
+        }
+        else
+        {
+            searchModel.SearchStoreId = managedStoreId;
+            searchModel.AvailableStores = [];
+        }
+
+        var effectiveStoreId = isStoreOwner ? managedStoreId : searchModel.SearchStoreId;
+        var segments = await _dealerService.SearchDealerSegmentsAsync(
+            name: searchModel.SearchName,
+            storeId: effectiveStoreId,
+            active: searchModel.SearchActive,
+            pageSize: int.MaxValue);
+
+        var storesById = stores.ToDictionary(store => store.Id);
+        searchModel.Segments = new List<DealerSegmentListItemModel>();
+        foreach (var segment in segments)
+        {
+            var dealerCount = (await _dealerService.GetDealerSegmentMappingsAsync(dealerSegmentId: segment.Id)).Count;
+            searchModel.Segments.Add(new DealerSegmentListItemModel
+            {
+                Id = segment.Id,
+                Name = segment.Name,
+                Code = segment.Code,
+                StoreName = storesById.TryGetValue(segment.StoreId, out var store) ? store.Name : "-",
+                Active = segment.Active,
+                DisplayOrder = segment.DisplayOrder,
+                DealerCount = dealerCount
+            });
+        }
+
+        return searchModel;
     }
 
     protected virtual async Task ValidateManualTransactionInputsAsync(DealerModel model)
@@ -1302,6 +1446,13 @@ public partial class DealerController : BaseAdminController
     public virtual async Task<IActionResult> FinancialInstruments(DealerFinancialInstrumentListModel searchModel)
     {
         var model = await PrepareDealerFinancialInstrumentListModelAsync(searchModel, 1000);
+        return View(model);
+    }
+
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> Segments(DealerSegmentListModel searchModel)
+    {
+        var model = await PrepareDealerSegmentListModelAsync(searchModel);
         return View(model);
     }
 
@@ -1724,6 +1875,14 @@ public partial class DealerController : BaseAdminController
         return View(model);
     }
 
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    public virtual async Task<IActionResult> CreateSegment()
+    {
+        var model = new DealerSegmentModel { Active = true };
+        await PrepareDealerSegmentModelAsync(model);
+        return View(model);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
@@ -1735,6 +1894,7 @@ public partial class DealerController : BaseAdminController
         if (isStoreOwner)
             return AccessDeniedView();
 
+        NormalizeSelectedSegmentsFromRequest(model);
         NormalizeSelectedPaymentMethodsFromRequest(model);
 
         var store = await _storeService.GetStoreByIdAsync(model.StoreId);
@@ -1767,6 +1927,42 @@ public partial class DealerController : BaseAdminController
         return RedirectToAction(nameof(List));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    [ParameterBasedOnFormName("save-continue", "continueEditing")]
+    [FormValueRequired("save", "save-continue")]
+    public virtual async Task<IActionResult> CreateSegment(DealerSegmentModel model, bool continueEditing)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        if (isStoreOwner)
+            model.StoreId = managedStoreId;
+
+        await ValidateDealerSegmentModelAsync(model);
+        if (!ModelState.IsValid)
+        {
+            await PrepareDealerSegmentModelAsync(model);
+            return View(model);
+        }
+
+        var dealerSegment = new DealerSegment
+        {
+            StoreId = model.StoreId,
+            Name = model.Name.Trim(),
+            Code = model.Code.Trim(),
+            Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim(),
+            Active = model.Active,
+            DisplayOrder = model.DisplayOrder
+        };
+
+        await _dealerService.InsertDealerSegmentAsync(dealerSegment);
+
+        if (continueEditing)
+            return RedirectToAction(nameof(EditSegment), new { id = dealerSegment.Id });
+
+        return RedirectToAction(nameof(Segments));
+    }
+
     [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
     public virtual async Task<IActionResult> Edit(int id)
     {
@@ -1789,6 +1985,7 @@ public partial class DealerController : BaseAdminController
             StoreId = dealer.StoreId,
             Active = dealer.Active,
             SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList(),
+            SelectedSegmentIds = (await _dealerService.GetDealerSegmentIdsByDealerIdAsync(dealer.Id)).ToList(),
             SelectedPaymentMethodSystemNames = (await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id)).ToList()
         };
         var financialProfile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealer.Id);
@@ -1796,6 +1993,32 @@ public partial class DealerController : BaseAdminController
         model.CreditLimit = financialProfile?.CreditLimit ?? 0;
 
         await PrepareDealerModelAsync(model);
+        return View(model);
+    }
+
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_VIEW)]
+    public virtual async Task<IActionResult> EditSegment(int id)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var segment = await _dealerService.GetDealerSegmentByIdAsync(id);
+        if (segment is null)
+            return RedirectToAction(nameof(Segments));
+
+        if (isStoreOwner && managedStoreId > 0 && segment.StoreId != managedStoreId)
+            return AccessDeniedView();
+
+        var model = new DealerSegmentModel
+        {
+            Id = segment.Id,
+            Name = segment.Name,
+            Code = segment.Code,
+            Description = segment.Description,
+            StoreId = segment.StoreId,
+            Active = segment.Active,
+            DisplayOrder = segment.DisplayOrder
+        };
+
+        await PrepareDealerSegmentModelAsync(model);
         return View(model);
     }
 
@@ -1840,6 +2063,7 @@ public partial class DealerController : BaseAdminController
         model.StoreId = dealer.StoreId;
         model.Active = dealer.Active;
         model.SelectedCustomerIds = (await _dealerService.GetCustomerIdsByDealerIdAsync(dealer.Id)).ToList();
+        model.SelectedSegmentIds = (await _dealerService.GetDealerSegmentIdsByDealerIdAsync(dealer.Id)).ToList();
         model.SelectedPaymentMethodSystemNames = (await _dealerService.GetAllowedPaymentMethodSystemNamesAsync(dealer.Id)).ToList();
 
         var financialProfile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealer.Id);
@@ -1858,6 +2082,7 @@ public partial class DealerController : BaseAdminController
     public virtual async Task<IActionResult> Edit(DealerModel model, bool continueEditing)
     {
         var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        NormalizeSelectedSegmentsFromRequest(model);
         NormalizeSelectedPaymentMethodsFromRequest(model);
 
         var dealer = await _dealerService.GetDealerByIdAsync(model.Id);
@@ -1897,6 +2122,47 @@ public partial class DealerController : BaseAdminController
             return RedirectToAction(nameof(Edit), new { id = dealer.Id });
 
         return RedirectToAction(nameof(List));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [CheckPermission(StandardPermission.Customers.CUSTOMERS_CREATE_EDIT_DELETE)]
+    [ParameterBasedOnFormName("save-continue", "continueEditing")]
+    [FormValueRequired("save", "save-continue")]
+    public virtual async Task<IActionResult> EditSegment(DealerSegmentModel model, bool continueEditing)
+    {
+        var (_, isStoreOwner, managedStoreId, _) = await GetAccessContextAsync();
+        var segment = await _dealerService.GetDealerSegmentByIdAsync(model.Id);
+        if (segment is null)
+            return RedirectToAction(nameof(Segments));
+
+        if (isStoreOwner)
+        {
+            if (managedStoreId > 0 && segment.StoreId != managedStoreId)
+                return AccessDeniedView();
+            model.StoreId = managedStoreId;
+        }
+
+        await ValidateDealerSegmentModelAsync(model);
+        if (!ModelState.IsValid)
+        {
+            await PrepareDealerSegmentModelAsync(model);
+            return View(model);
+        }
+
+        segment.Name = model.Name.Trim();
+        segment.Code = model.Code.Trim();
+        segment.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
+        segment.StoreId = model.StoreId;
+        segment.Active = model.Active;
+        segment.DisplayOrder = model.DisplayOrder;
+
+        await _dealerService.UpdateDealerSegmentAsync(segment);
+
+        if (continueEditing)
+            return RedirectToAction(nameof(EditSegment), new { id = segment.Id });
+
+        return RedirectToAction(nameof(Segments));
     }
 
     #endregion
