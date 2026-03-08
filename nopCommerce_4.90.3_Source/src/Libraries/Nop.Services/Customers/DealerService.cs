@@ -13,6 +13,7 @@ public partial class DealerService : IDealerService
     #region Fields
 
     protected readonly IRepository<DealerInfo> _dealerInfoRepository;
+    protected readonly IRepository<DealerSegment> _dealerSegmentRepository;
     protected readonly IRepository<DealerFinancialProfile> _dealerFinancialProfileRepository;
     protected readonly IRepository<DealerTransaction> _dealerTransactionRepository;
     protected readonly IRepository<DealerTransactionAllocation> _dealerTransactionAllocationRepository;
@@ -20,6 +21,7 @@ public partial class DealerService : IDealerService
     protected readonly IRepository<DealerFinancialInstrument> _dealerFinancialInstrumentRepository;
     protected readonly IRepository<DealerFinanceAuditLog> _dealerFinanceAuditLogRepository;
     protected readonly IRepository<DealerCustomerMapping> _dealerCustomerMappingRepository;
+    protected readonly IRepository<DealerSegmentMapping> _dealerSegmentMappingRepository;
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<DealerPaymentMethodMapping> _dealerPaymentMethodMappingRepository;
 
@@ -30,6 +32,7 @@ public partial class DealerService : IDealerService
     #region Ctor
 
     public DealerService(IRepository<DealerInfo> dealerInfoRepository,
+        IRepository<DealerSegment> dealerSegmentRepository,
         IRepository<DealerFinancialProfile> dealerFinancialProfileRepository,
         IRepository<DealerTransaction> dealerTransactionRepository,
         IRepository<DealerTransactionAllocation> dealerTransactionAllocationRepository,
@@ -37,10 +40,12 @@ public partial class DealerService : IDealerService
         IRepository<DealerFinancialInstrument> dealerFinancialInstrumentRepository,
         IRepository<DealerFinanceAuditLog> dealerFinanceAuditLogRepository,
         IRepository<DealerCustomerMapping> dealerCustomerMappingRepository,
+        IRepository<DealerSegmentMapping> dealerSegmentMappingRepository,
         IRepository<Order> orderRepository,
         IRepository<DealerPaymentMethodMapping> dealerPaymentMethodMappingRepository)
     {
         _dealerInfoRepository = dealerInfoRepository;
+        _dealerSegmentRepository = dealerSegmentRepository;
         _dealerFinancialProfileRepository = dealerFinancialProfileRepository;
         _dealerTransactionRepository = dealerTransactionRepository;
         _dealerTransactionAllocationRepository = dealerTransactionAllocationRepository;
@@ -48,6 +53,7 @@ public partial class DealerService : IDealerService
         _dealerFinancialInstrumentRepository = dealerFinancialInstrumentRepository;
         _dealerFinanceAuditLogRepository = dealerFinanceAuditLogRepository;
         _dealerCustomerMappingRepository = dealerCustomerMappingRepository;
+        _dealerSegmentMappingRepository = dealerSegmentMappingRepository;
         _orderRepository = orderRepository;
         _dealerPaymentMethodMappingRepository = dealerPaymentMethodMappingRepository;
     }
@@ -176,6 +182,22 @@ public partial class DealerService : IDealerService
             return null;
 
         return await _dealerInfoRepository.GetByIdAsync(dealerId, cache => default);
+    }
+
+    /// <summary>
+    /// Gets a dealer segment by identifier
+    /// </summary>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer segment
+    /// </returns>
+    public virtual async Task<DealerSegment> GetDealerSegmentByIdAsync(int dealerSegmentId)
+    {
+        if (dealerSegmentId <= 0)
+            return null;
+
+        return await _dealerSegmentRepository.GetByIdAsync(dealerSegmentId, cache => default);
     }
 
     /// <summary>
@@ -1017,6 +1039,39 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Searches dealer segments
+    /// </summary>
+    /// <param name="name">Segment name</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="active">Segment active flag</param>
+    /// <param name="pageIndex">Page index</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer segments
+    /// </returns>
+    public virtual async Task<IPagedList<DealerSegment>> SearchDealerSegmentsAsync(string name = "", int storeId = 0,
+        bool? active = null, int pageIndex = 0, int pageSize = int.MaxValue)
+    {
+        var query = _dealerSegmentRepository.Table;
+
+        if (!string.IsNullOrWhiteSpace(name))
+            query = query.Where(segment => segment.Name.Contains(name) || segment.Code.Contains(name));
+
+        if (storeId > 0)
+            query = query.Where(segment => segment.StoreId == storeId);
+
+        if (active.HasValue)
+            query = query.Where(segment => segment.Active == active.Value);
+
+        query = query.OrderBy(segment => segment.DisplayOrder)
+            .ThenBy(segment => segment.Name)
+            .ThenBy(segment => segment.Id);
+
+        return await query.ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    /// <summary>
     /// Gets dealer-customer mappings
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -1041,6 +1096,30 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Gets dealer-segment mappings
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains mappings
+    /// </returns>
+    public virtual async Task<IList<DealerSegmentMapping>> GetDealerSegmentMappingsAsync(int dealerId = 0, int dealerSegmentId = 0)
+    {
+        var query = _dealerSegmentMappingRepository.Table;
+
+        if (dealerId > 0)
+            query = query.Where(mapping => mapping.DealerId == dealerId);
+
+        if (dealerSegmentId > 0)
+            query = query.Where(mapping => mapping.DealerSegmentId == dealerSegmentId);
+
+        query = query.OrderBy(mapping => mapping.DealerId).ThenBy(mapping => mapping.DealerSegmentId);
+
+        return await query.ToListAsync();
+    }
+
+    /// <summary>
     /// Gets customer identifiers by dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -1056,6 +1135,50 @@ public partial class DealerService : IDealerService
         return await _dealerCustomerMappingRepository.Table
             .Where(mapping => mapping.DealerId == dealerId)
             .Select(mapping => mapping.CustomerId)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Gets segment identifiers by dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains segment identifiers
+    /// </returns>
+    public virtual async Task<IList<int>> GetDealerSegmentIdsByDealerIdAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return new List<int>();
+
+        return await _dealerSegmentMappingRepository.Table
+            .Where(mapping => mapping.DealerId == dealerId)
+            .Select(mapping => mapping.DealerSegmentId)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Gets dealer segments by dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer segments
+    /// </returns>
+    public virtual async Task<IList<DealerSegment>> GetDealerSegmentsByDealerIdAsync(int dealerId)
+    {
+        if (dealerId <= 0)
+            return new List<DealerSegment>();
+
+        var segmentIds = await GetDealerSegmentIdsByDealerIdAsync(dealerId);
+        if (!segmentIds.Any())
+            return new List<DealerSegment>();
+
+        return await _dealerSegmentRepository.Table
+            .Where(segment => segmentIds.Contains(segment.Id))
+            .OrderBy(segment => segment.DisplayOrder)
+            .ThenBy(segment => segment.Name)
+            .ThenBy(segment => segment.Id)
             .ToListAsync();
     }
 
@@ -1213,6 +1336,24 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Indicates whether a dealer is mapped to the segment
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains a value indicating whether mapping exists
+    /// </returns>
+    public virtual async Task<bool> IsDealerMappedToSegmentAsync(int dealerId, int dealerSegmentId)
+    {
+        if (dealerId <= 0 || dealerSegmentId <= 0)
+            return false;
+
+        return await _dealerSegmentMappingRepository.Table
+            .AnyAsync(mapping => mapping.DealerId == dealerId && mapping.DealerSegmentId == dealerSegmentId);
+    }
+
+    /// <summary>
     /// Maps a customer to dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -1248,6 +1389,41 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Maps a dealer to segment
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task MapDealerToSegmentAsync(int dealerId, int dealerSegmentId)
+    {
+        if (dealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerId));
+
+        if (dealerSegmentId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerSegmentId));
+
+        var dealer = await GetDealerByIdAsync(dealerId);
+        if (dealer == null)
+            throw new ArgumentException("Dealer not found.", nameof(dealerId));
+
+        var dealerSegment = await GetDealerSegmentByIdAsync(dealerSegmentId);
+        if (dealerSegment == null)
+            throw new ArgumentException("Dealer segment not found.", nameof(dealerSegmentId));
+
+        if (dealer.StoreId != dealerSegment.StoreId)
+            throw new InvalidOperationException("Dealer segment store does not match dealer store.");
+
+        if (await IsDealerMappedToSegmentAsync(dealerId, dealerSegmentId))
+            return;
+
+        await _dealerSegmentMappingRepository.InsertAsync(new DealerSegmentMapping
+        {
+            DealerId = dealerId,
+            DealerSegmentId = dealerSegmentId
+        });
+    }
+
+    /// <summary>
     /// Unmaps customer from dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -1263,6 +1439,66 @@ public partial class DealerService : IDealerService
 
         if (mapping != null)
             await _dealerCustomerMappingRepository.DeleteAsync(mapping);
+    }
+
+    /// <summary>
+    /// Unmaps dealer from segment
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UnmapDealerFromSegmentAsync(int dealerId, int dealerSegmentId)
+    {
+        if (dealerId <= 0 || dealerSegmentId <= 0)
+            return;
+
+        var mapping = await _dealerSegmentMappingRepository.Table
+            .SingleOrDefaultAsync(item => item.DealerId == dealerId && item.DealerSegmentId == dealerSegmentId);
+
+        if (mapping != null)
+            await _dealerSegmentMappingRepository.DeleteAsync(mapping);
+    }
+
+    /// <summary>
+    /// Replaces dealer segment mappings
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentIds">Dealer segment identifiers</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task SetDealerSegmentsAsync(int dealerId, IList<int> dealerSegmentIds)
+    {
+        if (dealerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(dealerId));
+
+        var dealer = await GetDealerByIdAsync(dealerId);
+        if (dealer == null)
+            throw new ArgumentException("Dealer not found.", nameof(dealerId));
+
+        var normalizedSegmentIds = (dealerSegmentIds ?? [])
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        await _dealerSegmentMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealerId);
+
+        if (!normalizedSegmentIds.Any())
+            return;
+
+        var validSegmentIds = await _dealerSegmentRepository.Table
+            .Where(segment => normalizedSegmentIds.Contains(segment.Id) && segment.StoreId == dealer.StoreId)
+            .Select(segment => segment.Id)
+            .ToListAsync();
+
+        if (!validSegmentIds.Any())
+            return;
+
+        var mappings = validSegmentIds.Select(segmentId => new DealerSegmentMapping
+        {
+            DealerId = dealerId,
+            DealerSegmentId = segmentId
+        }).ToList();
+
+        await _dealerSegmentMappingRepository.InsertAsync(mappings);
     }
 
     /// <summary>
@@ -1282,6 +1518,22 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Inserts a dealer segment
+    /// </summary>
+    /// <param name="dealerSegment">Dealer segment</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task InsertDealerSegmentAsync(DealerSegment dealerSegment)
+    {
+        ArgumentNullException.ThrowIfNull(dealerSegment);
+
+        if (dealerSegment.CreatedOnUtc == default)
+            dealerSegment.CreatedOnUtc = DateTime.UtcNow;
+
+        dealerSegment.UpdatedOnUtc = null;
+        await _dealerSegmentRepository.InsertAsync(dealerSegment);
+    }
+
+    /// <summary>
     /// Updates a dealer
     /// </summary>
     /// <param name="dealer">Dealer</param>
@@ -1295,6 +1547,19 @@ public partial class DealerService : IDealerService
     }
 
     /// <summary>
+    /// Updates a dealer segment
+    /// </summary>
+    /// <param name="dealerSegment">Dealer segment</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task UpdateDealerSegmentAsync(DealerSegment dealerSegment)
+    {
+        ArgumentNullException.ThrowIfNull(dealerSegment);
+
+        dealerSegment.UpdatedOnUtc = DateTime.UtcNow;
+        await _dealerSegmentRepository.UpdateAsync(dealerSegment);
+    }
+
+    /// <summary>
     /// Deletes a dealer and related mappings
     /// </summary>
     /// <param name="dealer">Dealer</param>
@@ -1305,9 +1570,23 @@ public partial class DealerService : IDealerService
 
         await _dealerPaymentMethodMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
         await _dealerCustomerMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
+        await _dealerSegmentMappingRepository.DeleteAsync(mapping => mapping.DealerId == dealer.Id);
         await _dealerFinancialProfileRepository.DeleteAsync(profile => profile.DealerId == dealer.Id);
         await _dealerTransactionRepository.DeleteAsync(transaction => transaction.DealerId == dealer.Id);
         await _dealerInfoRepository.DeleteAsync(dealer);
+    }
+
+    /// <summary>
+    /// Deletes a dealer segment and related mappings
+    /// </summary>
+    /// <param name="dealerSegment">Dealer segment</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task DeleteDealerSegmentAsync(DealerSegment dealerSegment)
+    {
+        ArgumentNullException.ThrowIfNull(dealerSegment);
+
+        await _dealerSegmentMappingRepository.DeleteAsync(mapping => mapping.DealerSegmentId == dealerSegment.Id);
+        await _dealerSegmentRepository.DeleteAsync(dealerSegment);
     }
 
     #endregion
