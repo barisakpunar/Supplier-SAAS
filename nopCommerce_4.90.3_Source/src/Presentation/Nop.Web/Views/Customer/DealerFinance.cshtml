@@ -1,0 +1,138 @@
+@model DealerFinanceModel
+@{
+    Layout = "_ColumnsTwo";
+
+    NopHtml.AddTitleParts(T("PageTitle.Account").Text);
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-dealer-finance-page");
+}
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.DealerFinance })
+}
+<div class="page account-page dealer-finance-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.DealerFinance")</h1>
+    </div>
+    <div class="page-body">
+        <div class="section dealer-finance-summary">
+            <div class="title">
+                <strong>@T("Account.DealerFinance.Summary")</strong>
+            </div>
+            <div class="dealer-finance-summary-grid">
+                <div class="dealer-finance-summary-item">
+                    <label>@T("Account.DealerFinance.Fields.Dealer")</label>
+                    <span>@Model.DealerName</span>
+                </div>
+                <div class="dealer-finance-summary-item">
+                    <label>@T("Account.DealerFinance.Fields.OpenAccountEnabled")</label>
+                    <span>@T(Model.OpenAccountEnabled ? "Account.DealerFinance.Fields.Status.Enabled" : "Account.DealerFinance.Fields.Status.Disabled")</span>
+                </div>
+                <div class="dealer-finance-summary-item">
+                    <label>@T("Account.DealerFinance.Fields.CreditLimit")</label>
+                    <span>@Model.CreditLimit.ToString("N2")</span>
+                </div>
+                <div class="dealer-finance-summary-item">
+                    <label>@T("Account.DealerFinance.Fields.CurrentDebt")</label>
+                    <span>@Model.CurrentDebt.ToString("N2")</span>
+                </div>
+                <div class="dealer-finance-summary-item">
+                    <label>@T("Account.DealerFinance.Fields.AvailableCredit")</label>
+                    <span>@Model.AvailableCredit.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+        <div class="section dealer-finance-transactions">
+            <div class="title">
+                <strong>@T("Account.DealerFinance.Transactions")</strong>
+            </div>
+            @if (Model.Transactions.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.Date")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.Type")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.Source")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.ReferenceNo")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.DocumentNo")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.DueDate")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.Debit")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.Credit")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.Balance")</th>
+                                <th>@T("Account.DealerFinance.Transactions.Columns.Note")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var transaction in Model.Transactions)
+                            {
+                                <tr>
+                                    <td>@transaction.CreatedOn.ToString("g")</td>
+                                    <td>@transaction.TransactionType</td>
+                                    <td>@transaction.Source</td>
+                                    <td>@transaction.ReferenceNo</td>
+                                    <td>@transaction.DocumentNo</td>
+                                    <td>@(transaction.DueDate?.ToString("d") ?? string.Empty)</td>
+                                    <td>@(transaction.DebitAmount > 0 ? transaction.DebitAmount.ToString("N2") : string.Empty)</td>
+                                    <td>@(transaction.CreditAmount > 0 ? transaction.CreditAmount.ToString("N2") : string.Empty)</td>
+                                    <td>@transaction.RunningBalance.ToString("N2")</td>
+                                    <td>@transaction.Note</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    @T("Account.DealerFinance.Transactions.NoData")
+                </div>
+            }
+        </div>
+        <div class="section dealer-finance-instruments">
+            <div class="title">
+                <strong>@T("Account.DealerFinance.Instruments")</strong>
+            </div>
+            @if (Model.FinancialInstruments.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>@T("Account.DealerFinance.Instruments.Columns.Type")</th>
+                                <th>@T("Account.DealerFinance.Instruments.Columns.Status")</th>
+                                <th>@T("Account.DealerFinance.Instruments.Columns.Amount")</th>
+                                <th>@T("Account.DealerFinance.Instruments.Columns.DocumentNo")</th>
+                                <th>@T("Account.DealerFinance.Instruments.Columns.IssueDate")</th>
+                                <th>@T("Account.DealerFinance.Instruments.Columns.DueDate")</th>
+                                <th>@T("Account.DealerFinance.Instruments.Columns.Note")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var instrument in Model.FinancialInstruments)
+                            {
+                                <tr>
+                                    <td>@instrument.InstrumentType</td>
+                                    <td>@instrument.InstrumentStatus</td>
+                                    <td>@instrument.Amount.ToString("N2")</td>
+                                    <td>@instrument.InstrumentNo</td>
+                                    <td>@(instrument.IssueDate?.ToString("d") ?? string.Empty)</td>
+                                    <td>@(instrument.DueDate?.ToString("d") ?? string.Empty)</td>
+                                    <td>@instrument.Note</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    @T("Account.DealerFinance.Instruments.NoData")
+                </div>
+            }
+        </div>
+    </div>
+</div>

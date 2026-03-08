@@ -41,6 +41,11 @@ public static partial class NopRouteNames
         public const string CUSTOMER_ORDERS = "CustomerOrders";
 
         /// <summary>
+        /// Gets the customer dealer finance route name
+        /// </summary>
+        public const string CUSTOMER_DEALER_FINANCE = "CustomerDealerFinance";
+
+        /// <summary>
         /// Gets the contact us route name
         /// </summary>
         public const string CONTACT_US = "ContactUs";

@@ -1720,6 +1720,18 @@ public partial class CustomerController : BasePublicController
         return View(model);
     }
 
+    public virtual async Task<IActionResult> DealerFinance()
+    {
+        if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+            return Challenge();
+
+        var model = await _customerModelFactory.PrepareDealerFinanceModelAsync();
+        if (model is null)
+            return RedirectToRoute(NopRouteNames.General.CUSTOMER_INFO);
+
+        return View(model);
+    }
+
     //ignore SEO friendly URLs checks
     [CheckLanguageSeoCode(ignore: true)]
     public virtual async Task<IActionResult> UserAgreement(Guid orderItemId)

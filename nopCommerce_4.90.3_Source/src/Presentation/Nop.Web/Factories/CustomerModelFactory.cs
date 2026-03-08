@@ -55,6 +55,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     protected readonly IAuthenticationPluginManager _authenticationPluginManager;
     protected readonly ICountryService _countryService;
     protected readonly ICustomerService _customerService;
+    protected readonly IDealerService _dealerService;
     protected readonly IDateTimeHelper _dateTimeHelper;
     protected readonly IExternalAuthenticationModelFactory _externalAuthenticationModelFactory;
     protected readonly IExternalAuthenticationService _externalAuthenticationService;
@@ -100,6 +101,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         IAuthenticationPluginManager authenticationPluginManager,
         ICountryService countryService,
         ICustomerService customerService,
+        IDealerService dealerService,
         IDateTimeHelper dateTimeHelper,
         IExternalAuthenticationModelFactory externalAuthenticationModelFactory,
         IExternalAuthenticationService externalAuthenticationService,
@@ -143,6 +145,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         _authenticationPluginManager = authenticationPluginManager;
         _countryService = countryService;
         _customerService = customerService;
+        _dealerService = dealerService;
         _dateTimeHelper = dateTimeHelper;
         _gdprService = gdprService;
         _genericAttributeService = genericAttributeService;
@@ -694,6 +697,18 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             });
         }
 
+        if (await _customerService.IsRegisteredAsync(customer)
+            && await _dealerService.GetDealerByCustomerIdAsync(customer.Id) is not null)
+        {
+            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+            {
+                RouteName = NopRouteNames.General.CUSTOMER_DEALER_FINANCE,
+                Title = await _localizationService.GetResourceAsync("Account.DealerFinance"),
+                Tab = (int)CustomerNavigationEnum.DealerFinance,
+                ItemClass = "dealer-finance"
+            });
+        }
+
         model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
         {
             RouteName = NopRouteNames.Standard.CUSTOMER_CHANGE_PASSWORD,
@@ -780,6 +795,149 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         model.SelectedTab = selectedTabId;
 
         return model;
+    }
+
+    /// <summary>
+    /// Prepare the dealer finance model
+    /// </summary>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer finance model
+    /// </returns>
+    public virtual async Task<DealerFinanceModel> PrepareDealerFinanceModelAsync()
+    {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        if (!await _customerService.IsRegisteredAsync(customer))
+            return null;
+
+        var dealer = await _dealerService.GetDealerByCustomerIdAsync(customer.Id);
+        if (dealer is null)
+            return null;
+
+        var profile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealer.Id);
+        var currentDebt = await _dealerService.GetOpenAccountCurrentDebtAsync(dealer.Id);
+        var availableCredit = await _dealerService.GetOpenAccountAvailableCreditAsync(dealer.Id);
+        var transactions = (await _dealerService.SearchDealerTransactionsAsync(dealerId: dealer.Id, pageSize: int.MaxValue))
+            .OrderBy(item => item.CreatedOnUtc)
+            .ThenBy(item => item.Id)
+            .ToList();
+        var instruments = (await _dealerService.SearchDealerFinancialInstrumentsAsync(dealerId: dealer.Id, pageSize: int.MaxValue))
+            .OrderByDescending(item => item.DueDateUtc ?? item.CreatedOnUtc)
+            .ThenByDescending(item => item.Id)
+            .ToList();
+
+        var sourceCollectionIds = transactions
+            .Where(item => item.SourceType == DealerTransactionSourceType.Collection && item.SourceId.HasValue)
+            .Select(item => item.SourceId!.Value)
+            .Distinct()
+            .ToArray();
+        var sourceCollections = sourceCollectionIds.Any()
+            ? (await Task.WhenAll(sourceCollectionIds.Select(id => _dealerService.GetDealerCollectionByIdAsync(id))))
+                .Where(item => item is not null)
+                .ToDictionary(item => item.Id)
+            : new Dictionary<int, DealerCollection>();
+
+        decimal runningBalance = 0;
+        var model = new DealerFinanceModel
+        {
+            DealerId = dealer.Id,
+            DealerName = dealer.Name,
+            OpenAccountEnabled = profile?.OpenAccountEnabled ?? false,
+            CreditLimit = profile?.CreditLimit ?? 0,
+            CurrentDebt = currentDebt,
+            AvailableCredit = availableCredit
+        };
+
+        foreach (var transaction in transactions)
+        {
+            var debitAmount = transaction.DirectionId == (int)DealerTransactionDirection.Debit ? transaction.Amount : 0;
+            var creditAmount = transaction.DirectionId == (int)DealerTransactionDirection.Credit ? transaction.Amount : 0;
+            runningBalance += debitAmount - creditAmount;
+
+            sourceCollections.TryGetValue(transaction.SourceId ?? 0, out var sourceCollection);
+
+            model.Transactions.Add(new DealerFinanceTransactionModel
+            {
+                CreatedOn = await _dateTimeHelper.ConvertToUserTimeAsync(transaction.CreatedOnUtc, DateTimeKind.Utc),
+                TransactionType = await GetDealerTransactionTypeTextAsync(transaction.TransactionTypeId),
+                Source = await GetDealerTransactionSourceTextAsync(transaction, sourceCollection),
+                ReferenceNo = transaction.ReferenceNo,
+                DocumentNo = sourceCollection?.DocumentNo,
+                DueDate = sourceCollection?.DueDateUtc.HasValue == true
+                    ? await _dateTimeHelper.ConvertToUserTimeAsync(sourceCollection.DueDateUtc.Value, DateTimeKind.Utc)
+                    : null,
+                DebitAmount = debitAmount,
+                CreditAmount = creditAmount,
+                RunningBalance = runningBalance,
+                Note = transaction.Note
+            });
+        }
+
+        foreach (var instrument in instruments)
+        {
+            model.FinancialInstruments.Add(new DealerFinanceInstrumentModel
+            {
+                InstrumentType = await GetDealerFinancialInstrumentTypeTextAsync(instrument.InstrumentTypeId),
+                InstrumentStatus = await GetDealerFinancialInstrumentStatusTextAsync(instrument.InstrumentStatusId),
+                Amount = instrument.Amount,
+                InstrumentNo = instrument.InstrumentNo,
+                IssueDate = instrument.IssueDateUtc.HasValue
+                    ? await _dateTimeHelper.ConvertToUserTimeAsync(instrument.IssueDateUtc.Value, DateTimeKind.Utc)
+                    : null,
+                DueDate = instrument.DueDateUtc.HasValue
+                    ? await _dateTimeHelper.ConvertToUserTimeAsync(instrument.DueDateUtc.Value, DateTimeKind.Utc)
+                    : null,
+                Note = instrument.Note
+            });
+        }
+
+        return model;
+    }
+
+    protected virtual async Task<string> GetDealerTransactionTypeTextAsync(int transactionTypeId)
+    {
+        var resourceKey = transactionTypeId switch
+        {
+            (int)DealerTransactionType.OpenAccountOrder => "Admin.Customers.Dealers.Transactions.Type.OpenAccountOrder",
+            (int)DealerTransactionType.OpenAccountCollection => "Admin.Customers.Dealers.Transactions.Type.OpenAccountCollection",
+            (int)DealerTransactionType.ManualDebitAdjustment => "Admin.Customers.Dealers.Transactions.Type.ManualDebitAdjustment",
+            (int)DealerTransactionType.ManualCreditAdjustment => "Admin.Customers.Dealers.Transactions.Type.ManualCreditAdjustment",
+            _ => null
+        };
+
+        return resourceKey is null
+            ? string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Type.Unknown"), transactionTypeId)
+            : await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual async Task<string> GetDealerTransactionSourceTextAsync(DealerTransaction transaction, DealerCollection sourceCollection)
+    {
+        return transaction.SourceType switch
+        {
+            DealerTransactionSourceType.Order when !string.IsNullOrWhiteSpace(transaction.ReferenceNo)
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.OrderByReference"), transaction.ReferenceNo),
+            DealerTransactionSourceType.Order when transaction.SourceId.HasValue
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Order"), transaction.SourceId.Value),
+            DealerTransactionSourceType.Collection when transaction.SourceId.HasValue
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Collection"), transaction.SourceId.Value),
+            DealerTransactionSourceType.Collection when sourceCollection is not null
+                => string.Format(await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.Collection"), sourceCollection.Id),
+            DealerTransactionSourceType.ManualAdjustment
+                => await _localizationService.GetResourceAsync("Admin.Customers.Dealers.Transactions.Source.ManualAdjustment"),
+            _ => string.Empty
+        };
+    }
+
+    protected virtual async Task<string> GetDealerFinancialInstrumentTypeTextAsync(int instrumentTypeId)
+    {
+        var resourceKey = $"Admin.Customers.DealerFinancialInstruments.Type.{((DealerFinancialInstrumentType)instrumentTypeId)}";
+        return await _localizationService.GetResourceAsync(resourceKey);
+    }
+
+    protected virtual async Task<string> GetDealerFinancialInstrumentStatusTextAsync(int instrumentStatusId)
+    {
+        var resourceKey = $"Admin.Customers.DealerFinancialInstruments.Status.{((DealerFinancialInstrumentStatus)instrumentStatusId)}";
+        return await _localizationService.GetResourceAsync(resourceKey);
     }
 
     /// <summary>

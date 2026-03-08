@@ -99,6 +99,10 @@ public partial class RouteProvider : BaseRouteProvider, IRouteProvider
             pattern: $"{lang}/order/history/{{limit?}}",
             defaults: new { controller = "Order", action = "CustomerOrders" });
 
+        endpointRouteBuilder.MapControllerRoute(name: NopRouteNames.General.CUSTOMER_DEALER_FINANCE,
+            pattern: $"{lang}/customer/dealer-finance",
+            defaults: new { controller = "Customer", action = "DealerFinance" });
+
         endpointRouteBuilder.MapControllerRoute(name: NopRouteNames.Standard.CUSTOMER_ORDERS_PAGED,
             pattern: $"{lang}/order/history/{{limit?}}/page/{{pageNumber:min(0)}}",
             defaults: new { controller = "Order", action = "CustomerOrders" });

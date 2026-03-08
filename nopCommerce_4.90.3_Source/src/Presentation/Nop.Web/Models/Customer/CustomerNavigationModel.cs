@@ -40,4 +40,5 @@ public enum CustomerNavigationEnum
     CheckGiftCardBalance = 130,
     MultiFactorAuthentication = 140,
     RecurringPayments = 150,
+    DealerFinance = 160,
 }

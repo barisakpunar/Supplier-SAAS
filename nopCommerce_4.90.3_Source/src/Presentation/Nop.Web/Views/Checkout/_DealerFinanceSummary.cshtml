@@ -1,0 +1,31 @@
+@model CheckoutPaymentMethodModel
+@if (Model.DealerFinanceSummary is not null)
+{
+    <div class="section dealer-finance-summary">
+        <div class="title">
+            <strong>@T("Checkout.DealerFinanceSummary")</strong>
+        </div>
+        <div class="dealer-finance-summary-grid">
+            <div class="dealer-finance-summary-item">
+                <label>@T("Account.DealerFinance.Fields.Dealer")</label>
+                <span>@Model.DealerFinanceSummary.DealerName</span>
+            </div>
+            <div class="dealer-finance-summary-item">
+                <label>@T("Account.DealerFinance.Fields.OpenAccountEnabled")</label>
+                <span>@T(Model.DealerFinanceSummary.OpenAccountEnabled ? "Account.DealerFinance.Fields.Status.Enabled" : "Account.DealerFinance.Fields.Status.Disabled")</span>
+            </div>
+            <div class="dealer-finance-summary-item">
+                <label>@T("Account.DealerFinance.Fields.CreditLimit")</label>
+                <span>@Model.DealerFinanceSummary.CreditLimit</span>
+            </div>
+            <div class="dealer-finance-summary-item">
+                <label>@T("Account.DealerFinance.Fields.CurrentDebt")</label>
+                <span>@Model.DealerFinanceSummary.CurrentDebt</span>
+            </div>
+            <div class="dealer-finance-summary-item">
+                <label>@T("Account.DealerFinance.Fields.AvailableCredit")</label>
+                <span>@Model.DealerFinanceSummary.AvailableCredit</span>
+            </div>
+        </div>
+    </div>
+}

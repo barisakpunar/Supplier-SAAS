@@ -80,6 +80,15 @@ public partial interface ICustomerModelFactory
     Task<CustomerNavigationModel> PrepareCustomerNavigationModelAsync(int selectedTabId = 0);
 
     /// <summary>
+    /// Prepare the dealer finance model
+    /// </summary>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer finance model
+    /// </returns>
+    Task<DealerFinanceModel> PrepareDealerFinanceModelAsync();
+
+    /// <summary>
     /// Prepare the customer address list model
     /// </summary>
     /// <returns>
