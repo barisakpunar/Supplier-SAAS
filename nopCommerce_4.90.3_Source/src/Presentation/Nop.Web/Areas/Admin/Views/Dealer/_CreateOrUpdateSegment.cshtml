@@ -1,0 +1,80 @@
+@model DealerSegmentModel
+
+<div asp-validation-summary="All"></div>
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="card card-default">
+                <div class="card-header">
+                    <h3 class="card-title">@T("Admin.Customers.DealerSegments.Info")</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="Name" />
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="Code" />
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="Code" class="form-control" />
+                            <span asp-validation-for="Code"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="Description" />
+                        </div>
+                        <div class="col-md-9">
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="StoreId" />
+                        </div>
+                        <div class="col-md-9">
+                            @if (Model.IsStoreOwner)
+                            {
+                                <input type="text" class="form-control" value="@Model.StoreName" disabled />
+                                <input asp-for="StoreId" type="hidden" />
+                            }
+                            else
+                            {
+                                <select asp-for="StoreId" asp-items="Model.AvailableStores" class="form-control"></select>
+                            }
+                            <span asp-validation-for="StoreId"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="Active" />
+                        </div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="Active" />
+                            <span asp-validation-for="Active"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="DisplayOrder" />
+                        </div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="DisplayOrder" />
+                            <span asp-validation-for="DisplayOrder"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

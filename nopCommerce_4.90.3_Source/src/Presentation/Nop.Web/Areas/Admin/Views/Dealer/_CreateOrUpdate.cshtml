@@ -165,6 +165,53 @@
 
             <div class="card card-default">
                 <div class="card-header">
+                    <h3 class="card-title">@T("Admin.Customers.Dealers.Fields.Segments")</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">@T("Admin.Customers.Dealers.Fields.Segments.Hint")</p>
+                    @if (Model.AvailableSegments.Any())
+                    {
+                        <div class="row">
+                            @for (var index = 0; index < Model.AvailableSegments.Count; index++)
+                            {
+                                var segment = Model.AvailableSegments[index];
+                                var segmentId = $"dealer-segment-{index}";
+                                var isChecked = Model.SelectedSegmentIds.Contains(int.Parse(segment.Value));
+
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        @if (isChecked)
+                                        {
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   id="@segmentId"
+                                                   name="SelectedSegmentIds"
+                                                   value="@segment.Value"
+                                                   checked="checked" />
+                                        }
+                                        else
+                                        {
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   id="@segmentId"
+                                                   name="SelectedSegmentIds"
+                                                   value="@segment.Value" />
+                                        }
+                                        <label class="form-check-label" for="@segmentId">@segment.Text</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning mb-0">@T("Admin.Customers.Dealers.Segments.NoData")</div>
+                    }
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-header">
                     <h3 class="card-title">@T("Admin.Customers.Dealers.Fields.PaymentMethods")</h3>
                 </div>
                 <div class="card-body">
