@@ -96,6 +96,8 @@ public class SchemaMigration : ForwardOnlyMigration
         Create.TableFor<ShoppingCartItem>();
         Create.TableFor<Store>();
         Create.TableFor<DealerInfo>();
+        Create.TableFor<DealerSegment>();
+        Create.TableFor<DealerSegmentMapping>();
         Create.TableFor<DealerFinancialProfile>();
         Create.TableFor<DealerTransaction>();
         Create.TableFor<DealerTransactionAllocation>();

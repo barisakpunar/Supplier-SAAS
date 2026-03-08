@@ -19,6 +19,16 @@ public partial interface IDealerService
     Task<DealerInfo> GetDealerByIdAsync(int dealerId);
 
     /// <summary>
+    /// Gets a dealer segment by identifier
+    /// </summary>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the dealer segment
+    /// </returns>
+    Task<DealerSegment> GetDealerSegmentByIdAsync(int dealerSegmentId);
+
+    /// <summary>
     /// Gets a dealer by customer identifier
     /// </summary>
     /// <param name="customerId">Customer identifier</param>
@@ -330,6 +340,21 @@ public partial interface IDealerService
         int pageIndex = 0, int pageSize = int.MaxValue);
 
     /// <summary>
+    /// Searches dealer segments
+    /// </summary>
+    /// <param name="name">Segment name</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="active">Segment active flag</param>
+    /// <param name="pageIndex">Page index</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer segments
+    /// </returns>
+    Task<IPagedList<DealerSegment>> SearchDealerSegmentsAsync(string name = "", int storeId = 0, bool? active = null,
+        int pageIndex = 0, int pageSize = int.MaxValue);
+
+    /// <summary>
     /// Gets dealer-customer mappings
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -341,6 +366,17 @@ public partial interface IDealerService
     Task<IList<DealerCustomerMapping>> GetDealerCustomerMappingsAsync(int dealerId = 0, int customerId = 0);
 
     /// <summary>
+    /// Gets dealer-segment mappings
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains mappings
+    /// </returns>
+    Task<IList<DealerSegmentMapping>> GetDealerSegmentMappingsAsync(int dealerId = 0, int dealerSegmentId = 0);
+
+    /// <summary>
     /// Gets customer identifiers by dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
@@ -349,6 +385,26 @@ public partial interface IDealerService
     /// The task result contains customer identifiers
     /// </returns>
     Task<IList<int>> GetCustomerIdsByDealerIdAsync(int dealerId);
+
+    /// <summary>
+    /// Gets segment identifiers by dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains segment identifiers
+    /// </returns>
+    Task<IList<int>> GetDealerSegmentIdsByDealerIdAsync(int dealerId);
+
+    /// <summary>
+    /// Gets dealer segments by dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains dealer segments
+    /// </returns>
+    Task<IList<DealerSegment>> GetDealerSegmentsByDealerIdAsync(int dealerId);
 
     /// <summary>
     /// Gets dealer-payment method mappings
@@ -410,12 +466,31 @@ public partial interface IDealerService
     Task<bool> IsCustomerMappedToDealerAsync(int dealerId, int customerId);
 
     /// <summary>
+    /// Indicates whether a dealer is mapped to the segment
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains a value indicating whether mapping exists
+    /// </returns>
+    Task<bool> IsDealerMappedToSegmentAsync(int dealerId, int dealerSegmentId);
+
+    /// <summary>
     /// Maps a customer to dealer
     /// </summary>
     /// <param name="dealerId">Dealer identifier</param>
     /// <param name="customerId">Customer identifier</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task MapCustomerToDealerAsync(int dealerId, int customerId);
+
+    /// <summary>
+    /// Maps a dealer to segment
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task MapDealerToSegmentAsync(int dealerId, int dealerSegmentId);
 
     /// <summary>
     /// Unmaps customer from dealer
@@ -426,11 +501,34 @@ public partial interface IDealerService
     Task UnmapCustomerFromDealerAsync(int dealerId, int customerId);
 
     /// <summary>
+    /// Unmaps dealer from segment
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentId">Dealer segment identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UnmapDealerFromSegmentAsync(int dealerId, int dealerSegmentId);
+
+    /// <summary>
+    /// Replaces dealer segment mappings
+    /// </summary>
+    /// <param name="dealerId">Dealer identifier</param>
+    /// <param name="dealerSegmentIds">Dealer segment identifiers</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task SetDealerSegmentsAsync(int dealerId, IList<int> dealerSegmentIds);
+
+    /// <summary>
     /// Inserts a dealer
     /// </summary>
     /// <param name="dealer">Dealer</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task InsertDealerAsync(DealerInfo dealer);
+
+    /// <summary>
+    /// Inserts a dealer segment
+    /// </summary>
+    /// <param name="dealerSegment">Dealer segment</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task InsertDealerSegmentAsync(DealerSegment dealerSegment);
 
     /// <summary>
     /// Updates a dealer
@@ -440,9 +538,23 @@ public partial interface IDealerService
     Task UpdateDealerAsync(DealerInfo dealer);
 
     /// <summary>
+    /// Updates a dealer segment
+    /// </summary>
+    /// <param name="dealerSegment">Dealer segment</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task UpdateDealerSegmentAsync(DealerSegment dealerSegment);
+
+    /// <summary>
     /// Deletes a dealer and related mappings
     /// </summary>
     /// <param name="dealer">Dealer</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task DeleteDealerAsync(DealerInfo dealer);
+
+    /// <summary>
+    /// Deletes a dealer segment and related mappings
+    /// </summary>
+    /// <param name="dealerSegment">Dealer segment</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task DeleteDealerSegmentAsync(DealerSegment dealerSegment);
 }
