@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Discount requirements",
+  "FriendlyName": "Must be in dealer segment",
+  "SystemName": "DiscountRequirement.MustBeInDealerSegment",
+  "Version": "4.90.2",
+  "SupportedVersions": [ "4.90" ],
+  "Author": "OpenAI",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.DiscountRules.DealerSegments.dll",
+  "Description": "This plugin allows you to configure discounts for dealer segments"
+}
