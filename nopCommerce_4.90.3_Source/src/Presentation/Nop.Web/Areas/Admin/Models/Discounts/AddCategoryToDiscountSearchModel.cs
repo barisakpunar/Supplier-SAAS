@@ -20,6 +20,8 @@ public partial record AddCategoryToDiscountSearchModel : BaseSearchModel
 
     #region Properties
 
+    public int DiscountId { get; set; }
+
     [NopResourceDisplayName("Admin.Catalog.Categories.List.SearchCategoryName")]
     public string SearchCategoryName { get; set; }
 

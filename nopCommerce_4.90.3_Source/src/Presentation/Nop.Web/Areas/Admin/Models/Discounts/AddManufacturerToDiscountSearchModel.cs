@@ -20,6 +20,8 @@ public partial record AddManufacturerToDiscountSearchModel : BaseSearchModel
 
     #region Properties
 
+    public int DiscountId { get; set; }
+
     [NopResourceDisplayName("Admin.Catalog.Manufacturers.List.SearchManufacturerName")]
     public string SearchManufacturerName { get; set; }
 

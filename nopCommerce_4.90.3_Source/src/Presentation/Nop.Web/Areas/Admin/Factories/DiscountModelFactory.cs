@@ -199,6 +199,19 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         return (true, customer.RegisteredInStoreId);
     }
 
+    protected virtual async Task<int> GetDiscountStoreIdAsync(int discountId)
+    {
+        if (discountId <= 0)
+            return 0;
+
+        var discount = await _discountService.GetDiscountByIdAsync(discountId);
+        if (discount == null)
+            return 0;
+
+        var storeIds = (await _storeMappingService.GetStoresIdsWithAccessAsync(discount)).Distinct().ToList();
+        return storeIds.FirstOrDefault();
+    }
+
     #endregion
 
     #region Methods
@@ -617,6 +630,7 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         ArgumentNullException.ThrowIfNull(searchModel);
 
         var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var discountStoreId = await GetDiscountStoreIdAsync(searchModel.DiscountId);
         searchModel.IsStoreOwner = isStoreOwner;
         searchModel.IsLoggedInAsVendor = await _workContext.GetCurrentVendorAsync() != null;
 
@@ -634,6 +648,13 @@ public partial class DiscountModelFactory : IDiscountModelFactory
             searchModel.SearchStoreId = managedStoreId;
             searchModel.AvailableStores = searchModel.AvailableStores
                 .Where(item => item.Value == managedStoreId.ToString())
+                .ToList();
+        }
+        else if (discountStoreId > 0)
+        {
+            searchModel.SearchStoreId = discountStoreId;
+            searchModel.AvailableStores = searchModel.AvailableStores
+                .Where(item => item.Value == discountStoreId.ToString())
                 .ToList();
         }
 
@@ -662,8 +683,11 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         ArgumentNullException.ThrowIfNull(searchModel);
 
         var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var discountStoreId = await GetDiscountStoreIdAsync(searchModel.DiscountId);
         if (isStoreOwner)
             searchModel.SearchStoreId = managedStoreId;
+        else if (discountStoreId > 0)
+            searchModel.SearchStoreId = discountStoreId;
 
         //a vendor should have access only to his products
         var currentVendor = await _workContext.GetCurrentVendorAsync();
@@ -672,12 +696,13 @@ public partial class DiscountModelFactory : IDiscountModelFactory
 
         //get products
         IPagedList<Product> products;
-        if (isStoreOwner && managedStoreId > 0)
+        if (searchModel.SearchStoreId > 0 && (isStoreOwner || discountStoreId > 0))
         {
+            var scopedStoreId = searchModel.SearchStoreId;
             var allStoreProducts = await _productService.SearchProductsAsync(showHidden: true,
                 categoryIds: new List<int> { searchModel.SearchCategoryId },
                 manufacturerIds: new List<int> { searchModel.SearchManufacturerId },
-                storeId: managedStoreId,
+                storeId: scopedStoreId,
                 vendorId: searchModel.SearchVendorId,
                 productType: searchModel.SearchProductTypeId > 0 ? (ProductType?)searchModel.SearchProductTypeId : null,
                 keywords: searchModel.SearchProductName,
@@ -685,7 +710,7 @@ public partial class DiscountModelFactory : IDiscountModelFactory
                 pageSize: int.MaxValue);
 
             var strictlyOwnedProducts = (await allStoreProducts
-                .WhereAwait(async product => product.LimitedToStores && await _storeMappingService.AuthorizeAsync(product, managedStoreId))
+                .WhereAwait(async product => product.LimitedToStores && await _storeMappingService.AuthorizeAsync(product, scopedStoreId))
                 .ToListAsync());
 
             products = strictlyOwnedProducts.ToPagedList(searchModel);
@@ -769,6 +794,7 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         ArgumentNullException.ThrowIfNull(searchModel);
 
         var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var discountStoreId = await GetDiscountStoreIdAsync(searchModel.DiscountId);
         searchModel.IsStoreOwner = isStoreOwner;
 
         await _baseAdminModelFactory.PrepareStoresAsync(searchModel.AvailableStores);
@@ -777,6 +803,13 @@ public partial class DiscountModelFactory : IDiscountModelFactory
             searchModel.SearchStoreId = managedStoreId;
             searchModel.AvailableStores = searchModel.AvailableStores
                 .Where(item => item.Value == managedStoreId.ToString())
+                .ToList();
+        }
+        else if (discountStoreId > 0)
+        {
+            searchModel.SearchStoreId = discountStoreId;
+            searchModel.AvailableStores = searchModel.AvailableStores
+                .Where(item => item.Value == discountStoreId.ToString())
                 .ToList();
         }
 
@@ -799,21 +832,25 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         ArgumentNullException.ThrowIfNull(searchModel);
 
         var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var discountStoreId = await GetDiscountStoreIdAsync(searchModel.DiscountId);
         if (isStoreOwner)
             searchModel.SearchStoreId = managedStoreId;
+        else if (discountStoreId > 0)
+            searchModel.SearchStoreId = discountStoreId;
 
         //get categories
         IPagedList<Category> categories;
-        if (isStoreOwner && managedStoreId > 0)
+        if (searchModel.SearchStoreId > 0 && (isStoreOwner || discountStoreId > 0))
         {
+            var scopedStoreId = searchModel.SearchStoreId;
             var allStoreCategories = await _categoryService.GetAllCategoriesAsync(showHidden: true,
                 categoryName: searchModel.SearchCategoryName,
-                storeId: managedStoreId,
+                storeId: scopedStoreId,
                 pageIndex: 0,
                 pageSize: int.MaxValue);
 
             var strictlyOwnedCategories = (await allStoreCategories
-                .WhereAwait(async category => category.LimitedToStores && await _storeMappingService.AuthorizeAsync(category, managedStoreId))
+                .WhereAwait(async category => category.LimitedToStores && await _storeMappingService.AuthorizeAsync(category, scopedStoreId))
                 .ToListAsync());
 
             categories = strictlyOwnedCategories.ToPagedList(searchModel);
@@ -897,6 +934,7 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         ArgumentNullException.ThrowIfNull(searchModel);
 
         var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var discountStoreId = await GetDiscountStoreIdAsync(searchModel.DiscountId);
         searchModel.IsStoreOwner = isStoreOwner;
 
         await _baseAdminModelFactory.PrepareStoresAsync(searchModel.AvailableStores);
@@ -905,6 +943,13 @@ public partial class DiscountModelFactory : IDiscountModelFactory
             searchModel.SearchStoreId = managedStoreId;
             searchModel.AvailableStores = searchModel.AvailableStores
                 .Where(item => item.Value == managedStoreId.ToString())
+                .ToList();
+        }
+        else if (discountStoreId > 0)
+        {
+            searchModel.SearchStoreId = discountStoreId;
+            searchModel.AvailableStores = searchModel.AvailableStores
+                .Where(item => item.Value == discountStoreId.ToString())
                 .ToList();
         }
 
@@ -927,21 +972,25 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         ArgumentNullException.ThrowIfNull(searchModel);
 
         var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
+        var discountStoreId = await GetDiscountStoreIdAsync(searchModel.DiscountId);
         if (isStoreOwner)
             searchModel.SearchStoreId = managedStoreId;
+        else if (discountStoreId > 0)
+            searchModel.SearchStoreId = discountStoreId;
 
         //get manufacturers
         IPagedList<Manufacturer> manufacturers;
-        if (isStoreOwner && managedStoreId > 0)
+        if (searchModel.SearchStoreId > 0 && (isStoreOwner || discountStoreId > 0))
         {
+            var scopedStoreId = searchModel.SearchStoreId;
             var allStoreManufacturers = await _manufacturerService.GetAllManufacturersAsync(showHidden: true,
                 manufacturerName: searchModel.SearchManufacturerName,
-                storeId: managedStoreId,
+                storeId: scopedStoreId,
                 pageIndex: 0,
                 pageSize: int.MaxValue);
 
             var strictlyOwnedManufacturers = (await allStoreManufacturers
-                .WhereAwait(async manufacturer => manufacturer.LimitedToStores && await _storeMappingService.AuthorizeAsync(manufacturer, managedStoreId))
+                .WhereAwait(async manufacturer => manufacturer.LimitedToStores && await _storeMappingService.AuthorizeAsync(manufacturer, scopedStoreId))
                 .ToListAsync());
 
             manufacturers = strictlyOwnedManufacturers.ToPagedList(searchModel);

@@ -21,6 +21,7 @@ else
           asp-route-discountId="@Context.Request.Query["discountId"]"
           asp-route-btnId="@Context.Request.Query["btnId"]"
           asp-route-formId="@Context.Request.Query["formId"]">
+        <input asp-for="DiscountId" type="hidden" />
         <div class="content-header clearfix">
             <h1 class="float-left">
                 @T("Admin.Promotions.Discounts.AppliedToProducts.AddNew")
@@ -116,6 +117,7 @@ else
                                         LengthMenu = Model.AvailablePageSizes,
                                         Filters = new List<FilterParameter>
                                         {
+                                            new FilterParameter(nameof(Model.DiscountId)),
                                             new FilterParameter(nameof(Model.SearchProductName)),
                                             new FilterParameter(nameof(Model.SearchCategoryId)),
                                             new FilterParameter(nameof(Model.SearchManufacturerId)),

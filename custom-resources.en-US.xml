@@ -325,6 +325,12 @@
   <LocaleResource Name="Admin.Promotions.Discounts.Validation.LegacyMultiStoreWarning">
     <Value>This discount is currently mapped to multiple stores. Saving it will keep only the selected store.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.StoreLocked">
+    <Value>The discount store cannot be changed after creation. Create a new discount for a different store.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.StoreScopedEntityOnly">
+    <Value>Only products, categories, and manufacturers limited to the discount store can be selected.</Value>
+  </LocaleResource>
 
   <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText">
     <Value>Description</Value>

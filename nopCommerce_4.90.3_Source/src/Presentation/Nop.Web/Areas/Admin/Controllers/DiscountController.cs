@@ -140,6 +140,20 @@ public partial class DiscountController : BaseAdminController
                 await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreSelectionRequired"));
     }
 
+    protected virtual async Task<int> GetDiscountContextStoreIdAsync(int discountId)
+    {
+        if (discountId <= 0)
+            return 0;
+
+        var discount = await _discountService.GetDiscountByIdAsync(discountId);
+        if (discount == null)
+            return 0;
+
+        return (await _storeMappingService.GetStoresIdsWithAccessAsync(discount))
+            .Distinct()
+            .FirstOrDefault();
+    }
+
     public virtual IActionResult Index()
     {
         return RedirectToAction("List");
@@ -246,6 +260,13 @@ public partial class DiscountController : BaseAdminController
         var currentVendor = await _workContext.GetCurrentVendorAsync();
         if (currentVendor != null && discount.VendorId != currentVendor.Id)
             return RedirectToAction("List");
+
+        var existingStoreIds = (await _storeMappingService.GetStoresIdsWithAccessAsync(discount)).ToList();
+        if (existingStoreIds.Any())
+        {
+            model.SelectedStoreIds = existingStoreIds;
+            model.SelectedStoreId = existingStoreIds.First();
+        }
 
         var (isStoreOwner, managedStoreId) = await GetStoreOwnerContextAsync();
         var canManageGlobalStoreScope = await _permissionService.AuthorizeAsync(StandardPermission.Promotions.DISCOUNTS_MANAGE_GLOBAL);
@@ -531,7 +552,10 @@ public partial class DiscountController : BaseAdminController
     public virtual async Task<IActionResult> ProductAddPopup(int discountId)
     {
         //prepare model
-        var model = await _discountModelFactory.PrepareAddProductToDiscountSearchModelAsync(new AddProductToDiscountSearchModel());
+        var model = await _discountModelFactory.PrepareAddProductToDiscountSearchModelAsync(new AddProductToDiscountSearchModel
+        {
+            DiscountId = discountId
+        });
 
         return View(model);
     }
@@ -555,7 +579,25 @@ public partial class DiscountController : BaseAdminController
         var discount = await _discountService.GetDiscountByIdAsync(model.DiscountId)
             ?? throw new ArgumentException("No discount found with the specified id");
 
+        var discountStoreId = await GetDiscountContextStoreIdAsync(discount.Id);
+
         var selectedProducts = await _productService.GetProductsByIdsAsync(model.SelectedProductIds.ToArray());
+        if (discountStoreId > 0)
+        {
+            foreach (var product in selectedProducts)
+            {
+                if (product.LimitedToStores && await _storeMappingService.AuthorizeAsync(product, discountStoreId))
+                    continue;
+
+                ModelState.AddModelError(string.Empty,
+                    await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreScopedEntityOnly"));
+                return View(await _discountModelFactory.PrepareAddProductToDiscountSearchModelAsync(new AddProductToDiscountSearchModel
+                {
+                    DiscountId = model.DiscountId
+                }));
+            }
+        }
+
         if (selectedProducts.Any())
         {
             foreach (var product in selectedProducts)
@@ -614,7 +656,10 @@ public partial class DiscountController : BaseAdminController
     public virtual async Task<IActionResult> CategoryAddPopup(int discountId)
     {
         //prepare model
-        var model = await _discountModelFactory.PrepareAddCategoryToDiscountSearchModelAsync(new AddCategoryToDiscountSearchModel());
+        var model = await _discountModelFactory.PrepareAddCategoryToDiscountSearchModelAsync(new AddCategoryToDiscountSearchModel
+        {
+            DiscountId = discountId
+        });
 
         return View(model);
     }
@@ -638,11 +683,23 @@ public partial class DiscountController : BaseAdminController
         var discount = await _discountService.GetDiscountByIdAsync(model.DiscountId)
             ?? throw new ArgumentException("No discount found with the specified id");
 
+        var discountStoreId = await GetDiscountContextStoreIdAsync(discount.Id);
+
         foreach (var id in model.SelectedCategoryIds)
         {
             var category = await _categoryService.GetCategoryByIdAsync(id);
             if (category == null)
                 continue;
+
+            if (discountStoreId > 0 && (!category.LimitedToStores || !await _storeMappingService.AuthorizeAsync(category, discountStoreId)))
+            {
+                ModelState.AddModelError(string.Empty,
+                    await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreScopedEntityOnly"));
+                return View(await _discountModelFactory.PrepareAddCategoryToDiscountSearchModelAsync(new AddCategoryToDiscountSearchModel
+                {
+                    DiscountId = model.DiscountId
+                }));
+            }
 
             if (await _categoryService.GetDiscountAppliedToCategoryAsync(category.Id, discount.Id) is null)
                 await _categoryService.InsertDiscountCategoryMappingAsync(new DiscountCategoryMapping { DiscountId = discount.Id, EntityId = category.Id });
@@ -697,7 +754,10 @@ public partial class DiscountController : BaseAdminController
     public virtual async Task<IActionResult> ManufacturerAddPopup(int discountId)
     {
         //prepare model
-        var model = await _discountModelFactory.PrepareAddManufacturerToDiscountSearchModelAsync(new AddManufacturerToDiscountSearchModel());
+        var model = await _discountModelFactory.PrepareAddManufacturerToDiscountSearchModelAsync(new AddManufacturerToDiscountSearchModel
+        {
+            DiscountId = discountId
+        });
 
         return View(model);
     }
@@ -721,11 +781,23 @@ public partial class DiscountController : BaseAdminController
         var discount = await _discountService.GetDiscountByIdAsync(model.DiscountId)
             ?? throw new ArgumentException("No discount found with the specified id");
 
+        var discountStoreId = await GetDiscountContextStoreIdAsync(discount.Id);
+
         foreach (var id in model.SelectedManufacturerIds)
         {
             var manufacturer = await _manufacturerService.GetManufacturerByIdAsync(id);
             if (manufacturer == null)
                 continue;
+
+            if (discountStoreId > 0 && (!manufacturer.LimitedToStores || !await _storeMappingService.AuthorizeAsync(manufacturer, discountStoreId)))
+            {
+                ModelState.AddModelError(string.Empty,
+                    await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreScopedEntityOnly"));
+                return View(await _discountModelFactory.PrepareAddManufacturerToDiscountSearchModelAsync(new AddManufacturerToDiscountSearchModel
+                {
+                    DiscountId = model.DiscountId
+                }));
+            }
 
             if (await _manufacturerService.GetDiscountAppliedToManufacturerAsync(manufacturer.Id, discount.Id) is null)
                 await _manufacturerService.InsertDiscountManufacturerMappingAsync(new DiscountManufacturerMapping { EntityId = manufacturer.Id, DiscountId = discount.Id });
