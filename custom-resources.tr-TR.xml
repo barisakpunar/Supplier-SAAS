@@ -319,6 +319,9 @@
   <LocaleResource Name="Admin.Promotions.Discounts.Validation.StoreSelectionRequired">
     <Value>En az bir mağaza seçilmelidir.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.SingleStoreOnly">
+    <Value>İndirimler tek bir mağazaya bağlı olmalıdır.</Value>
+  </LocaleResource>
 
   <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText">
     <Value>Açıklama</Value>

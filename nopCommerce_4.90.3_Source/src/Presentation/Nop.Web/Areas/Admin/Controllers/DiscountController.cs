@@ -99,17 +99,9 @@ public partial class DiscountController : BaseAdminController
 
     protected virtual async Task NormalizeAndValidateStoreScopeAsync(DiscountModel model, bool isStoreOwner, int managedStoreId, bool canManageGlobalStoreScope, bool isVendor)
     {
-        model.SelectedStoreIds = model.SelectedStoreIds?
-            .Where(storeId => storeId > 0)
-            .Distinct()
-            .ToList() ?? new List<int>();
-
         var validStoreIds = (await _storeService.GetAllStoresAsync())
             .Select(store => store.Id)
             .ToHashSet();
-        model.SelectedStoreIds = model.SelectedStoreIds
-            .Where(validStoreIds.Contains)
-            .ToList();
 
         if (isStoreOwner)
         {
@@ -120,7 +112,26 @@ public partial class DiscountController : BaseAdminController
                 return;
             }
 
+            model.SelectedStoreId = managedStoreId;
             model.SelectedStoreIds = [managedStoreId];
+            return;
+        }
+
+        model.SelectedStoreIds = model.SelectedStoreId > 0 && validStoreIds.Contains(model.SelectedStoreId)
+            ? [model.SelectedStoreId]
+            : new List<int>();
+
+        if (model.SelectedStoreId <= 0 || !validStoreIds.Contains(model.SelectedStoreId))
+        {
+            ModelState.AddModelError(nameof(model.SelectedStoreId),
+                await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreRequired"));
+            return;
+        }
+
+        if (model.SelectedStoreIds.Count != 1)
+        {
+            ModelState.AddModelError(nameof(model.SelectedStoreId),
+                await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.SingleStoreOnly"));
             return;
         }
 

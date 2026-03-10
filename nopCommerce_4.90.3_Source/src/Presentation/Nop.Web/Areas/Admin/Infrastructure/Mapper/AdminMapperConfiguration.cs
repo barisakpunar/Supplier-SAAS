@@ -996,6 +996,7 @@ public partial class AdminMapperConfiguration : Profile, IOrderedMapperProfile
             .ForMember(model => model.GroupName, options => options.Ignore())
             .ForMember(model => model.PrimaryStoreCurrencyCode, options => options.Ignore())
             .ForMember(model => model.RequirementGroupId, options => options.Ignore())
+            .ForMember(model => model.SelectedStoreId, options => options.Ignore())
             .ForMember(model => model.SelectedStoreIds, options => options.Ignore())
             .ForMember(model => model.TimesUsed, options => options.Ignore())
             .ForMember(model => model.IsLoggedInAsVendor, options => options.Ignore())

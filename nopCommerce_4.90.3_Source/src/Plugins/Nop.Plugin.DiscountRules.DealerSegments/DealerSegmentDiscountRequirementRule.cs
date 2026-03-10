@@ -105,7 +105,8 @@ public class DealerSegmentDiscountRequirementRule : BasePlugin, IDiscountRequire
             ["Plugins.DiscountRules.DealerSegments.Fields.DealerSegment.Select"] = "Select dealer segment",
             ["Plugins.DiscountRules.DealerSegments.Fields.DealerSegmentId.Required"] = "Dealer segment is required",
             ["Plugins.DiscountRules.DealerSegments.Fields.DiscountId.Required"] = "Discount is required",
-            ["Plugins.DiscountRules.DealerSegments.Fields.StoreScope.Required"] = "This discount must be limited to at least one store before configuring a dealer segment requirement.",
+            ["Plugins.DiscountRules.DealerSegments.Fields.StoreScope.Required"] = "This discount must be limited to a single store before configuring a dealer segment requirement.",
+            ["Plugins.DiscountRules.DealerSegments.Fields.StoreScope.SingleStoreRequired"] = "This discount must be limited to a single store before configuring a dealer segment requirement.",
             ["Plugins.DiscountRules.DealerSegments.Fields.DealerSegment.Invalid"] = "Selected dealer segment is not available for this discount."
         });
 
