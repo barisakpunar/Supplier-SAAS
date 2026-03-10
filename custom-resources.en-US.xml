@@ -322,6 +322,9 @@
   <LocaleResource Name="Admin.Promotions.Discounts.Validation.SingleStoreOnly">
     <Value>Discounts must be limited to a single store.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.LegacyMultiStoreWarning">
+    <Value>This discount is currently mapped to multiple stores. Saving it will keep only the selected store.</Value>
+  </LocaleResource>
 
   <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText">
     <Value>Description</Value>

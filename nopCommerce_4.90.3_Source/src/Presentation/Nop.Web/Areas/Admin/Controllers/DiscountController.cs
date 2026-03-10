@@ -107,7 +107,7 @@ public partial class DiscountController : BaseAdminController
         {
             if (managedStoreId <= 0 || !validStoreIds.Contains(managedStoreId))
             {
-                ModelState.AddModelError(nameof(model.SelectedStoreIds),
+                ModelState.AddModelError(nameof(model.SelectedStoreId),
                     await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.StoreRequired"));
                 return;
             }

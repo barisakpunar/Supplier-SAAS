@@ -322,6 +322,9 @@
   <LocaleResource Name="Admin.Promotions.Discounts.Validation.SingleStoreOnly">
     <Value>İndirimler tek bir mağazaya bağlı olmalıdır.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Promotions.Discounts.Validation.LegacyMultiStoreWarning">
+    <Value>Bu indirim şu anda birden fazla mağazaya bağlı. Kaydederseniz sadece seçili mağaza korunur.</Value>
+  </LocaleResource>
 
   <LocaleResource Name="Plugins.Payment.OpenAccount.DescriptionText">
     <Value>Açıklama</Value>
