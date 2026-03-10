@@ -24,6 +24,8 @@ public partial record AddProductToDiscountSearchModel : BaseSearchModel
 
     #region Properties
 
+    public int DiscountId { get; set; }
+
     [NopResourceDisplayName("Admin.Catalog.Products.List.SearchProductName")]
     public string SearchProductName { get; set; }
 

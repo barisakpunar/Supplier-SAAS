@@ -141,7 +141,15 @@
             <nop-label asp-for="SelectedStoreId" />
         </div>
         <div class="col-md-9">
-            @if (Model.IsStoreOwner)
+            @if (Model.Id > 0)
+            {
+                <input type="hidden" asp-for="SelectedStoreId" />
+                <div class="form-text-row">
+                    @(Model.AvailableStores.FirstOrDefault(item => item.Value == Model.SelectedStoreId.ToString())?.Text ?? "Current store")
+                </div>
+                <div class="text-muted mt-2">@T("Admin.Promotions.Discounts.Validation.StoreLocked")</div>
+            }
+            else if (Model.IsStoreOwner)
             {
                 <input type="hidden" asp-for="SelectedStoreId" />
                 <div class="form-text-row">
