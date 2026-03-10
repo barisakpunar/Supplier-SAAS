@@ -12,6 +12,7 @@ using Nop.Services.Directory;
 using Nop.Services.Discounts;
 using Nop.Services.Helpers;
 using Nop.Services.Localization;
+using Nop.Services.Messages;
 using Nop.Services.Orders;
 using Nop.Services.Security;
 using Nop.Services.Seo;
@@ -41,6 +42,7 @@ public partial class DiscountModelFactory : IDiscountModelFactory
     protected readonly IDiscountService _discountService;
     protected readonly ILocalizationService _localizationService;
     protected readonly IManufacturerService _manufacturerService;
+    protected readonly INotificationService _notificationService;
     protected readonly IOrderService _orderService;
     protected readonly IPermissionService _permissionService;
     protected readonly IPriceFormatter _priceFormatter;
@@ -65,6 +67,7 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         IDiscountService discountService,
         ILocalizationService localizationService,
         IManufacturerService manufacturerService,
+        INotificationService notificationService,
         IOrderService orderService,
         IPermissionService permissionService,
         IPriceFormatter priceFormatter,
@@ -85,6 +88,7 @@ public partial class DiscountModelFactory : IDiscountModelFactory
         _discountService = discountService;
         _localizationService = localizationService;
         _manufacturerService = manufacturerService;
+        _notificationService = notificationService;
         _orderService = orderService;
         _permissionService = permissionService;
         _priceFormatter = priceFormatter;
@@ -430,6 +434,11 @@ public partial class DiscountModelFactory : IDiscountModelFactory
             model.AvailableStores = model.AvailableStores
                 .Where(item => item.Value == managedStoreId.ToString())
                 .ToList();
+        }
+
+        if (discount != null && model.SelectedStoreIds.Count > 1)
+        {
+            _notificationService.WarningNotification(await _localizationService.GetResourceAsync("Admin.Promotions.Discounts.Validation.LegacyMultiStoreWarning"));
         }
 
         model.SelectedStoreId = model.SelectedStoreIds.FirstOrDefault();
