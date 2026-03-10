@@ -17,8 +17,18 @@ public partial record CheckoutPaymentMethodModel : BaseNopModel
     public string RewardPointsToUseAmount { get; set; }
     public bool RewardPointsEnoughToPayForOrder { get; set; }
     public bool UseRewardPoints { get; set; }
+    public DealerFinanceSummaryModel DealerFinanceSummary { get; set; }
 
     #region Nested classes
+
+    public partial record DealerFinanceSummaryModel : BaseNopModel
+    {
+        public string DealerName { get; set; }
+        public bool OpenAccountEnabled { get; set; }
+        public string CreditLimit { get; set; }
+        public string CurrentDebt { get; set; }
+        public string AvailableCredit { get; set; }
+    }
 
     public partial record PaymentMethodModel : BaseNopModel
     {

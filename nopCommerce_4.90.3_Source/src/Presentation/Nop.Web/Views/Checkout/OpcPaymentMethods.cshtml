@@ -1,6 +1,7 @@
 ﻿@model CheckoutPaymentMethodModel
 <div class="checkout-data">
     @await Component.InvokeAsync(typeof(WidgetViewComponent), new { widgetZone = PublicWidgetZones.OpCheckoutPaymentMethodTop, additionalData = Model })
+    <partial name="_DealerFinanceSummary" model="Model" />
     <div class="section payment-method">
         @if (Model.DisplayRewardPoints && Model.PaymentMethods.Count > 0)
         {

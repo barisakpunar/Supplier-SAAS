@@ -34,6 +34,7 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
     protected readonly ICountryService _countryService;
     protected readonly ICurrencyService _currencyService;
     protected readonly ICustomerService _customerService;
+    protected readonly IDealerService _dealerService;
     protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly ILocalizationService _localizationService;
     protected readonly IOrderProcessingService _orderProcessingService;
@@ -69,6 +70,7 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
         ICountryService countryService,
         ICurrencyService currencyService,
         ICustomerService customerService,
+        IDealerService dealerService,
         IGenericAttributeService genericAttributeService,
         ILocalizationService localizationService,
         IOrderProcessingService orderProcessingService,
@@ -100,6 +102,7 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
         _countryService = countryService;
         _currencyService = currencyService;
         _customerService = customerService;
+        _dealerService = dealerService;
         _genericAttributeService = genericAttributeService;
         _localizationService = localizationService;
         _orderProcessingService = orderProcessingService;
@@ -459,6 +462,26 @@ public partial class CheckoutModelFactory : ICheckoutModelFactory
 
         var customer = await _workContext.GetCurrentCustomerAsync();
         var store = await _storeContext.GetCurrentStoreAsync();
+
+        if (await _customerService.IsRegisteredAsync(customer))
+        {
+            var dealer = await _dealerService.GetDealerByCustomerIdAsync(customer.Id);
+            if (dealer is not null)
+            {
+                var profile = await _dealerService.GetDealerFinancialProfileByDealerIdAsync(dealer.Id);
+                var currentDebt = await _dealerService.GetOpenAccountCurrentDebtAsync(dealer.Id);
+                var availableCredit = await _dealerService.GetOpenAccountAvailableCreditAsync(dealer.Id);
+
+                model.DealerFinanceSummary = new CheckoutPaymentMethodModel.DealerFinanceSummaryModel
+                {
+                    DealerName = dealer.Name,
+                    OpenAccountEnabled = profile?.OpenAccountEnabled ?? false,
+                    CreditLimit = await _priceFormatter.FormatPriceAsync(profile?.CreditLimit ?? decimal.Zero, true, false),
+                    CurrentDebt = await _priceFormatter.FormatPriceAsync(currentDebt, true, false),
+                    AvailableCredit = await _priceFormatter.FormatPriceAsync(availableCredit, true, false)
+                };
+            }
+        }
 
         //reward points
         if (_rewardPointsSettings.Enabled && !await _shoppingCartService.ShoppingCartIsRecurringAsync(cart))
