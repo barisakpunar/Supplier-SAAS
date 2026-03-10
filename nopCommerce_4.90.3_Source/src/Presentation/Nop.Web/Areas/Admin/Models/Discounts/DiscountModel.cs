@@ -103,6 +103,9 @@ public partial record DiscountModel : BaseNopEntityModel, IStoreMappingSupported
     [NopResourceDisplayName("Admin.Configuration.Settings.GeneralCommon.Stores")]
     public IList<int> SelectedStoreIds { get; set; }
 
+    [NopResourceDisplayName("Admin.Configuration.Settings.GeneralCommon.Stores")]
+    public int SelectedStoreId { get; set; }
+
     public IList<SelectListItem> AvailableStores { get; set; }
 
     [NopResourceDisplayName("Admin.Promotions.Discounts.Requirements.DiscountRequirementType")]

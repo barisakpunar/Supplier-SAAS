@@ -432,6 +432,8 @@ public partial class DiscountModelFactory : IDiscountModelFactory
                 .ToList();
         }
 
+        model.SelectedStoreId = model.SelectedStoreIds.FirstOrDefault();
+
         model.PrimaryStoreCurrencyCode = (await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId)).CurrencyCode;
 
         //get URL of discount with coupon code

@@ -102,8 +102,11 @@ public class DiscountRulesDealerSegmentsController : BasePluginController
     protected virtual async Task<IList<SelectListItem>> PrepareDealerSegmentSelectListAsync(Discount discount, int selectedSegmentId)
     {
         var allowedStoreIds = await GetAllowedStoreIdsAsync(discount);
+        if (allowedStoreIds.Count != 1)
+            return new List<SelectListItem>();
+
         var stores = (await _storeService.GetAllStoresAsync())
-            .Where(store => !allowedStoreIds.Any() || allowedStoreIds.Contains(store.Id))
+            .Where(store => allowedStoreIds.Contains(store.Id))
             .Select(store => store.Id)
             .ToList();
 
@@ -132,10 +135,10 @@ public class DiscountRulesDealerSegmentsController : BasePluginController
     protected virtual async Task ValidateRequirementModelAsync(RequirementModel model, Discount discount)
     {
         var allowedStoreIds = await GetAllowedStoreIdsAsync(discount);
-        if (!allowedStoreIds.Any())
+        if (allowedStoreIds.Count != 1)
         {
             ModelState.AddModelError(nameof(model.DealerSegmentId),
-                await _localizationService.GetResourceAsync("Plugins.DiscountRules.DealerSegments.Fields.StoreScope.Required"));
+                await _localizationService.GetResourceAsync("Plugins.DiscountRules.DealerSegments.Fields.StoreScope.SingleStoreRequired"));
             return;
         }
 
