@@ -63,6 +63,22 @@ public partial class InstallationService
         var stores = new List<Store>
         {
             new() {
+                Name = "Main Store",
+                DefaultTitle = "Main Store",
+                DefaultMetaKeywords = string.Empty,
+                DefaultMetaDescription = string.Empty,
+                HomepageTitle = "Main Store",
+                HomepageDescription = "Main Store",
+                Url = storeUrl,
+                SslEnabled = _webHelper.IsCurrentConnectionSecured(),
+                Hosts = string.Empty,
+                DisplayOrder = 1,
+                CompanyName = "Main Store",
+                CompanyAddress = string.Empty,
+                CompanyPhoneNumber = string.Empty,
+                CompanyVat = null
+            },
+            new() {
                 Name = "Your store name",
                 DefaultTitle = "Your store",
                 DefaultMetaKeywords = string.Empty,
@@ -72,7 +88,7 @@ public partial class InstallationService
                 Url = storeUrl,
                 SslEnabled = _webHelper.IsCurrentConnectionSecured(),
                 Hosts = "yourstore.com,www.yourstore.com",
-                DisplayOrder = 1,
+                DisplayOrder = 2,
                 //should we set some default company info?
                 CompanyName = "Your company name",
                 CompanyAddress = "your company country, state, zip, street, etc",
@@ -2199,7 +2215,11 @@ public partial class InstallationService
         await _dataProvider.BulkInsertEntitiesAsync(customerRoles);
 
         //default store 
-        var defaultStore = await Table<Store>().FirstOrDefaultAsync() ?? throw new Exception("No default store could be loaded");
+        var defaultStore = await Table<Store>()
+                               .OrderBy(store => store.DisplayOrder)
+                               .ThenBy(store => store.Id)
+                               .FirstOrDefaultAsync()
+                           ?? throw new Exception("No default store could be loaded");
 
         var storeId = defaultStore.Id;
 
