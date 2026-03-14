@@ -100,8 +100,9 @@ public class SchemaMigration : ForwardOnlyMigration
         Create.TableFor<DealerSegmentMapping>();
         Create.TableFor<DealerFinancialProfile>();
         Create.TableFor<DealerTransaction>();
-        Create.TableFor<DealerTransactionAllocation>();
         Create.TableFor<DealerCollection>();
+        Create.TableFor<DealerFinancialInstrument>();
+        Create.TableFor<DealerTransactionAllocation>();
         Create.TableFor<DealerFinanceAuditLog>();
         Create.TableFor<DealerCustomerMapping>();
         Create.TableFor<DealerPaymentMethodMapping>();

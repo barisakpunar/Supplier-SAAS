@@ -7,6 +7,83 @@ BEGIN
     END IF;
 END $$;
 
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM "Store" WHERE "Name" = 'Main Store' AND "Deleted" = FALSE) THEN
+        UPDATE "Store"
+        SET "DisplayOrder" = "DisplayOrder" + 1
+        WHERE "Deleted" = FALSE;
+
+        INSERT INTO "Store" (
+            "Name", "Url", "Hosts", "CompanyName", "CompanyAddress", "CompanyPhoneNumber", "CompanyVat",
+            "DefaultMetaKeywords", "DefaultMetaDescription", "DefaultTitle", "HomepageTitle", "HomepageDescription",
+            "SslEnabled", "DefaultLanguageId", "DisplayOrder", "Deleted"
+        )
+        SELECT
+            'Main Store', s."Url", '', 'Main Store', '', '', NULL,
+            s."DefaultMetaKeywords", s."DefaultMetaDescription", 'Main Store', 'Main Store', 'Main Store',
+            s."SslEnabled", s."DefaultLanguageId", 1, FALSE
+        FROM "Store" s
+        WHERE s."Deleted" = FALSE
+        ORDER BY s."DisplayOrder", s."Id"
+        LIMIT 1;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM "Store" WHERE "Name" = 'Your store name' AND "Deleted" = FALSE)
+       AND NOT EXISTS (SELECT 1 FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE) THEN
+        UPDATE "Store"
+        SET "Name" = 'Store B',
+            "DefaultTitle" = 'Store B',
+            "HomepageTitle" = 'Store B',
+            "HomepageDescription" = 'Store B',
+            "CompanyName" = 'Store B'
+        WHERE "Name" = 'Your store name'
+          AND "Deleted" = FALSE;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE) THEN
+        INSERT INTO "Store" (
+            "Name", "Url", "Hosts", "CompanyName", "CompanyAddress", "CompanyPhoneNumber", "CompanyVat",
+            "DefaultMetaKeywords", "DefaultMetaDescription", "DefaultTitle", "HomepageTitle", "HomepageDescription",
+            "SslEnabled", "DefaultLanguageId", "DisplayOrder", "Deleted"
+        )
+        SELECT
+            'Store B', s."Url", '', 'Store B', '', '', NULL,
+            s."DefaultMetaKeywords", s."DefaultMetaDescription", 'Store B', 'Store B', 'Store B',
+            s."SslEnabled", s."DefaultLanguageId", 2, FALSE
+        FROM "Store" s
+        WHERE s."Deleted" = FALSE
+        ORDER BY s."DisplayOrder", s."Id"
+        LIMIT 1;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE) THEN
+        INSERT INTO "Store" (
+            "Name", "Url", "Hosts", "CompanyName", "CompanyAddress", "CompanyPhoneNumber", "CompanyVat",
+            "DefaultMetaKeywords", "DefaultMetaDescription", "DefaultTitle", "HomepageTitle", "HomepageDescription",
+            "SslEnabled", "DefaultLanguageId", "DisplayOrder", "Deleted"
+        )
+        SELECT
+            'Store A', s."Url", '', 'Store A', '', '', NULL,
+            s."DefaultMetaKeywords", s."DefaultMetaDescription", 'Store A', 'Store A', 'Store A',
+            s."SslEnabled", s."DefaultLanguageId", 3, FALSE
+        FROM "Store" s
+        WHERE s."Deleted" = FALSE
+        ORDER BY s."DisplayOrder", s."Id"
+        LIMIT 1;
+    END IF;
+
+    UPDATE "Store"
+    SET "DisplayOrder" = CASE "Name"
+            WHEN 'Main Store' THEN 1
+            WHEN 'Store B' THEN 2
+            WHEN 'Store A' THEN 3
+            ELSE "DisplayOrder"
+        END
+    WHERE "Name" IN ('Main Store', 'Store B', 'Store A')
+      AND "Deleted" = FALSE;
+END $$;
+
 -- Normalize global settings required by the finance fixture.
 UPDATE "Setting"
 SET "Value" = 'False'
@@ -16,13 +93,52 @@ UPDATE "Setting"
 SET "Value" = 'Payments.CheckMoneyOrder,Payments.Manual,Payments.OpenAccount'
 WHERE "Name" = 'paymentsettings.activepaymentmethodsystemnames';
 
+INSERT INTO "Customer" (
+    "Username", "Email", "CustomerGuid", "CountryId", "StateProvinceId", "VatNumberStatusId",
+    "AffiliateId", "VendorId", "IsTaxExempt", "HasShoppingCartItems", "RequireReLogin", "FailedLoginAttempts",
+    "Active", "Deleted", "IsSystemAccount", "CreatedOnUtc", "LastActivityDateUtc",
+    "RegisteredInStoreId", "MustChangePassword"
+)
+SELECT
+    seed."Email",
+    seed."Email",
+    seed."CustomerGuid"::uuid,
+    0,
+    0,
+    0,
+    0,
+    0,
+    FALSE,
+    FALSE,
+    FALSE,
+    0,
+    TRUE,
+    FALSE,
+    FALSE,
+    NOW(),
+    NOW(),
+    (SELECT "Id" FROM "Store" WHERE "Name" = seed."StoreName" AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1),
+    FALSE
+FROM (
+    VALUES
+        ('owner-a@test.local', 'Store A', '00000000-0000-0000-0000-0000000000a1'),
+        ('owner-b@test.local', 'Store B', '00000000-0000-0000-0000-0000000000b1'),
+        ('buyer-a1@example.com', 'Store A', '00000000-0000-0000-0000-0000000000a2'),
+        ('buyer-b1@example.com', 'Store B', '00000000-0000-0000-0000-0000000000b2')
+) AS seed("Email", "StoreName", "CustomerGuid")
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM "Customer" c
+    WHERE c."Email" = seed."Email"
+);
+
 -- Reset fixture users to deterministic credentials and stores.
 UPDATE "Customer"
 SET "RegisteredInStoreId" = CASE "Email"
-        WHEN 'owner-a@test.local' THEN 2
-        WHEN 'owner-b@test.local' THEN 1
-        WHEN 'buyer-a1@example.com' THEN 2
-        WHEN 'buyer-b1@example.com' THEN 1
+        WHEN 'owner-a@test.local' THEN (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1)
+        WHEN 'owner-b@test.local' THEN (SELECT "Id" FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1)
+        WHEN 'buyer-a1@example.com' THEN (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1)
+        WHEN 'buyer-b1@example.com' THEN (SELECT "Id" FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1)
         ELSE "RegisteredInStoreId"
     END,
     "Active" = TRUE,
@@ -101,6 +217,19 @@ DELETE FROM "DealerFinancialInstrument";
 DELETE FROM "DealerCollection";
 DELETE FROM "DealerTransaction";
 
+INSERT INTO "DealerInfo" ("Id", "Name", "StoreId", "Active", "CreatedOnUtc", "UpdatedOnUtc")
+VALUES
+    (1, 'Dealer B', (SELECT "Id" FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1), TRUE, NOW(), NOW()),
+    (2, 'Dealer A', (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1), TRUE, NOW(), NOW()),
+    (3, 'Unused Dealer', (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1), FALSE, NOW(), NOW())
+ON CONFLICT ("Id") DO UPDATE
+SET "Name" = EXCLUDED."Name",
+    "StoreId" = EXCLUDED."StoreId",
+    "Active" = EXCLUDED."Active",
+    "UpdatedOnUtc" = NOW();
+
+SELECT setval('"DealerInfo_Id_seq"', GREATEST((SELECT COALESCE(MAX("Id"), 0) FROM "DealerInfo"), 1), TRUE);
+
 UPDATE "DealerInfo"
 SET "Name" = CASE "Id"
         WHEN 1 THEN 'Dealer B'
@@ -109,9 +238,9 @@ SET "Name" = CASE "Id"
         ELSE "Name"
     END,
     "StoreId" = CASE "Id"
-        WHEN 1 THEN 1
-        WHEN 2 THEN 2
-        WHEN 3 THEN 2
+        WHEN 1 THEN (SELECT "Id" FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1)
+        WHEN 2 THEN (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1)
+        WHEN 3 THEN (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1)
         ELSE "StoreId"
     END,
     "Active" = CASE WHEN "Id" IN (1, 2) THEN TRUE ELSE FALSE END,
@@ -152,36 +281,36 @@ VALUES
 -- Stabilize store-specific catalog items used in checkout tests.
 UPDATE "Category"
 SET "Name" = CASE "Id"
-        WHEN 17 THEN 'Fixture Category A'
-        WHEN 18 THEN 'Fixture Category B'
+        WHEN 15 THEN 'Fixture Category A'
+        WHEN 16 THEN 'Fixture Category B'
         ELSE "Name"
     END,
     "LimitedToStores" = TRUE,
     "Published" = TRUE,
     "Deleted" = FALSE,
     "UpdatedOnUtc" = NOW()
-WHERE "Id" IN (17, 18);
+WHERE "Id" IN (15, 16);
 
 DELETE FROM "StoreMapping"
-WHERE ("EntityName" = 'Category' AND "EntityId" IN (17, 18))
-   OR ("EntityName" = 'Product' AND "EntityId" IN (48, 49));
+WHERE ("EntityName" = 'Category' AND "EntityId" IN (15, 16))
+   OR ("EntityName" = 'Product' AND "EntityId" IN (46, 47));
 
 INSERT INTO "StoreMapping" ("EntityName", "StoreId", "EntityId")
 VALUES
-    ('Category', 2, 17),
-    ('Category', 1, 18),
-    ('Product', 2, 48),
-    ('Product', 1, 49);
+    ('Category', (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1), 15),
+    ('Category', (SELECT "Id" FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1), 16),
+    ('Product', (SELECT "Id" FROM "Store" WHERE "Name" = 'Store A' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1), 46),
+    ('Product', (SELECT "Id" FROM "Store" WHERE "Name" = 'Store B' AND "Deleted" = FALSE ORDER BY "DisplayOrder", "Id" LIMIT 1), 47);
 
 UPDATE "Product"
 SET "Name" = CASE "Id"
-        WHEN 48 THEN 'Fixture Product A'
-        WHEN 49 THEN 'Fixture Product B'
+        WHEN 46 THEN 'Fixture Product A'
+        WHEN 47 THEN 'Fixture Product B'
         ELSE "Name"
     END,
     "Price" = CASE "Id"
-        WHEN 48 THEN 200.0000
-        WHEN 49 THEN 150.0000
+        WHEN 46 THEN 200.0000
+        WHEN 47 THEN 150.0000
         ELSE "Price"
     END,
     "LimitedToStores" = TRUE,
@@ -194,16 +323,16 @@ SET "Name" = CASE "Id"
     "OrderMaximumQuantity" = 10000,
     "StockQuantity" = 10000,
     "UpdatedOnUtc" = NOW()
-WHERE "Id" IN (48, 49);
+WHERE "Id" IN (46, 47);
 
 UPDATE "Product_Category_Mapping"
 SET "CategoryId" = CASE "ProductId"
-        WHEN 48 THEN 17
-        WHEN 49 THEN 18
+        WHEN 46 THEN 15
+        WHEN 47 THEN 16
         ELSE "CategoryId"
     END,
     "DisplayOrder" = 1,
     "IsFeaturedProduct" = FALSE
-WHERE "ProductId" IN (48, 49);
+WHERE "ProductId" IN (46, 47);
 
 COMMIT;

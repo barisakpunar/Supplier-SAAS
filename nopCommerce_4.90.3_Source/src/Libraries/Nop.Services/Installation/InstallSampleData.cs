@@ -64,7 +64,11 @@ public partial class InstallationService
         if (_defaultStoreId.HasValue)
             return _defaultStoreId.Value;
 
-        var store = await Table<Store>().FirstOrDefaultAsync() ?? throw new Exception("No default store could be loaded");
+        var store = await Table<Store>()
+                        .OrderBy(store => store.DisplayOrder)
+                        .ThenBy(store => store.Id)
+                        .FirstOrDefaultAsync()
+                    ?? throw new Exception("No default store could be loaded");
 
         _defaultStoreId = store.Id;
 

@@ -28,7 +28,7 @@ if ! docker ps --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
 fi
 
 require_eq "$(query "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='DealerCollection';")" "1" "DealerCollection table exists"
-require_eq "$(query "SELECT COUNT(*) FROM \"Store\" WHERE \"Id\" IN (1,2,3) AND \"Deleted\" = FALSE;")" "3" "fixture stores exist"
+require_eq "$(query "SELECT COUNT(*) FROM \"Store\" WHERE \"Name\" IN ('Main Store','Store A','Store B') AND \"Deleted\" = FALSE;")" "3" "fixture stores exist"
 require_eq "$(query "SELECT COUNT(*) FROM \"Customer\" WHERE \"Email\" IN ('owner-a@test.local','owner-b@test.local','buyer-a1@example.com','buyer-b1@example.com') AND \"Deleted\" = FALSE AND \"Active\" = TRUE;")" "4" "fixture customers active"
 require_eq "$(query "SELECT COUNT(*) FROM \"CustomerPassword\" cp JOIN \"Customer\" c ON c.\"Id\" = cp.\"CustomerId\" WHERE c.\"Email\" IN ('owner-a@test.local','owner-b@test.local','buyer-a1@example.com','buyer-b1@example.com') AND cp.\"PasswordFormatId\" = 0 AND cp.\"Password\" = 'Test123!';")" "4" "fixture passwords reset"
 require_eq "$(query "SELECT COUNT(*) FROM \"Customer_CustomerRole_Mapping\" m JOIN \"Customer\" c ON c.\"Id\" = m.\"Customer_Id\" JOIN \"CustomerRole\" r ON r.\"Id\" = m.\"CustomerRole_Id\" WHERE c.\"Email\" IN ('owner-a@test.local','owner-b@test.local') AND r.\"SystemName\" = 'StoreOwners';")" "2" "store owner roles assigned"
@@ -40,7 +40,7 @@ require_eq "$(query "SELECT COUNT(*) FROM \"DealerPaymentMethodMapping\" WHERE \
 require_eq "$(query "SELECT \"CreditLimit\"::text FROM \"DealerFinancialProfile\" WHERE \"DealerId\" = 2;")" "1000.0000" "dealer A credit limit"
 require_eq "$(query "SELECT COUNT(*) FROM \"ShoppingCartItem\" WHERE \"CustomerId\" IN (SELECT \"Id\" FROM \"Customer\" WHERE \"Email\" IN ('owner-a@test.local','owner-b@test.local','buyer-a1@example.com','buyer-b1@example.com'));")" "0" "fixture carts cleared"
 require_eq "$(query "SELECT \"Value\" FROM \"Setting\" WHERE \"Name\" = 'paymentsettings.activepaymentmethodsystemnames' LIMIT 1;")" "Payments.CheckMoneyOrder,Payments.Manual,Payments.OpenAccount" "active payment methods"
-require_eq "$(query "SELECT \"Price\"::text FROM \"Product\" WHERE \"Id\" = 48;")" "200.0000" "fixture product A price"
-require_eq "$(query "SELECT COUNT(*) FROM \"StoreMapping\" WHERE \"EntityName\" = 'Product' AND ((\"EntityId\" = 48 AND \"StoreId\" = 2) OR (\"EntityId\" = 49 AND \"StoreId\" = 1));")" "2" "fixture product store mappings"
+require_eq "$(query "SELECT \"Price\"::text FROM \"Product\" WHERE \"Id\" = 46;")" "200.0000" "fixture product A price"
+require_eq "$(query "SELECT COUNT(*) FROM \"StoreMapping\" sm JOIN \"Store\" s ON s.\"Id\" = sm.\"StoreId\" WHERE sm.\"EntityName\" = 'Product' AND ((sm.\"EntityId\" = 46 AND s.\"Name\" = 'Store A') OR (sm.\"EntityId\" = 47 AND s.\"Name\" = 'Store B'));")" "2" "fixture product store mappings"
 
 echo "Fixture verification completed successfully."
